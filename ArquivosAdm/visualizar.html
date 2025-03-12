@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="./imagensadm/estrela.ico" type="image/x-icon">
+    <link rel="stylesheet" href="./admcss/admcss.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+   
+    <title>Formulário</title>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="bars">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+            <img src="./imagensadm/logos-png-8-3394041218.png" class="logo"/>
+        </div>
+
+        <div class="navbar-content">
+            <div class="notification">
+                <i class="fa-solid fa-bell"></i>
+                <span class="number">7</span>
+                <div class="dropdown-menu">
+                    <div class="dropdown-content">
+                        <li>
+                            <img src="./imagensadm/user-pic.jpg" alt="usuario" width="40"  />
+                            <div class="text">
+                                Duis vel accumsan lorem. Vivamus ornare, massa sed rhoncus finibus, orci augue malesuada orci. 
+                            </div>
+                        </li>
+                        <li>
+                            <img src="./imagensadm/user-pic.jpg" alt="usuario" width="40" />
+                            <div class="text">
+                                Duis vel accumsan lorem. Vivamus ornare, massa sed rhoncus finibus.
+                            </div>
+                        </li>
+                    </div>
+                </div>
+            </div>    
+                
+            <div class="avatar">
+                <img src="./imagensadm/user-pic.jpg" alt="usuario" width="40" >
+                <div class="dropdown-menu setting">
+                    <div class="item">
+                        <span class="fa-solid fa-user"></span>Perfil
+                    </div>
+                    <div class="item">
+                        <span class="fa-solid fa-gear"></span> Configurações
+                    </div>
+                    <div class="item">
+                        <span class="fa-solid fa-door-open"></span> Sair
+                    </div>
+                </div>
+            </div>    
+        </div>
+                
+    </nav>
+
+    <div class="content">
+        <div class="sidebar">
+            <a href="./indexadm.html" class="sidebar-nav"> <i class="icon fa-solid fa-house"></i><span>Dashboard</span></a>
+
+            <button class="dropdown-btn">
+                <i class="icon fa-solid fa-users"></i><span>Dropdown</span><i class="fa-solid fa-caret-down"></i>
+            </button>
+            <div class="dropdown-container">
+                <a href="#" class="sidebar-nav"><i class="icon fa-solid fa-user-check"></i><span>Link 1</span></a>
+                <a href="sidebar_dropdown.html" class="sidebar-nav"><i class="icon fa-solid fa-user-gear"></i><span>Link 2</span></a>
+                <a href="#" class="sidebar-nav"><i class="icon fa-solid fa-chalkboard-user"></i><span>Link 3</span></a>
+            </div>
+
+            <button class="dropdown-btn">
+                <i class="icon fa-solid fa-globe"></i><span>Dropdown</span><i class="fa-solid fa-caret-down"></i>
+            </button>
+            <div class="dropdown-container">
+                <a href="#" class="sidebar-nav"><i class="icon fa-solid fa-car-rear"></i><span>Link 1</span></a>
+                <a href="#" class="sidebar-nav"><i class="icon fa-solid fa-bus"></i><span>Link 2</span></a>
+                <a href="#" class="sidebar-nav"><i class="icon fa-solid fa-plane"></i><span>Link 3</span></a>
+                <a href="sidebar_dropdown2.html" class="sidebar-nav"><i class="icon fa-solid fa-ship"></i><span>Link 4</span></a>
+            </div>
+
+            <a href="./listar.html" class="sidebar-nav"> <i class="icon fa-solid fa-list"></i><span>Listar</span></a>
+
+            <a href="./formulario.html" class="sidebar-nav"> <i class="icon fa-solid fa-file-lines"></i><span>Formulário</span></a>
+
+            <a href="./visualizar.html" class="sidebar-nav active"> <i class="icon fa-solid fa-eye"></i><span>Visualizar</span></a>
+
+            <a href="./alerta.html" class="sidebar-nav"> <i class="icon fa-solid fa-triangle-exclamation"></i><span>Alertas</span></a>
+
+            <a href="./button.html" class="sidebar-nav"> <i class="icon fa-solid fa-square-check"></i><span>Botões</span></a>
+            
+            <a href="../login/login.html" class="sidebar-nav"> <i class="icon fa-solid fa-door-open"></i><span>Sair</span></a>
+        </div>
+
+        <!-- Fim da Sidebar -->
+        <!-- Inicio do conteudo do administrativo -->
+        <div class="wrapper">
+            <div class="row">
+                <div class="top-list">
+                    <span class="title-content">Visualizar</span>
+                    <div class="top-list-right">
+                        <a href="./listar.html" class="btn-info">Listar</a> 
+                        
+                    </div>
+                </div>
+                
+                <div class="content-adm">
+                    <div class="view-det-adm">
+                        <span class="view-adm-title">Nome:</span>
+                        <span class="view-adm-info">Andréa</span>
+                    </div>
+
+                    <div class="view-det-adm">
+                        <span class="view-adm-title">E-mail:</span>
+                        <span class="view-adm-info">andrea.kozicki@gmail.com</span>
+                    </div>
+
+                    <div class="view-det-adm">
+                        <span class="view-adm-title">Título 1:</span>
+                        <span class="view-adm-info">Informação 1</span>
+                    </div>
+
+                    <div class="view-det-adm">
+                        <span class="view-adm-title">Título 2:</span>
+                        <span class="view-adm-info">Informação 2</span>
+                    </div>
+                    
+                    <div class="view-det-adm">
+                        <span class="view-adm-title">Título 3:</span>
+                        <span class="view-adm-info">Informação 3</span>
+                    </div>
+
+                    <div class="view-det-adm">
+                        <span class="view-adm-title">Título 4:</span>
+                        <span class="view-adm-info">Informação 4</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Fim do conteudo do administrativo -->
+    </div>
+    <!-- Fim Conteudo -->
+
+    <script src="js/admjs.js"></script>
+
+</body>
+
+</html>
