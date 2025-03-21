@@ -106,6 +106,11 @@
             <input type="email" id="email" name="email" required>
             <!-- Um campo de entrada de email, que é obrigatório e deve conter um endereço de email válido -->
 
+            <label for="usuario">Nome de usuario:</label>
+            <!-- Um label para o campo de entrada do nome de usuario -->
+            <input type="text" id="usuario" name="usuario" required>
+            <!-- Um campo de entrada de texto para o nome de usuario, que é obrigatório -->
+
             <label for="senha">Senha:</label>
             <!-- Um label para o campo de entrada de senha -->
             <input type="password" id="senha" name="senha" required pattern="^(?=.*\d).{4,}$" title="A senha deve conter pelo menos 4 caracteres e 1 número.">
@@ -138,8 +143,8 @@
             <label for="cidade">Cidade:</label>
             <input type="text" id="cidade" name="cidade" required>
 
-            <label for="logradouro">Rua:</label>
-            <input type="text" id="logradouro" name="rua" required>
+            <label for="rua">Rua:</label>
+            <input type="text" id="rua" name="rua" required>
 
             <label for="numero">Número:</label>
             <input type="text" id="numero" name="numero" required>
@@ -150,43 +155,85 @@
     </div>
 
     <script>
-        // Código JavaScript para lidar com a validação e sanitização do formulário
-
+        // Obtém o formulário
         const form = document.getElementById('cadastroForm');
-        // Obtém o elemento do formulário pelo seu ID
-
+    
+        // Adiciona validação ao enviar o formulário
         form.addEventListener('submit', (event) => {
-            // Adiciona um listener de evento ao formulário que é acionado quando o formulário é submetido
-
-            const nome = document.getElementById('nome').value;
-            // Obtém o valor do campo de entrada do nome completo
-            const endereco = document.getElementById('endereco').value;
-            // Obtém o valor do campo de entrada do endereço
-
-            const nomeSanitizado = nome.replace(/[^a-zA-Z\s]/g, '');
-            // Sanitiza o nome completo, removendo qualquer caractere que não seja letra ou espaço
-            const enderecoSanitizado = endereco.replace(/[^a-zA-Z0-9\s,.-]/g, '');
-            // Sanitiza o endereço, removendo qualquer caractere que não seja letra, número, espaço, vírgula, ponto ou hífen
-
-            document.getElementById('nome').value = nomeSanitizado;
-            // Define o nome sanitizado de volta no campo de entrada
-            document.getElementById('endereco').value = enderecoSanitizado;
-            // Define o endereço sanitizado de volta no campo de entrada
-
-            const dataNascimento = document.getElementById('data_nascimento').value;
-            // Obtém o valor do campo de entrada da data de nascimento
-            const hoje = new Date();
-            // Obtém a data atual
-            const dataMin = new Date('1900-01-01');
-            // Define a data mínima permitida como 1º de janeiro de 1900
-
-            if (new Date(dataNascimento) > hoje || new Date(dataNascimento) < dataMin) {
-                // Verifica se a data de nascimento é no futuro ou antes da data mínima permitida
-                alert("Data de nascimento inválida");
-                // Exibe um alerta se a data de nascimento for inválida
-                event.preventDefault();
-                // Impede o envio do formulário
+            let isValid = true; // Controla se o formulário é válido
+    
+            // Função para exibir mensagens de erro
+            function showError(input, message) {
+                const error = document.createElement('div'); // Cria uma div para o erro
+                error.style.color = 'red'; // Define a cor do texto
+                error.textContent = message; // Adiciona a mensagem de erro
+                input.parentNode.insertBefore(error, input.nextSibling); // Insere a mensagem após o campo
+                isValid = false; // Marca o formulário como inválido
             }
+    
+            // Limpa erros anteriores
+            const errors = form.querySelectorAll('div');
+            errors.forEach(error => error.remove());
+    
+            // Validação do Nome
+            const nome = document.getElementById('nome');
+            if (!nome.value.trim()) showError(nome, 'Nome é obrigatório.');
+    
+            // Validação do Email
+            const email = document.getElementById('email');
+            if (!email.value.trim()) showError(email, 'Email é obrigatório.');
+            else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) showError(email, 'Email inválido.');
+    
+            // Validação do Usuário
+            const usuario = document.getElementById('usuario');
+            if (!usuario.value.trim()) showError(usuario, 'Usuário é obrigatório.');
+            else if (usuario.value.length < 4) showError(usuario, 'Usuário deve ter pelo menos 4 caracteres.');
+    
+            // Validação da Senha
+            const senha = document.getElementById('senha');
+            if (!senha.value.trim()) showError(senha, 'Senha é obrigatória.');
+            else if (!/^(?=.*\d).{4,}$/.test(senha.value)) showError(senha, 'Senha deve ter 4 caracteres e 1 número.');
+    
+            // Validação do Telefone
+            const telefone = document.getElementById('telefone');
+            if (!telefone.value.trim()) showError(telefone, 'Telefone é obrigatório.');
+            else if (!/^\d{10,11}$/.test(telefone.value)) showError(telefone, 'Telefone deve ter 10 ou 11 dígitos.');
+    
+            // Validação do CPF
+            const cpf = document.getElementById('cpf');
+            if (!cpf.value.trim()) showError(cpf, 'CPF é obrigatório.');
+            else if (!/^\d{11}$/.test(cpf.value)) showError(cpf, 'CPF deve ter 11 dígitos.');
+    
+            // Validação da Data de Nascimento
+            const dataNascimento = document.getElementById('data_nascimento');
+            const hoje = new Date();
+            if (!dataNascimento.value) showError(dataNascimento, 'Data de nascimento é obrigatória.');
+            else if (new Date(dataNascimento.value) > hoje) showError(dataNascimento, 'Data não pode ser no futuro.');
+    
+            // Validação do CEP
+            const cep = document.getElementById('cep');
+            if (!cep.value.trim()) showError(cep, 'CEP é obrigatório.');
+            else if (!/^\d{8}$/.test(cep.value)) showError(cep, 'CEP deve ter 8 dígitos.');
+    
+            // Validação do Estado
+            const estado = document.getElementById('estado');
+            if (!estado.value.trim()) showError(estado, 'Estado é obrigatório.');
+            else if (!/^[A-Za-z]{2}$/.test(estado.value)) showError(estado, 'Estado deve ter 2 letras.');
+    
+            // Validação da Cidade
+            const cidade = document.getElementById('cidade');
+            if (!cidade.value.trim()) showError(cidade, 'Cidade é obrigatória.');
+    
+            // Validação da Rua
+            const rua = document.getElementById('rua');
+            if (!rua.value.trim()) showError(rua, 'rua é obrigatório.');
+    
+            // Validação do Número
+            const numero = document.getElementById('numero');
+            if (!numero.value.trim()) showError(numero, 'Número é obrigatório.');
+    
+            // Impede o envio se houver erros
+            if (!isValid) event.preventDefault();
         });
     </script>
 
