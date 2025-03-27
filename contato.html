@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="./imagens/estrela.ico" type="image/x-icon">
+    <link rel="stylesheet" href="./css/sitecss.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+   
+    <title>Entre em contato conosco!</title>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="bars">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+            <img src="./imagens/estrela.ico" class="logo"/>
+        </div>
+        
+        <div class="navbar-content"> 
+            <div class="avatar">
+                <img src="./imagens/user-pic.jpg" alt="usuario" width="40" >
+                <div class="dropdown-menu setting">
+                    <div class="item">
+                        <span class="fa-solid fa-door-open"></span> <a href="./login.html">Login</a> 
+                    </div>
+                    <div class="item">
+                        <span class="fa-solid fa-user"></span><a href="./perfil.html">Perfil</a>
+                    </div>
+                    <div class="item">
+                        <span class="fa-solid fa-door-open"></span><a href="./index.html">Sair</a>
+                    </div>
+                    </div>
+                </div>
+            </div>    
+        </div>
+                
+    </nav>
+
+    <div class="content">
+        <div class="sidebar">
+            <a href="./index.html" class="sidebar-nav"> <i class="icon fa-solid fa-house"></i><span>Inicio</span></a>
+
+            <a href="./maisvendidos.html" class="sidebar-nav"><i class="icon fa-solid fa-user-check"></i><span>Mais vendidos</span></a>
+
+            <button class="dropdown-btn">
+                <i class="icon fa-solid fa-globe"></i><span>Gêneros</span><i class="fa-solid fa-caret-down"></i>
+            </button>
+            <div class="dropdown-container">
+                <a href="./romance.html" class="sidebar-nav"><i class="icon fa-solid fa-car-rear"></i><span>Romance</span></a>
+                <a href="./biografias.html" class="sidebar-nav"><i class="icon fa-solid fa-bus"></i><span>Biografias</span></a>
+                <a href="./poesias.html" class="sidebar-nav"><i class="icon fa-solid fa-plane"></i><span>Poesias</span></a>
+                <a href="./contos.html" class="sidebar-nav"><i class="icon fa-solid fa-ship"></i><span>Contos</span></a>
+            </div>
+
+            <a href="./contato.html" class="sidebar-nav active"> <i class="icon fa-solid fa-file-lines"></i><span>Contato</span></a>
+
+            <a href="./sobre.html" class="sidebar-nav"> <i class="icon fa-solid fa-eye"></i><span>Sobre a livraria</span></a>
+        </div>
+
+        <!-- Fim da Sidebar -->
+        <!-- Inicio do conteudo do administrativo -->
+        <div class="wrapper">
+            <div class="row">
+                <div class="top-list">
+                    <span class="title-content">Aqui é o espaço para você entrar em contato com a gente. É só preencher o formulário :)</span>
+                </div>
+                
+                <div class="content-adm">
+                    <form class="form-adm">
+                        <div class="row-input">
+                            <div class="column">
+                                <label class="title-input">Nome</label>
+                                <input type="text" name="name" id="name" class="input-adm" placeholder="Nome completo">
+                            </div>
+                        </div>
+
+                        <div class="row-input">
+                            <div class="column">
+                                <label class="title-input">Email</label>
+                                <input type="email" name="email" id="E-mail" class="input-adm" placeholder="Melhor email">
+                            </div>
+                        </div>    
+
+                        <div class="row-input">
+                            <div class="column">
+                                <label class="title-input">Assunto</label>
+                                <select name="assunto" id="assunto" class="input-adm">
+                                    <option>Selecione</option>
+                                    <option>Pedidos</option>
+                                    <option>Login e senha</option>
+                                    <option>Outros</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row-input">
+                            <div class="column">
+                                <label class="title-input">Sua mensagem</label>
+                                <textarea name="descricao" id="descricao" class="input-adm" placeholder="Escreva sua mensagem para nós"></textarea>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-success">Enviar</button>
+                    </form>
+                </div>
+                
+                
+            </div>
+        </div>
+        <!-- Fim do conteudo do administrativo -->
+    </div>
+    <!-- Fim Conteudo -->
+
+    <script src="js/contatojs.js"></script>
+
+</body>
+
+</html>
