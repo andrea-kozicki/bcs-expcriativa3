@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
-   
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
     <title>Login</title>
 </head>
 <body>
@@ -71,17 +71,17 @@
                     <span class="title-content">Faça o seu login</span>
                 </div>
                 <div class="content-adm">
-                    <form class="form-adm">
+                    <form id="formlogin" class="form-adm">
                         <div class="row-input">
                             <div class="column">
                                 <label class="title-input">Email</label>
-                                <input type="email" name="email" id="email" class="input-adm" placeholder="Digite o seu email" required>
+                                <input type="email" name="email" id="email" class="input-adm" placeholder="Digite o seu email" required pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$>
                             </div>
                         </div>
                         <div class="row-input">
                             <div class="column">
                                 <label class="title-input">Senha</label>
-                                <input type="password" name="senha" id="senha" class="input-adm" placeholder="Digite sua senha" required>
+                                <input type="password" name="senha" id="senha" class="input-adm" placeholder="Digite sua senha" minlength="12" maxlength="64" required>
                             </div>
                         </div>   
                         <button type="submit" class="btn-success" id="entrar">Entrar</button>

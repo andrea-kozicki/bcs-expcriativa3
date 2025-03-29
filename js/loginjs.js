@@ -107,10 +107,63 @@ function sanitizacaoSenha(senha) {
 
 }
 
+function validacaoLogin(email, senha) {
+    
+    const email = document.getElementById('email').value
+   
     //variavel a ser criada pela captura do valor da senha digitado no campo
-    //const senha = document.getElementById('senha').value;
+    const senha = document.getElementById('senha').value;
+    let senhaHash = CryptoJS.SHA256(senha);
+    
+    if (!validacaoEmail(email)) {
+        alert('Por favor, insira um e-mail em padrão válido.');
+        return;
+    }
 
-    //usando a biblioteca bcrypt
+    if (!validacaoSenha(senha)) {
+        
+        alert('A senha deve conter pelo menos 12 caracteres.');
+        return;
+    }
+}
+
+document.getElementById('formlogin').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = {
+        email: document.getElementById('email').value,
+        senha: document.getElementById('senha').value
+    };
+    
+    try {
+        const response = await fetch('/login.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Protection': '1'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            // Exibir erro SEM usar innerHTML
+            alert(data.erro || 'Erro no login');
+            return;
+        }
+        
+        // Redirecionar seguro
+        window.location.href = '/index.html';
+        
+    } catch (error) {
+        alert('Erro na comunicação com o servidor');
+    }
+});
+/* fim validação do login */
+
+
+    /*usando a biblioteca bcrypt
 if(validacaoSenha(senha)){    
 
     const senhaSantitizada = sanitizePassword(senha);
@@ -134,29 +187,11 @@ if(validacaoSenha(senha)){
     });
     } else {
     console.log("Senha inválida. A senha deve ter pelo menos 8 caracteres, incluindo letras e números.");
-    } */
-}
+    }
+}/*
 
 /* função para validação do login */
 
-function validacaoLogin(email, senha) {
-    
-    const email = document.getElementById('email').value
-    const senha = document.getElementById('senha').value
-    
-    if (!validacaoEmail(email)) {
-        alert('Por favor, insira um e-mail em padrão válido.');
-        return;
-    }
-
-    if (!validateSenha(senha)) {
-        
-        alert('A senha deve conter pelo menos 12 caracteres.');
-        return;
-    }
-}
-
-/* fim validação do login */
 
  // Enviar o hash para o backend
 
