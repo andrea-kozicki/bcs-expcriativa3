@@ -77,7 +77,7 @@ function validacaoEmailRegex(email) {
     return regex.test(email);
 }
 
-/* função para impedir atques de XSS e SQL Injection */
+/* função para impedir atques de XSS e SQL Injection no campo email*/
 function sanitizacaoEmail(email) {
 
     email = email.trim();
@@ -97,7 +97,7 @@ function validacaoSenha(senha) {
 
 }
 
-/* função para impedir atques de XSS e SQL Injection */
+/* função para impedir atques de XSS e SQL Injection  no campo senha*/
 function sanitizacaoSenha(senha) {
 
     senha = senha.trim();
