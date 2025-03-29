@@ -107,10 +107,14 @@ function sanitizacaoSenha(senha) {
 }
 
     //variavel a ser criada pela captura do valor da senha digitado no campo
-    const senha = document.getElementById('senha').value;
+    senha = document.getElementById('senha').value;
+   
+    //usando hash para a senha
+    const senhaHash = CryptoJS.SHA256(senha)
 
+   
     //usando a biblioteca bcrypt
-if(validacaoSenha(senha)){    
+/*if(validacaoSenha(senha)){    
 
     const senhaSantitizada = sanitizePassword(senha);
     const salt = bcrypt.genSaltSync(10); 
@@ -133,8 +137,8 @@ if(validacaoSenha(senha)){
     });
     } else {
     console.log("Senha inválida. A senha deve ter pelo menos 8 caracteres, incluindo letras e números.");
-    } */
-}
+    } 
+}*/
 
 
 /* inicio procedimento para mandar link de redefinição de senha por email */
@@ -173,7 +177,7 @@ document.getElementById('redefinesenha').addEventListener('submit', async functi
 
 /* fim procedimento para mandar link de redefinição de senha por email */
 
-/* inicio procedimento para fazer nova senha */
+/* inicio procedimento para fazer nova senha 
 
  // Extrai token da URL
  const urlParams = new URLSearchParams(window.location.search);
@@ -183,8 +187,8 @@ document.getElementById('redefinesenha').addEventListener('submit', async functi
  document.getElementById('novasenha').addEventListener('submit', async function(e) {
      e.preventDefault();
      
-     const newPassword = document.getElementById('new_password').value;
-     const confirmPassword = document.getElementById('confirm_password').value;
+     const newPassword = document.getElementById('senha1').value;
+     const confirmPassword = document.getElementById('senha2').value;
      const messageDiv = document.getElementById('message');
      
      if (newPassword !== confirmPassword) {
