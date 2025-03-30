@@ -113,7 +113,7 @@ function validacaoLogin(email, senha) {
    
     //variavel a ser criada pela captura do valor da senha digitado no campo
     const senha = document.getElementById('senha').value;
-    let senhaHash = CryptoJS.SHA256(senha);
+    
     
     if (!validacaoEmail(email)) {
         alert('Por favor, insira um e-mail em padrão válido.');
@@ -163,7 +163,7 @@ document.getElementById('formlogin').addEventListener('submit', async (e) => {
 /* fim validação do login */
 
 
-    /*usando a biblioteca bcrypt
+    /*usando a biblioteca bcrypt */
 if(validacaoSenha(senha)){    
 
     const senhaSantitizada = sanitizePassword(senha);
@@ -187,13 +187,10 @@ if(validacaoSenha(senha)){
     });
     } else {
     console.log("Senha inválida. A senha deve ter pelo menos 8 caracteres, incluindo letras e números.");
-    }
-}/*
+    }*/
+}
 
 /* função para validação do login */
 
 
  // Enviar o hash para o backend
-
-
-
