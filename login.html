@@ -71,7 +71,7 @@
                 <div class="top-list">
                     <span class="title-content">Faça o seu login</span>
                 </div>
-                <div class="content-adm">
+                <div id="basiclogin" class="content-adm">
                     <form id="formlogin" class="form-adm">
                         <div class="row-input">
                             <div class="column">
@@ -92,6 +92,21 @@
                     </form>
                 </div>
                 
+                 <!-- Verificação MFA (etapa 2 - inicialmente oculta) -->
+                <div id="mfaVerification" class="content-adm" style="display:none;">
+                    <h3>Verificação em Dois Fatores</h3>
+                    <p>Abra seu Google Authenticator e insira o código:</p>
+                    <form id="formMFA" class="form-adm">
+                        <div class="row-input">
+                            <div class="column">
+                                <input type="text" id="mfaCode" class="input-adm" placeholder="Código de 6 dígitos" pattern="\d{6}" required>
+                            </div>
+                        </div>
+                        <br>
+                        <button type="submit" class="btn-success">Verificar</button>
+                        <button type="button" id="backToLogin" class="btn-cancel">Voltar</button>
+                    </form>
+                </div>
             </div>
         </div>
         <!-- Fim do conteudo do administrativo -->

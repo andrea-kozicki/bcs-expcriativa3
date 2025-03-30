@@ -193,4 +193,74 @@ if(validacaoSenha(senha)){
 /* função para validação do login */
 
 
- // Enviar o hash para o backend
+//MFA
+
+// Variáveis globais
+let mfaSecret = null;
+let currentUser = null;
+
+// Biblioteca OTP
+const { authenticator } = otplib;
+
+document.getElementById('formLogin').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('email').value;
+    const senha = document.getElementById('senha').value;
+    
+    // Simulação: Verificar credenciais (substitua por chamada real ao backend)
+    if (await verifyCredentials(email, senha)) {
+        // Simulação: Verificar se usuário tem MFA ativado (substitua por lógica real)
+        if (userHasMFAEnabled(email)) {
+            // Mostrar etapa de verificação MFA
+            document.getElementById('basicLogin').style.display = 'none';
+            document.getElementById('mfaVerification').style.display = 'block';
+            
+            // Obter segredo MFA do usuário (substitua por chamada ao backend)
+            mfaSecret = await getUserMFASecret(email);
+            currentUser = email;
+        } else {
+            // Login sem MFA
+            window.location.href = 'dashboard.html';
+        }
+    } else {
+        alert('Credenciais inválidas');
+    }
+});
+
+document.getElementById('formMFA').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const code = document.getElementById('mfaCode').value;
+    
+    // Verificar código MFA
+    if (authenticator.check(code, mfaSecret)) {
+        // Código válido - prosseguir com login
+        alert('Login bem-sucedido!');
+        window.location.href = 'index.html';
+    } else {
+        alert('Código inválido. Tente novamente.');
+    }
+});
+
+document.getElementById('backToLogin').addEventListener('click', function() {
+    document.getElementById('mfaVerification').style.display = 'none';
+    document.getElementById('basicLogin').style.display = 'block';
+});
+
+// Funções simuladas (substitua por chamadas reais ao backend)
+async function verifyCredentials(email, senha) {
+    // Simulação - substitua por chamada AJAX real
+    return true;
+}
+
+function userHasMFAEnabled(email) {
+    // Simulação - substitua por verificação real
+    return true;
+}
+
+async function getUserMFASecret(email) {
+    // Simulação - substitua por chamada AJAX real
+    return 'JBSWY3DPEHPK3PXP'; // Segredo de exemplo
+}
+
