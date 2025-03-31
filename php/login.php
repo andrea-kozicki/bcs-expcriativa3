@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $senha = $_POST['senha'] ?? '';
     
     // Verificar usuário
-    if (!isset($users[$email]) {
+    if (!isset($users[$email])) {
         echo json_encode(['success' => false, 'message' => 'Credenciais inválidas']);
         exit;
     }

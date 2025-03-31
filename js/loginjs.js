@@ -171,7 +171,7 @@ if(validacaoSenha(senha)){
     const hashedPassword = bcrypt.hashSync(senhaSantitizada, salt);
     console.log("Hash da senha: ", hashedPassword);
 
-    /*fetch('/login', {
+    fetch('/login.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -187,8 +187,8 @@ if(validacaoSenha(senha)){
     });
     } else {
     console.log("Senha inválida. A senha deve ter pelo menos 8 caracteres, incluindo letras e números.");
-    }*/
-}
+    }
+
 
 /* função para validação do login */
 
