@@ -193,74 +193,175 @@ if(validacaoSenha(senha)){
 /* função para validação do login */
 
 
-//MFA
-
-// Variáveis globais
-let mfaSecret = null;
-let currentUser = null;
-
-// Biblioteca OTP
-const { authenticator } = otplib;
-
-document.getElementById('formLogin').addEventListener('submit', async function(e) {
-    e.preventDefault();
+// MFA Implementation
+document.addEventListener('DOMContentLoaded', function() {
+    const formLogin = document.getElementById('formlogin');
+    const formMFA = document.getElementById('formMFA');
+    const backToLogin = document.getElementById('backToLogin');
     
-    const email = document.getElementById('email').value;
-    const senha = document.getElementById('senha').value;
-    
-    // Simulação: Verificar credenciais (substitua por chamada real ao backend)
-    if (await verifyCredentials(email, senha)) {
-        // Simulação: Verificar se usuário tem MFA ativado (substitua por lógica real)
-        if (userHasMFAEnabled(email)) {
-            // Mostrar etapa de verificação MFA
-            document.getElementById('basicLogin').style.display = 'none';
-            document.getElementById('mfaVerification').style.display = 'block';
+    let mfaToken = null;
+    let currentEmail = null;
+
+    // Login Form Submission
+    if (formLogin) {
+        formLogin.addEventListener('submit', async function(e) {
+            e.preventDefault();
             
-            // Obter segredo MFA do usuário (substitua por chamada ao backend)
-            mfaSecret = await getUserMFASecret(email);
-            currentUser = email;
-        } else {
-            // Login sem MFA
-            window.location.href = 'dashboard.html';
+            const email = document.getElementById('email').value;
+            const senha = document.getElementById('senha').value;
+            
+            try {
+                const response = await fetch('login.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'login',
+                        email: email,
+                        senha: senha
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.mfa_required) {
+                        // Mostrar etapa MFA
+                        currentEmail = email;
+                        mfaToken = data.mfa_token;
+                        document.getElementById('basiclogin').style.display = 'none';
+                        document.getElementById('mfaVerification').style.display = 'block';
+                    } else {
+                        // Login sem MFA
+                        window.location.href = 'index.html';
+                    }
+                } else {
+                    alert(data.message || 'Login falhou');
+                }
+            } catch (error) {
+                console.error('Erro ao processar login:', error);
+                alert('Erro ao processar login. Tente novamente.');
+            }
+        });
+    }
+    
+    // MFA Form Submission
+    if (formMFA) {
+        formMFA.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const mfaCode = document.getElementById('mfaCode').value;
+            
+            try {
+                const response = await fetch('login.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'verify_mfa',
+                        mfa_token: mfaToken,
+                        code: mfaCode
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    window.location.href = 'index.html';
+                } else {
+                    alert(data.message || 'Código inválido');
+                }
+            } catch (error) {
+                console.error('Erro ao verificar MFA:', error);
+                alert('Erro ao verificar código. Tente novamente.');
+            }
+        });
+    }
+    
+    // Back to Login Button
+    if (backToLogin) {
+        backToLogin.addEventListener('click', function() {
+            document.getElementById('basiclogin').style.display = 'block';
+            document.getElementById('mfaVerification').style.display = 'none';
+        });
+    }
+    
+    // MFA Setup Functionality (to be called from user profile page)
+    window.setupMFA = async function(email) {
+        try {
+            // Step 1: Get MFA secret and QR code
+            const response = await fetch('login.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'setup_mfa',
+                    email: email
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Show QR code and manual entry code
+                document.getElementById('qrCodeContainer').innerHTML = `<img src="${data.qr_code}" alt="QR Code">`;
+                document.getElementById('manualCode').textContent = data.secret;
+                
+                // Show setup modal
+                document.getElementById('mfaSetupModal').style.display = 'block';
+                
+                // Verify button handler
+                document.getElementById('verifySetupCode').onclick = async function() {
+                    const code = document.getElementById('setupCode').value;
+                    
+                    const verifyResponse = await fetch('login.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            action: 'confirm_mfa',
+                            email: email,
+                            code: code
+                        })
+                    });
+                    
+                    const verifyData = await verifyResponse.json();
+                    
+                    if (verifyData.success) {
+                        // Show backup codes
+                        document.getElementById('mfaSetupStep1').style.display = 'none';
+                        document.getElementById('mfaSetupStep2').style.display = 'block';
+                        
+                        const backupCodesHTML = verifyData.backup_codes.map(code => 
+                            `<div class="backup-code">${code}</div>`
+                        ).join('');
+                        
+                        document.getElementById('backupCodes').innerHTML = backupCodesHTML;
+                    } else {
+                        alert(verifyData.message || 'Código inválido');
+                    }
+                };
+                
+                // Finish button handler
+                document.getElementById('finishMfaSetup').onclick = function() {
+                    document.getElementById('mfaSetupModal').style.display = 'none';
+                    alert('MFA configurado com sucesso!');
+                };
+            } else {
+                alert(data.message || 'Erro ao configurar MFA');
+            }
+        } catch (error) {
+            console.error('Erro ao configurar MFA:', error);
+            alert('Erro ao configurar MFA. Tente novamente.');
         }
-    } else {
-        alert('Credenciais inválidas');
-    }
-});
-
-document.getElementById('formMFA').addEventListener('submit', function(e) {
-    e.preventDefault();
+    };
     
-    const code = document.getElementById('mfaCode').value;
-    
-    // Verificar código MFA
-    if (authenticator.check(code, mfaSecret)) {
-        // Código válido - prosseguir com login
-        alert('Login bem-sucedido!');
-        window.location.href = 'index.html';
-    } else {
-        alert('Código inválido. Tente novamente.');
-    }
+    // Close modal button
+    document.querySelector('.close').onclick = function() {
+        document.getElementById('mfaSetupModal').style.display = 'none';
+    };
 });
-
-document.getElementById('backToLogin').addEventListener('click', function() {
-    document.getElementById('mfaVerification').style.display = 'none';
-    document.getElementById('basicLogin').style.display = 'block';
-});
-
-// Funções simuladas (substitua por chamadas reais ao backend)
-async function verifyCredentials(email, senha) {
-    // Simulação - substitua por chamada AJAX real
-    return true;
-}
-
-function userHasMFAEnabled(email) {
-    // Simulação - substitua por verificação real
-    return true;
-}
-
-async function getUserMFASecret(email) {
-    // Simulação - substitua por chamada AJAX real
-    return 'JBSWY3DPEHPK3PXP'; // Segredo de exemplo
-}
 

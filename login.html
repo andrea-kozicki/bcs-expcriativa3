@@ -76,7 +76,7 @@
                         <div class="row-input">
                             <div class="column">
                                 <label class="title-input">Email</label>
-                                <input type="email" name="email" id="email" class="input-adm" placeholder="Digite o seu email" required pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$>
+                                <input type="email" name="email" id="email" class="input-adm" placeholder="Digite o seu email" required pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
                             </div>
                         </div>
                         <div class="row-input">
@@ -92,20 +92,25 @@
                     </form>
                 </div>
                 
-                 <!-- Verificação MFA (etapa 2 - inicialmente oculta) -->
-                <div id="mfaVerification" class="content-adm" style="display:none;">
-                    <h3>Verificação em Dois Fatores</h3>
-                    <p>Abra seu Google Authenticator e insira o código:</p>
-                    <form id="formMFA" class="form-adm">
-                        <div class="row-input">
-                            <div class="column">
-                                <input type="text" id="mfaCode" class="input-adm" placeholder="Código de 6 dígitos" pattern="\d{6}" required>
-                            </div>
+                <!-- Modal de Configuração MFA (inicialmente oculto) -->
+                <div id="mfaSetupModal" class="modal" style="display:none;">
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <h3>Configurar Autenticação em Dois Fatores</h3>
+                        <div id="mfaSetupStep1">
+                            <p>Escaneie o QR Code abaixo com seu aplicativo Authenticator:</p>
+                            <div id="qrCodeContainer"></div>
+                            <p>Ou insira manualmente este código: <strong id="manualCode"></strong></p>
+                            <p>Depois, insira o código gerado pelo aplicativo para ativar:</p>
+                            <input type="text" id="setupCode" placeholder="Código de 6 dígitos" pattern="\d{6}" required>
+                            <button id="verifySetupCode" class="btn-success">Verificar e Ativar</button>
                         </div>
-                        <br>
-                        <button type="submit" class="btn-success">Verificar</button>
-                        <button type="button" id="backToLogin" class="btn-cancel">Voltar</button>
-                    </form>
+                        <div id="mfaSetupStep2" style="display:none;">
+                            <p>MFA configurado com sucesso! Aqui estão seus códigos de backup (guarde em lugar seguro):</p>
+                            <div id="backupCodes"></div>
+                            <button id="finishMfaSetup" class="btn-success">Concluir</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
