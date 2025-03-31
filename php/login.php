@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once '../vendor/autoload.php';
 
 header("Content-Type: application/json");
@@ -14,9 +15,11 @@ $google2fa = new Google2FA();
 // Simulação de banco de dados
 $users = [
     'usuario@exemplo.com' => [
-        'senha_hash' => password_hash('senha123', PASSWORD_BCRYPT),
-        'mfa_secret' => null,
-        'mfa_enabled' => false,
+        'senha_hash' => password_hash('senha123', PASSWORD_BCRYPT), js/loginjs.js
+        modified:   login.html
+        modified:   php/login.php
+        'mfa_secret' => null
+        'mfa_enabled' => true
         'backup_codes' => []
     ]
 ];

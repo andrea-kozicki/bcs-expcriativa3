@@ -77,89 +77,64 @@ function validacaoEmailRegex(email) {
     return regex.test(email);
 }
 
-/* função para impedir atques de XSS e SQL Injection no campo email*/
-function sanitizacaoEmail(email) {
+/* função unificada para sanitizar login e senha */
 
-    email = email.trim();
-    email = email.replace(/</g, "&lt;").replace(/>/g, "&gt;"); // Impede XSS
-    email = email.replace(/'/g, "&#39;").replace(/"/g, "&#34;"); //Impede SQL Injection
-    email = sanitizeImput(email);
- 
-
+function sanitizeInput(input) {
+    return input.trim()
+               .replace(/</g, "&lt;").replace(/>/g, "&gt;")// Impede XSS
+               .replace(/'/g, "&#39;").replace(/"/g, "&#34;");//Impede SQL Injection
 }
 
-/* função para validar a senha com regex */
-
-function validacaoSenha(senha) {
-   
-    const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{12,}$/; //Aplicação do regex para uma senha com 12 caracteres
-    return regex.test(senha); //teste do regex
-
-}
-
-/* função para impedir atques de XSS e SQL Injection  no campo senha*/
-function sanitizacaoSenha(senha) {
-
-    senha = senha.trim();
-    senha = senha.replace(/</g, "&lt;").replace(/>/g, "&gt;"); // Impede XSS
-    senha = senha.replace(/'/g, "&#39;").replace(/"/g, "&#34;"); //Impede SQL Injection
-    senha = sanitizeInput(senha);
-
-}
-
-function validacaoLogin(email, senha) {
-    
-    const email = document.getElementById('email').value
-   
-    //variavel a ser criada pela captura do valor da senha digitado no campo
-    const senha = document.getElementById('senha').value;
-    
-    
-    if (!validacaoEmail(email)) {
-        alert('Por favor, insira um e-mail em padrão válido.');
-        return;
-    }
-
-    if (!validacaoSenha(senha)) {
-        
-        alert('A senha deve conter pelo menos 12 caracteres.');
-        return;
-    }
-}
-
+/* validação do login */
 document.getElementById('formlogin').addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const formData = {
-        email: document.getElementById('email').value,
-        senha: document.getElementById('senha').value
-    };
-    
-    try {
-        const response = await fetch('/login.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-Protection': '1'
-            },
-            body: JSON.stringify(formData)
-        });
+    const email = sanitizeInput(document.getElementById('email').value);
+        const senha = document.getElementById('senha').value; // Hash será feito no backend
         
-        const data = await response.json();
-        
-        if (!response.ok) {
-            // Exibir erro SEM usar innerHTML
-            alert(data.erro || 'Erro no login');
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            alert('Por favor, insira um e-mail válido.');
             return;
         }
+
+        if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{12,}$/.test(senha)) {
+            alert('A senha deve conter pelo menos 12 caracteres alfanuméricos.');
+            return;
+        }
+    
+        try {
+            const response = await fetch('login.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'login',
+                    email: email,
+                    senha: senha
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success && data.mfa_required) {
+                showMFAVerification(data.mfa_token);
+            } else if (data.success) {
+                window.location.href = 'index.html';
+            } else {
+                alert(data.message || 'Erro no login');
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            alert('Erro na comunicação com o servidor');
+        }
+    });
+
+    function showMFAVerification(token) {
+        document.getElementById('basiclogin').style.display = 'none';
+        document.getElementById('mfaVerification').style.display = 'block';
         
-        // Redirecionar seguro
-        window.location.href = '/index.html';
-        
-    } catch (error) {
-        alert('Erro na comunicação com o servidor');
-    }
-});
+        document.getElementById('formMFA').onsubmit = async function(e) {
+            e.preventDefault();
+            const code = document.getElementById('mfaCode').value;
 /* fim validação do login */
 
 
@@ -365,3 +340,11 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 });
 
+// Adicionar CSRF token
+const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+headers: {
+    'Content-Type': 'application/json',
+    'X-CSRF-Token': csrfToken
+}
+}
+}

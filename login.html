@@ -91,6 +91,22 @@
                         <button type="button" class="btn-success"> <a href="./cadastro.html">Cadastre-se</a></button>
                     </form>
                 </div>
+
+                <div id="mfaVerification" class="content-adm" style="display:none;">
+                    <h3>Verificação em Dois Fatores</h3>
+                    <p>Insira o código do seu aplicativo autenticador:</p>
+                    <form id="formMFA" class="form-adm">
+                        <div class="row-input">
+                            <div class="column">
+                                <input type="text" id="mfaCode" class="input-adm" 
+                                       placeholder="Código de 6 dígitos" pattern="\d{6}" required>
+                            </div>
+                        </div>
+                        <br>
+                        <button type="submit" class="btn-success">Verificar</button>
+                        <button type="button" id="backToLogin" class="btn-cancel">Voltar</button>
+                    </form>
+                </div>
                 
                 <!-- Modal de Configuração MFA (inicialmente oculto) -->
                 <div id="mfaSetupModal" class="modal" style="display:none;">
@@ -111,7 +127,7 @@
                             <button id="finishMfaSetup" class="btn-success">Concluir</button>
                         </div>
                     </div>
-                </div>
+                </div> 
             </div>
         </div>
         <!-- Fim do conteudo do administrativo -->
