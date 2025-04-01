@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
     <script src="./js/loginjs.js"></script>
+    <meta name="csrf-token" content="<?php echo $_SESSION['csrf_token']; ?>">
     <title>Login</title>
 </head>
 <body>
@@ -91,43 +92,46 @@
                         <button type="button" class="btn-success"> <a href="./cadastro.html">Cadastre-se</a></button>
                     </form>
                 </div>
+                
+                <div class="mfa-options">
+                    <div id="mfaStatus" style="margin: 15px 0; padding: 10px; background: #f5f5f5; border-radius: 5px;">
+                        Autenticação em Dois Fatores: <strong>Desativada</strong>
+                    </div>
+                    <button id="enableMfaBtn" class="btn-info" style="margin-bottom: 15px;">
+                        <i class="fas fa-shield-alt"></i> Ativar Autenticação em Dois Fatores
+                    </button>
+                </div>
 
                 <div id="mfaVerification" class="content-adm" style="display:none;">
                     <h3>Verificação em Dois Fatores</h3>
                     <p>Insira o código do seu aplicativo autenticador:</p>
-                    <form id="formMFA" class="form-adm">
-                        <div class="row-input">
-                            <div class="column">
-                                <input type="text" id="mfaCode" class="input-adm" 
-                                       placeholder="Código de 6 dígitos" pattern="\d{6}" required>
+                    <div id="formMFA">
+                        <form id="formMFA" class="form-adm">
+                            <div class="row-input">
+                                <div class="column">
+                                    <input type="text" id="mfaCode" class="input-adm" 
+                                        placeholder="Código de 6 dígitos" pattern="\d{6}" required>
+                                </div>
                             </div>
-                        </div>
-                        <br>
-                        <button type="submit" class="btn-success">Verificar</button>
-                        <button type="button" id="backToLogin" class="btn-cancel">Voltar</button>
-                    </form>
+                            <br>
+                            <button type="submit" class="btn-success">Verificar</button>
+                            <button type="button" id="backToLogin" class="btn-cancel">Voltar</button>
+                            <button type="button" id="useBackupCode" class="btn-info">Usar Código de Backup</button>
+                        </form>
+                    </div>    
                 </div>
                 
-                <!-- Modal de Configuração MFA (inicialmente oculto) -->
-                <div id="mfaSetupModal" class="modal" style="display:none;">
-                    <div class="modal-content">
-                        <span class="close">&times;</span>
-                        <h3>Configurar Autenticação em Dois Fatores</h3>
-                        <div id="mfaSetupStep1">
-                            <p>Escaneie o QR Code abaixo com seu aplicativo Authenticator:</p>
-                            <div id="qrCodeContainer"></div>
-                            <p>Ou insira manualmente este código: <strong id="manualCode"></strong></p>
-                            <p>Depois, insira o código gerado pelo aplicativo para ativar:</p>
-                            <input type="text" id="setupCode" placeholder="Código de 6 dígitos" pattern="\d{6}" required>
-                            <button id="verifySetupCode" class="btn-success">Verificar e Ativar</button>
-                        </div>
-                        <div id="mfaSetupStep2" style="display:none;">
-                            <p>MFA configurado com sucesso! Aqui estão seus códigos de backup (guarde em lugar seguro):</p>
-                            <div id="backupCodes"></div>
-                            <button id="finishMfaSetup" class="btn-success">Concluir</button>
+              <!-- Formulário para códigos de backup (inicialmente oculto) -->
+                <form id="backupCodeForm" style="display:none;">
+                    <div class="row-input">
+                        <div class="column">
+                            <label class="title-input">Código de Backup</label>
+                            <input type="text" id="backupCode" class="input-adm" 
+                                placeholder="Insira um código de backup" required>
                         </div>
                     </div>
-                </div> 
+                    <button type="submit" class="btn-success">Verificar Código</button>
+                </form>    
             </div>
         </div>
         <!-- Fim do conteudo do administrativo -->
