@@ -21,6 +21,20 @@ header("Access-Control-Allow-Headers: Content-Type, X-CSRF-Token");
 header("Content-Type: application/json");
 header("Access-Control-Allow-Credentials: true");
 
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    exit(0);
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $data = json_decode(file_get_contents('php://input'), true);
+    
+    // Sua lógica de autenticação aqui
+    echo json_encode(['success' => true, 'message' => 'Login successful']);
+} else {
+    http_response_code(405);
+    echo json_encode(['error' => 'Method Not Allowed']);
+}
+
 use PragmaRX\Google2FA\Google2FA;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\Image\ImagickImageBackEnd;

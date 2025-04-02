@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         try {
-            const response = await fetch('./login.php', {
+            const response = await fetch('/php/login.php', {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         try {
-            const response = await fetch('/login.php', {
+            const response = await fetch('/php/login.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         try {
-            const response = await fetch('login.php', {
+            const response = await fetch('/php/login.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        fetch('login.php', {
+        fetch('/php/login.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -279,7 +279,7 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         
         try {
-            const data = await makeRequest('login.php', {
+            const data = await makeRequest('/php/login.php', {
                 action: 'login',
                 email: document.getElementById('email').value,
                 senha: document.getElementById('senha').value
