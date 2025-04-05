@@ -802,4 +802,31 @@ select.input-adm:focus {
     color: var(--danger-color);
 }
 /* fim classes para pagina redefinesenha.html e novasenha.html */
+
+/* Modal MFA */
+.modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    z-index: 1001;
+    max-width: 90%;
+    width: 400px;
+}
+
+.modal img {
+    display: block;
+    margin: 0 auto 15px;
+    max-width: 100%;
+}
+
+.modal button {
+    display: block;
+    margin: 15px auto 0;
+    padding: 8px 16px;
+}
 /* Fim conteudo */

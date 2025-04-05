@@ -1,3 +1,7 @@
+// Adicione no início do seu loginjs.js
+const API_BASE_URL = '/php/login.php';
+
+
 /* Inicio Dropdown Navbar */
 let dropdownContainer = document.querySelector(".dropdown-container");
 let avatar = document.querySelector(".avatar");
@@ -69,6 +73,8 @@ for (i = 0; i < dropdownSidebar.length; i++) {
 
 /* login */
 
+
+
 document.addEventListener('DOMContentLoaded', function() {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
     const loginForm = document.getElementById('formlogin');
@@ -90,25 +96,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const senha = document.getElementById('senha').value;
         
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            alert('Por favor, insira um e-mail válido.');
+            showAlert('Por favor, insira um e-mail válido.', 'error');
             return;
         }
-
+    
         try {
-            const response = await fetch('/php/login.php', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': csrfToken
-                },
-                body: JSON.stringify({
-                    action: 'login',
-                    email: email,
-                    senha: senha
-                })
-            });
-            
-            const data = await response.json();
+            const data = await makeRequest('login', { email, senha });
             
             if (data.success) {
                 if (data.mfa_required) {
@@ -119,12 +112,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.location.href = 'dashboard.php';
                 }
             } else {
-                alert(data.message || 'Erro no login');
+                showAlert(data.message || 'Erro no login', 'error');
             }
         } catch (error) {
-            alert('Erro na comunicação com o servidor');
+            showAlert('Erro na comunicação com o servidor', 'error');
         }
     });
+    
+    // Função para mostrar alertas estilizados
+    function showAlert(message, type = 'success') {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type}`;
+        alertDiv.textContent = message;
+        
+        document.body.appendChild(alertDiv);
+        
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
 
     // Verificação MFA
     mfaForm.addEventListener('submit', async (e) => {
@@ -252,21 +258,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     //Tratamento de erros
-    async function makeRequest(url, data) {
+    async function makeRequest(action, data = {}) {
         try {
-            const response = await fetch(url, {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+            const response = await fetch(API_BASE_URL, {
                 method: 'POST',
-                headers: {
+                headers: { 
                     'Content-Type': 'application/json',
-                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+                    'X-CSRF-Token': csrfToken
                 },
-                body: JSON.stringify(data)
+                body: JSON.stringify({
+                    ...data,
+                    action,
+                    csrf_token: csrfToken
+                })
             });
-    
+            
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-    
+            
             return await response.json();
         } catch (error) {
             console.error('Erro na requisição:', error);
@@ -274,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Exemplo de uso no login
+    /* Exemplo de uso no login
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -294,5 +305,5 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Erro na comunicação. Verifique o console para detalhes.');
             console.error('Detalhes do erro:', error);
         }
-    });
+    }); */
 });
