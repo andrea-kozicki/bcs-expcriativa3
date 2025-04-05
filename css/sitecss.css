@@ -850,4 +850,10 @@ select.input-adm:focus {
     100% { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
+/*página sobre */
+
+.about-text {
+    text-align: justify;
+}
+
 /* Fim conteudo */
