@@ -112,12 +112,13 @@ session_start();
                                 <div class="column">
                                     <input type="text" id="mfaCode" class="input-adm" 
                                         placeholder="Código de 6 dígitos" pattern="\d{6}" required>
+                                    <p id="tentativas-restantes" class="small-text"></p>
                                 </div>
                             </div>
                             <br>
                             <button type="submit" class="btn-success">Verificar</button>
-                            <button type="button" id="backToLogin" class="btn-success">Voltar</button>
-                            <button type="button" id="useBackupCode" class="btn-info">Usar Código de Backup</button>
+                            
+                          
                         </form>
                     </div>    
                 </div>   

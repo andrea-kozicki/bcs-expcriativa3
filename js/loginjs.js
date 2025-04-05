@@ -167,20 +167,19 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             if (data.success) {
-                window.location.href = data.redirect || './perfil.html'; //em substituição ao dashboard
+                showAlert('Autenticação bem-sucedida!', 'success');
+                setTimeout(() => {
+                    window.location.href = data.redirect || 'perfil.html';
+                }, 1500);
             } else {
-                mfaState.remainingAttempts--;
-                if (mfaState.remainingAttempts > 0) {
-                    showAlert(`Código inválido. ${mfaState.remainingAttempts} tentativa(s) restante(s).`, 'error');
-                } else {
-                    showAlert('Número máximo de tentativas excedido. Por favor, faça login novamente.', 'error');
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 3000);
+                showAlert(data.message || 'Código inválido', 'error');
+                if (data.tentativas_restantes !== undefined) {
+                    document.getElementById('tentativas-restantes').textContent = 
+                        `Tentativas restantes: ${data.tentativas_restantes}`;
                 }
             }
         } catch (error) {
-            showAlert(error.message || 'Falha na verificação do código', 'error');
+            showAlert(error.message || 'Falha na verificação', 'error');
         }
     });
 
@@ -299,7 +298,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    
+
     /* Exemplo de uso no login
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();

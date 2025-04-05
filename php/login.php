@@ -1,5 +1,8 @@
 <?php
 
+
+
+
 // Permite requisições OPTIONS (pré-voo CORS)
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     header("Access-Control-Allow-Origin: *");
@@ -47,11 +50,13 @@ ini_set('display_errors', 1);
 // Carrega dependências
 require_once __DIR__.'/../vendor/autoload.php';
 
+
 use PragmaRX\Google2FA\Google2FA;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\Image\ImagickImageBackEnd;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
+
 
 // Inicializa Google2FA
 $google2fa = new Google2FA();
@@ -62,9 +67,11 @@ try {
     $dbHost = getenv('DB_HOST') ?: 'localhost';
     $dbName = getenv('DB_NAME') ?: 'testelogin';
     $dbUser = getenv('DB_USER') ?: 'testeplataformascursocloud@gmail.com';
-    $dbPass = getenv('DB_PASS') ?: 'm1NH@esc0LH@';
+    $dbPass = getenv('DB_PASS') ?: 'SenhaSegura123';
+    $dbMFA_enabled = getenv('DB_MFAENABLED') ?: '1';
+    $dbMFASecret = getenv('DB_MFASECRET') ?: '';
 
-    $pdo = new PDO("mysql:host=$dbHost;dbname=$dbName", $dbUser, $dbPass);
+    $pdo = new PDO("mysql:host=$dbHost;dbname=$dbName", $dbUser, $dbPass, $dbMFA_enabled, $dbMFASecret);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
     http_response_code(500);
@@ -150,20 +157,40 @@ function handleLogin($pdo, $google2fa, $input) {
     
     if (!$user['mfa_enabled']) {
         $_SESSION['user_id'] = $user['id'];
-        die(json_encode(['success' => true, 'mfa_required' => false]));
+        die(json_encode([
+            'success' => true, 
+            'mfa_required' => false,
+            'redirect' => 'perfil.html'
+        ]));
     }
+
+
+    
+    // Gera um código de 6 dígitos
+    $codigo = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    $mfa_token = bin2hex(random_bytes(16));
+    
+    // Armazena temporariamente o código
+    $_SESSION['mfa_tokens'][$mfa_token] = [
+        'user_id' => $user['id'],
+        'codigo' => $codigo,
+        'expires' => time() + 300, // 5 minutos
+        'tentativas' => 3
+    ];
     
     $mfa_token = bin2hex(random_bytes(16));
     $_SESSION['mfa_tokens'][$mfa_token] = [
         'user_id' => $user['id'],
         'expires' => time() + 300
     ];
-    
+      
     die(json_encode([
         'success' => true,
         'mfa_required' => true,
-        'mfa_token' => $mfa_token
+        'mfa_token' => $mfa_token,
+        'message' => 'Código de verificação enviado para seu e-mail'
     ]));
+
 }
 
 function handleVerifyMfa($pdo, $google2fa, $input) {
@@ -175,6 +202,75 @@ function handleVerifyMfa($pdo, $google2fa, $input) {
         die(json_encode(['success' => false, 'message' => 'Sessão inválida']));
     }
     
+    $user_id = $_SESSION['mfa_tokens'][$mfa_token]['user_id'];
+    $stmt = $pdo->prepare("SELECT mfa_secret FROM usuarios WHERE id = ?");
+    $stmt->execute([$user_id]);
+    $user = $stmt->fetch();
+    
+    if (!$user || empty($user['mfa_secret'])) {
+        http_response_code(401);
+        die(json_encode(['success' => false, 'message' => 'Configuração MFA inválida']));
+    }
+
+    $mfa_data = $_SESSION['mfa_tokens'][$mfa_token];
+    
+    // Verifica se expirou
+    if (time() > $mfa_data['expires']) {
+        unset($_SESSION['mfa_tokens'][$mfa_token]);
+        http_response_code(401);
+        die(json_encode(['success' => false, 'message' => 'Código expirado']));
+    }
+    
+    $valid = $google2fa->verifyKey($user['mfa_secret'], $code);
+    
+    if ($valid) {
+        $_SESSION['user_id'] = $user_id;
+        unset($_SESSION['mfa_tokens'][$mfa_token]);
+        die(json_encode([
+            'success' => true,
+            'redirect' => 'perfil.html'
+        ]));
+    } else {
+        http_response_code(401);
+        die(json_encode([
+            'success' => false, 
+            'message' => 'Código inválido',
+            'tentativas_restantes' => 3 // Pode implementar contador se quiser
+        ]));
+    }
+
+    // Verifica o código
+    if ($code === $mfa_data['codigo'] || 
+        ($google2fa->verifyKey($user['mfa_secret'], $code))) {
+        
+        $_SESSION['user_id'] = $mfa_data['user_id'];
+        unset($_SESSION['mfa_tokens'][$mfa_token]);
+        die(json_encode([
+            'success' => true,
+            'redirect' => 'perfil.html'
+        ]));
+    } else {
+        $_SESSION['mfa_tokens'][$mfa_token]['tentativas']--;
+        
+        if ($_SESSION['mfa_tokens'][$mfa_token]['tentativas'] <= 0) {
+            unset($_SESSION['mfa_tokens'][$mfa_token]);
+            http_response_code(401);
+            die(json_encode([
+                'success' => false,
+                'message' => 'Número máximo de tentativas excedido'
+            ]));
+        }
+        
+        http_response_code(401);
+        die(json_encode([
+            'success' => false,
+            'message' => 'Código inválido',
+            'tentativas_restantes' => $_SESSION['mfa_tokens'][$mfa_token]['tentativas']
+        ]));
+    }
+
+
+
     $user_id = $_SESSION['mfa_tokens'][$mfa_token]['user_id'];
     $stmt = $pdo->prepare("SELECT mfa_secret FROM usuarios WHERE id = ?");
     $stmt->execute([$user_id]);
@@ -198,13 +294,17 @@ function handleSetupMfa($pdo, $google2fa, $input) {
         die(json_encode(['success' => false, 'message' => 'Não autenticado']));
     }
     
+    $stmt = $pdo->prepare("SELECT email FROM usuarios WHERE id = ?");
+    $stmt->execute([$_SESSION['user_id']]);
+    $user = $stmt->fetch();
+
     $email = $input['email'] ?? '';
     $secret = $google2fa->generateSecretKey();
     
     // Geração do QR Code
     $qrCodeUrl = $google2fa->getQRCodeUrl(
         'Nome da Sua Aplicação',
-        $email,
+        $email['email'],
         $secret
     );
     
@@ -223,7 +323,8 @@ function handleSetupMfa($pdo, $google2fa, $input) {
     die(json_encode([
         'success' => true,
         'secret' => $secret,
-        'qr_code' => $qrCodeImage
+        'qr_code' => $qrCodeImage,
+        'manual_code' => $secret
     ]));
 }
 
@@ -245,4 +346,37 @@ function handleConfirmMfa($pdo, $google2fa, $input) {
         http_response_code(401);
         die(json_encode(['success' => false, 'message' => 'Código inválido']));
     }
+}
+
+//Verificação da tabela no banco de dados
+function verificarTabelaUsuarios($pdo) {
+    try {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'usuarios'");
+        $tabelaExiste = $stmt->rowCount() > 0;
+        
+        if (!$tabelaExiste) {
+            throw new Exception("Tabela 'usuarios' não encontrada");
+        }
+        
+        // Verifica se as colunas necessárias existem
+        $stmt = $pdo->query("DESCRIBE usuarios");
+        $colunas = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        
+        $colunasNecessarias = ['mfa_enabled', 'mfa_secret'];
+        foreach ($colunasNecessarias as $coluna) {
+            if (!in_array($coluna, $colunas)) {
+                throw new Exception("Coluna '$coluna' não encontrada na tabela 'usuarios'");
+            }
+        }
+        
+        return true;
+    } catch (Exception $e) {
+        error_log("Erro na verificação da tabela: " . $e->getMessage());
+        return false;
+    }
+}
+
+// Use assim na sua conexão:
+if (!verificarTabelaUsuarios($pdo)) {
+    die(json_encode(['success' => false, 'message' => 'Problema na configuração do banco de dados']));
 }
