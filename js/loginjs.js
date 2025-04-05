@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     loginForm.style.display = 'none';
                     mfaSection.style.display = 'block';
                 } else {
-                    window.location.href = 'index.html'; //em substituição ao dashboard.php
+                    window.location.href = './perfil.html'; //em substituição ao dashboard.php
                 }
             } else {
                 showAlert(data.message || 'Erro no login', 'error');
@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             if (data.success) {
-                window.location.href = data.redirect || 'index.html'; //em substituição ao dashboard
+                window.location.href = data.redirect || './perfil.html'; //em substituição ao dashboard
             } else {
                 mfaState.remainingAttempts--;
                 if (mfaState.remainingAttempts > 0) {

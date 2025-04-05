@@ -48,21 +48,21 @@ session_start();
 
     <div class="content">
         <div class="sidebar">
-            <a href="./index.html" class="sidebar-nav active"> <i class="icon fa-solid fa-house"></i><span>Inicio</span></a>
+            <a href="./index.html" class="sidebar-nav"> <i class="icon fa-solid fa-house"></i><span>Inicio</span></a>
 
-            <a href="./maisvendidos.html" class="sidebar-nav"><i class="icon fa-solid fa-user-check"></i><span>Mais vendidos</span></a>
+            <a href="./maisvendidos.html" class="sidebar-nav active"><i class="icon fa-solid fa-medal"></i><span>Mais vendidos</span></a>
 
             <button class="dropdown-btn">
-                <i class="icon fa-solid fa-globe"></i><span>Gêneros</span><i class="fa-solid fa-caret-down"></i>
+                <i class="icon fa-solid fa-book"></i><span>Gêneros</span><i class="fa-solid fa-caret-down"></i>
             </button>
             <div class="dropdown-container">
-                <a href="./romance.html" class="sidebar-nav"><i class="icon fa-solid fa-car-rear"></i><span>Romance</span></a>
-                <a href="./biografias.html" class="sidebar-nav"><i class="icon fa-solid fa-bus"></i><span>Biografias</span></a>
-                <a href="./poesias.html" class="sidebar-nav"><i class="icon fa-solid fa-plane"></i><span>Poesias</span></a>
-                <a href="./contos.html" class="sidebar-nav"><i class="icon fa-solid fa-ship"></i><span>Contos</span></a>
+                <a href="./romance.html" class="sidebar-nav"><i class="icon fa-solid fa-heart"></i><span>Romance</span></a>
+                <a href="./biografias.html" class="sidebar-nav"><i class="icon fa-solid fa-pen-nib"></i><span>Biografias</span></a>
+                <a href="./poesias.html" class="sidebar-nav"><i class="icon fa-solid fa-feather"></i><span>Poesias</span></a>
+                <a href="./contos.html" class="sidebar-nav"><i class="icon fa-solid fa-comment"></i><span>Contos</span></a>
             </div>
 
-            <a href="./contato.html" class="sidebar-nav"> <i class="icon fa-solid fa-file-lines"></i><span>Contato</span></a>
+            <a href="./contato.html" class="sidebar-nav"> <i class="icon fa-solid fa-envelope"></i><span>Contato</span></a>
 
             <a href="./sobre.html" class="sidebar-nav"> <i class="icon fa-solid fa-eye"></i><span>Sobre a livraria</span></a>
         </div>
@@ -93,17 +93,18 @@ session_start();
                         <button type="button" class="btn-success"> <a href="./redefinesenha.html">Esqueci minha senha</a></button>
                         <button type="button" class="btn-success"> <a href="./cadastro.html">Cadastre-se</a></button>
                     </form>
+                    <br><br>
                 </div>
                 
                 <div class="mfa-options">
-                    <div id="mfaStatus" style="margin: 15px 0; padding: 10px; background: #f5f5f5; border-radius: 5px;">
-                        Autenticação em Dois Fatores: <strong>Desativada</strong>
+                    <div id="mfaStatus">
+                        <span>Autenticação em Dois Fatores: <strong>Desativada</strong></span>
                     </div>
                     <button id="enableMfaBtn" class="btn-info" style="margin-bottom: 15px;">
                         <i class="fas fa-shield-alt"></i> Ativar Autenticação em Dois Fatores
                     </button>
-               
-                    <h3>Verificação em Dois Fatores</h3>
+                    <br><br>
+                    <span>Verificação em Dois Fatores</span>
                     <p>Insira o código do seu aplicativo autenticador:</p>
                     <div id="formMFA">
                         <form id="formMFA" class="form-adm">

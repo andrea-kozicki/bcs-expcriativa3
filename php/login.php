@@ -61,8 +61,8 @@ try {
 
     $dbHost = getenv('DB_HOST') ?: 'localhost';
     $dbName = getenv('DB_NAME') ?: 'testelogin';
-    $dbUser = getenv('DB_USER') ?: 'usuario@exemplo.com';
-    $dbPass = getenv('DB_PASS') ?: 'SenhaSegura123';
+    $dbUser = getenv('DB_USER') ?: 'testeplataformascursocloud@gmail.com';
+    $dbPass = getenv('DB_PASS') ?: 'm1NH@esc0LH@';
 
     $pdo = new PDO("mysql:host=$dbHost;dbname=$dbName", $dbUser, $dbPass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
