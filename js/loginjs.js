@@ -1,5 +1,6 @@
 // Adicione no início do seu loginjs.js
-const API_BASE_URL = '/php/login.php';
+const API_BASE_URL = window.location.origin + '/php/login.php';
+
 
 
 /* Inicio Dropdown Navbar */
@@ -73,10 +74,15 @@ for (i = 0; i < dropdownSidebar.length; i++) {
 
 /* login */
 
-
-
 document.addEventListener('DOMContentLoaded', function() {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    
+    if (!csrfToken) {
+        console.error('CSRF token não encontrado!');
+        showAlert('Erro de segurança. Por favor, recarregue a página.', 'error');
+        return;
+    }
+
     const loginForm = document.getElementById('formlogin');
     const mfaSection = document.getElementById('mfaVerification');
     const mfaForm = document.getElementById('formMFA');
@@ -109,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     loginForm.style.display = 'none';
                     mfaSection.style.display = 'block';
                 } else {
-                    window.location.href = 'dashboard.php';
+                    window.location.href = 'index.html'; //em substituição ao dashboard.php
                 }
             } else {
                 showAlert(data.message || 'Erro no login', 'error');
@@ -119,58 +125,55 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Função para mostrar alertas estilizados
-    function showAlert(message, type = 'success') {
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type}`;
-        alertDiv.textContent = message;
-        
-        document.body.appendChild(alertDiv);
-        
-        setTimeout(() => {
-            alertDiv.remove();
-        }, 5000);
-    }
+   // Função melhorada para mostrar alertas
+   function showAlert(message, type = 'success') {
+    // Remove alertas existentes primeiro
+    const existingAlerts = document.querySelectorAll('.alert');
+    existingAlerts.forEach(alert => alert.remove());
+    
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type}`;
+    alertDiv.textContent = message;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.style.opacity = '0';
+        setTimeout(() => alertDiv.remove(), 300);
+    }, 5000);
+}
 
     // Verificação MFA
-    mfaForm.addEventListener('submit', async (e) => {
+    mfaForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const code = document.getElementById('mfaCode').value;
+        const code = document.getElementById('mfaCode').value.trim();
         
         if (!/^\d{6}$/.test(code)) {
-            alert('Código deve ter 6 dígitos');
+            showAlert('O código deve ter exatamente 6 dígitos', 'error');
             return;
         }
         
         try {
-            const response = await fetch('/php/login.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': csrfToken
-                },
-                body: JSON.stringify({
-                    action: 'verify_mfa',
-                    mfa_token: mfaState.token,
-                    code: code
-                })
+            const data = await makeRequest('verify_mfa', {
+                mfa_token: mfaState.token,
+                code: code
             });
             
-            const data = await response.json();
-            
             if (data.success) {
-                window.location.href = 'dashboard.php';
+                window.location.href = data.redirect || 'index.html'; //em substituição ao dashboard
             } else {
                 mfaState.remainingAttempts--;
                 if (mfaState.remainingAttempts > 0) {
-                    alert(`Código inválido. ${mfaState.remainingAttempts} tentativas restantes.`);
+                    showAlert(`Código inválido. ${mfaState.remainingAttempts} tentativa(s) restante(s).`, 'error');
                 } else {
-                    alert('Número máximo de tentativas excedido.');
-                    mfaForm.style.display = 'none';
+                    showAlert('Número máximo de tentativas excedido. Por favor, faça login novamente.', 'error');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 3000);
                 }
             }
         } catch (error) {
-            alert('Erro ao verificar código');
+            showAlert(error.message || 'Falha na verificação do código', 'error');
         }
     });
 
@@ -259,8 +262,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     //Tratamento de erros
     async function makeRequest(action, data = {}) {
+        
+        const loader = document.createElement('div');
+        loader.className = 'loader';
+        document.body.appendChild(loader);
+        
         try {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
             const response = await fetch(API_BASE_URL, {
                 method: 'POST',
                 headers: { 
@@ -269,21 +276,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify({
                     ...data,
-                    action,
-                    csrf_token: csrfToken
+                    action
                 })
-            });
+            })
             
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `Erro HTTP: ${response.status}`);
             }
             
             return await response.json();
         } catch (error) {
             console.error('Erro na requisição:', error);
-            throw error;
+            throw new Error(error.message || 'Falha na comunicação com o servidor');
         }
     }
+
     
     /* Exemplo de uso no login
     loginForm.addEventListener('submit', async (e) => {

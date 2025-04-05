@@ -1,11 +1,23 @@
 <?php
+//Definição de sessão
+session_set_cookie_params([
+    'lifetime' => 86400,
+    'path' => '/',
+    'domain' => $_SERVER['HTTP_HOST'],
+    'secure' => isset($_SERVER['HTTPS']),
+    'httponly' => true,
+    'samesite' => 'Lax'
+]);
 session_start();
 
 // Headers para CORS e JSON
-header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Origin: " . ($_SERVER['HTTP_ORIGIN'] ?? '*'));
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, X-CSRF-Token");
 header("Content-Type: application/json; charset=UTF-8");
+header("Access-Control-Allow-Credentials: true");
+header("Access-Control-Max-Age: 86400"); // cache preflight por 1 dia
+
 
 // Configurações de erro (desative em produção)
 error_reporting(E_ALL);
@@ -25,7 +37,13 @@ $google2fa = new Google2FA();
 
 // Conexão com o banco de dados
 try {
-    $pdo = new PDO('mysql:host=localhost;dbname=testelogin', 'usuario', 'senha');
+
+    $dbHost = getenv('DB_HOST') ?: 'localhost';
+    $dbName = getenv('DB_NAME') ?: 'testelogin';
+    $dbUser = getenv('DB_USER') ?: 'usuario@exemplo.com';
+    $dbPass = getenv('DB_PASS') ?: 'SenhaSegura123';
+
+    $pdo = new PDO("mysql:host=$dbHost;dbname=$dbName", $dbUser, $dbPass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
     http_response_code(500);
@@ -81,6 +99,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 } else {
     http_response_code(405);
     die(json_encode(['error' => 'Method Not Allowed']));
+}
+
+//Content-type
+
+if (empty($_SERVER['CONTENT_TYPE']) || stripos($_SERVER['CONTENT_TYPE'], 'application/json') === false) {
+    http_response_code(415);
+    die(json_encode(['success' => false, 'message' => 'Content-Type deve ser application/json']));
 }
 
 // Funções de tratamento
