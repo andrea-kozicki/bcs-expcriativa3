@@ -1,6 +1,13 @@
 // Adicione no início do seu loginjs.js
 const API_BASE_URL = window.location.origin + '/php/login.php';
 
+// Adicione um log para verificar a URL completa
+console.log('Tentando acessar:', window.location.origin + '/php/login.php');
+
+// Teste se o arquivo existe fazendo uma requisição GET
+fetch(window.location.origin + '/php/login.php')
+  .then(response => console.log('Resposta GET:', response.status))
+  .catch(error => console.error('Erro no teste GET:', error));
 
 
 /* Inicio Dropdown Navbar */

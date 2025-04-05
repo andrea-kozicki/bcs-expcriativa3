@@ -1,4 +1,25 @@
 <?php
+
+// Permite requisições OPTIONS (pré-voo CORS)
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    header("Access-Control-Allow-Origin: *");
+    header("Access-Control-Allow-Methods: POST, OPTIONS");
+    header("Access-Control-Allow-Headers: Content-Type, X-CSRF-Token");
+    header("Content-Type: application/json");
+    http_response_code(200);
+    exit();
+}
+
+// Verifica explicitamente o método HTTP
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header("Content-Type: application/json");
+    http_response_code(405);
+    die(json_encode([
+        'success' => false,
+        'message' => 'Método não permitido. Use POST.'
+    ]));
+}
+
 //Definição de sessão
 session_set_cookie_params([
     'lifetime' => 86400,
