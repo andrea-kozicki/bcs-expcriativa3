@@ -353,21 +353,39 @@ async function enableMfa() {
     }
 
     try {
-        const data = await makeRequest('setup_mfa', { email });
+
+        // Verifique se já existe userData
+        if (!appState.userData) {
+            appState.userData = { email };
+        }
+
+        const data = await makeRequest('setup_mfa', { 
+            email,
+            user_id: appState.userData.userId || null // Envia null se não existir
+        });
         
         if (data.success) {
             appState.currentState = AuthStates.MFA_SETUP;
-            appState.userData = { email };
-            elements.mfaQrCode.src = data.qr_code;
-            elements.mfaSecret.textContent = data.secret;
+            appState.userData.userId = data.user_id || appState.userData.userId;
+            
+            // Verifica se os elementos existem antes de acessá-los
+            if (elements.mfaQrCode) {
+                elements.mfaQrCode.src = data.qr_code;
+            }
+            if (elements.mfaSecret) {
+                elements.mfaSecret.textContent = data.secret;
+            }
+            
             updateUI();
         } else {
             showAlert(data.message || 'Erro ao configurar MFA', 'error');
         }
     } catch (error) {
+        console.error('Erro ao ativar MFA:', error);
         showAlert('Erro na comunicação com o servidor', 'error');
     }
 }
+
 
 // ==============================================
 // CONFIGURAÇÃO DE EVENTOS
@@ -376,76 +394,104 @@ async function enableMfa() {
 //**
 /* Configura os dropdowns da navbar e sidebar
 */
+// Atualize a função setupDropdowns para ser mais robusta
 function setupDropdowns() {
-   // Dropdown do avatar (navbar)
-   document.querySelector(".avatar")?.addEventListener("click", function(e) {
-       e.stopPropagation();
-       this.querySelector(".dropdown-menu")?.classList.toggle("active");
-   });
+    // Dropdown do avatar (navbar)
+    const avatar = document.querySelector(".avatar");
+    if (avatar) {
+        avatar.addEventListener("click", function(e) {
+            e.stopPropagation();
+            const menu = this.querySelector(".dropdown-menu");
+            if (menu) {
+                menu.classList.toggle("active");
+                
+                // Fecha outros menus abertos
+                document.querySelectorAll(".dropdown-menu").forEach(d => {
+                    if (d !== menu) d.classList.remove("active");
+                });
+            }
+        });
+    }
 
-   // Dropdown dos gêneros (sidebar) - CORREÇÃO PRINCIPAL
-   const dropdownBtn = document.querySelector(".sidebar .dropdown-btn");
-   if (dropdownBtn) {
-       dropdownBtn.addEventListener("click", function(e) {
-           e.stopPropagation();
-           this.classList.toggle("active");
-           
-           // Alterna o dropdown container
-           const dropdownContent = this.nextElementSibling;
-           if (dropdownContent) {
-               dropdownContent.classList.toggle("active");
-               
-               // Alterna o ícone
-               const icon = this.querySelector(".fa-caret-down");
-               if (icon) {
-                   icon.classList.toggle("fa-rotate-180");
-               }
-           }
-       });
-   }
+    // Dropdown dos gêneros (sidebar)
+    const dropdownBtn = document.querySelector(".sidebar .dropdown-btn");
+    if (dropdownBtn) {
+        dropdownBtn.addEventListener("click", function(e) {
+            e.stopPropagation();
+            this.classList.toggle("active");
+            
+            const dropdownContent = this.nextElementSibling;
+            if (dropdownContent && dropdownContent.classList.contains("dropdown-container")) {
+                dropdownContent.classList.toggle("active");
+                
+                const icon = this.querySelector(".fa-caret-down");
+                if (icon) {
+                    icon.classList.toggle("fa-rotate-180");
+                }
+            }
+        });
+    }
 
-   // Fecha todos os dropdowns ao clicar fora
-   document.addEventListener("click", function() {
-       // Fecha dropdown do avatar
-       document.querySelectorAll(".dropdown-menu").forEach(dropdown => {
-           dropdown.classList.remove("active");
-       });
-       
-       // Fecha dropdown da sidebar
-       document.querySelectorAll(".sidebar .dropdown-container").forEach(dropdown => {
-           dropdown.classList.remove("active");
-       });
-       
-       // Remove estado ativo dos botões e reseta ícones
-       document.querySelectorAll(".sidebar .dropdown-btn").forEach(btn => {
-           btn.classList.remove("active");
-           const icon = btn.querySelector(".fa-caret-down");
-           if (icon) icon.classList.remove("fa-rotate-180");
-       });
-   });
+    // Fecha todos os dropdowns ao clicar fora
+    document.addEventListener("click", function(e) {
+        // Verifica se o clique foi fora dos dropdowns
+        if (!e.target.closest('.dropdown-menu') && !e.target.closest('.dropdown-btn')) {
+            document.querySelectorAll(".dropdown-menu").forEach(dropdown => {
+                dropdown.classList.remove("active");
+            });
+            
+            document.querySelectorAll(".sidebar .dropdown-container").forEach(dropdown => {
+                dropdown.classList.remove("active");
+            });
+            
+            document.querySelectorAll(".sidebar .dropdown-btn").forEach(btn => {
+                btn.classList.remove("active");
+                const icon = btn.querySelector(".fa-caret-down");
+                if (icon) icon.classList.remove("fa-rotate-180");
+            });
+        }
+    });
 
-   // Toggle da sidebar em mobile
-   document.querySelector(".bars")?.addEventListener("click", function(e) {
-       e.stopPropagation();
-       document.querySelector(".sidebar").classList.toggle("active");
-   });
+    // Toggle da sidebar em mobile
+    const bars = document.querySelector(".bars");
+    if (bars) {
+        bars.addEventListener("click", function(e) {
+            e.stopPropagation();
+            const sidebar = document.querySelector(".sidebar");
+            if (sidebar) {
+                sidebar.classList.toggle("active");
+            }
+        });
+    }
 }
 
 /**
  * Configura todos os eventos da aplicação
  */
 function setupEventListeners() {
+    console.log('Configurando event listeners...');
+    
     // Formulário de login
-    elements.loginForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        handleLogin();
-    });
+    if (elements.loginForm) {
+        elements.loginForm.addEventListener('submit', (e) => {
+            console.log('Formulário de login submetido');
+            e.preventDefault();
+            handleLogin();
+        });
+    } else {
+        console.error('Formulário de login não encontrado');
+    }
 
     // Botão de ativar MFA
-    elements.enableMfaBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        enableMfa();
-    });
+    if (elements.enableMfaBtn) {
+        elements.enableMfaBtn.addEventListener('click', (e) => {
+            console.log('Botão MFA clicado');
+            e.preventDefault();
+            enableMfa();
+        });
+    } else {
+        console.error('Botão MFA não encontrado');
+    }
 
     // Confirmação de setup MFA
     elements.confirmMfaSetupBtn.addEventListener('click', (e) => {
@@ -468,11 +514,28 @@ function setupEventListeners() {
 // ==============================================
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Verifique se o token CSRF existe
+    appState.csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    
     if (!appState.csrfToken) {
+        console.error('Token CSRF não encontrado');
         showAlert('Erro de segurança. Recarregue a página.', 'error');
         return;
     }
 
-    setupEventListeners();
-    updateUI();
+    // Verifique se os elementos principais existem
+    if (!elements.loginForm || !elements.enableMfaBtn) {
+        console.error('Elementos do DOM não encontrados');
+        showAlert('Erro na inicialização da página. Recarregue.', 'error');
+        return;
+    }
+
+    // Configure os event listeners
+    try {
+        setupEventListeners();
+        updateUI();
+    } catch (error) {
+        console.error('Erro na inicialização:', error);
+        showAlert('Erro ao carregar a página. Recarregue.', 'error');
+    }
 });
