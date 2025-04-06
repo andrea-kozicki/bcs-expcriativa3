@@ -9,6 +9,9 @@
 // CONFIGURAÇÕES GLOBAIS E CONSTANTES
 // ==============================================
 
+//Verificação de token CSRF
+console.log('Inicializando aplicação... Verificando token CSRF');
+
 // URL base da API
 const API_BASE_URL = window.location.origin + '/bcs-expcriativa3/php/login.php';
 
@@ -46,8 +49,9 @@ const appState = {
     currentState: AuthStates.LOGIN,
     mfaToken: null,
     remainingAttempts: 3,
-    csrfToken: document.querySelector('meta[name="csrf-token"]')?.content,
-    userData: null
+    csrfToken: null,
+    userData: null,
+    mfaEnabled: document.getElementById('mfaStatusText')?.textContent === 'Ativada'
 };
 
 // ==============================================
@@ -94,12 +98,25 @@ function toggleLoader(show = true) {
  */
 async function makeRequest(action, data = {}) {
 
+    toggleLoader(true);
+
     console.log('Enviando requisição para:', API_BASE_URL);
     console.log('Dados enviados:', {action, ...data});
 
-    toggleLoader(true);
+     // Verificação reforçada do token
+     if (!appState.csrfToken) {
+        console.error('Token CSRF não disponível na requisição');
+        await fetchCsrfToken();
+        if (!appState.csrfToken) {
+            showAlert('Erro de segurança. Recarregando...', 'error');
+            window.location.reload();
+            return;
+        }
+    }
+
     
     try {
+
         const response = await fetch(API_BASE_URL, {
             method: 'POST',
             credentials: 'include',
@@ -114,8 +131,6 @@ async function makeRequest(action, data = {}) {
             })
         });
 
-
-        
         // Adicione este log para debug
 
         console.log('Resposta bruta:', response);
@@ -126,16 +141,24 @@ async function makeRequest(action, data = {}) {
             url: response.url
         });
 
-
         if (!response.ok) {
-            throw new Error(`Erro HTTP: ${response.status}`);
-        }
-        
-        if (response.status === 403) {
             const errorData = await response.json().catch(() => null);
-            if (errorData?.message === 'Token CSRF inválido ou ausente') {
+            
+            if (errorData?.requires_reload) {
                 window.location.reload();
                 return;
+            }
+            
+            throw new Error(errorData?.message || `Erro HTTP: ${response.status}`);
+        }
+        
+        // Tratamento especial para erros CSRF
+        if (response.status === 403) {
+            const errorData = await response.json();
+            if (errorData.message.includes('CSRF')) {
+                console.warn('Token CSRF inválido ou expirado, obtendo novo...');
+                await fetchCsrfToken();
+                return makeRequest(action, data); // Retry
             }
         }
 
@@ -147,6 +170,7 @@ async function makeRequest(action, data = {}) {
         }
         
         return responseData;
+
     } catch (error) {
         console.error('Erro completo:', error);
 
@@ -161,33 +185,41 @@ async function makeRequest(action, data = {}) {
 
         showAlert('Erro na comunicação com o servidor', 'error');
         throw error;
-    } finally {
-        toggleLoader(false);
-    }
+    } 
 }
 
 /**
  * Atualiza a interface com base no estado atual
  */
+
 function updateUI() {
     // Esconde todas as seções primeiro
-    elements.loginForm.closest('.content-adm').style.display = 'block';
+    document.querySelector('.content-adm').style.display = 'none';
     elements.mfaSetupSection.style.display = 'none';
     elements.mfaVerifySection.style.display = 'none';
-
+    
     // Mostra a seção apropriada
     switch(appState.currentState) {
         case AuthStates.LOGIN:
-            elements.loginForm.closest('.content-adm').style.display = 'block';
+            document.querySelector('.content-adm').style.display = 'block';
             break;
         case AuthStates.MFA_SETUP:
             elements.mfaSetupSection.style.display = 'block';
+            elements.mfaSetupSection.classList.add('active');
             break;
         case AuthStates.MFA_VERIFY:
             elements.mfaVerifySection.style.display = 'block';
+            elements.mfaVerifySection.classList.add('active');
             elements.remainingAttempts.textContent = 
                 `Tentativas restantes: ${appState.remainingAttempts}`;
             break;
+    }
+    
+    // Atualiza o status do MFA
+    if (elements.mfaStatusText) {
+        const status = appState.mfaEnabled ? 'enabled' : 'disabled';
+        elements.mfaStatusText.textContent = status === 'enabled' ? 'Ativada' : 'Desativada';
+        elements.mfaStatusText.dataset.status = status;
     }
 }
 
@@ -240,36 +272,39 @@ async function handleLogin() {
  * Inicia o processo de configuração do MFA
  */
 async function startMfaSetup() {
-    // Adicionar verificação de user_id em startMfaSetup
-    const data = await makeRequest('setup_mfa', {
-        email: appState.userData.email,
-        user_id: appState.userData.userId // Garantir que está sendo enviado
-    });
-
     try {
-        // Adicionado user_id que é esperado pelo backend
         const data = await makeRequest('setup_mfa', {
             email: appState.userData.email,
-            user_id: appState.userData.userId
+            user_id: appState.userData.userId,
+            action: 'setup_mfa'
         });
         
         if (data.success) {
-            // Verificação de campos obrigatórios na resposta
             if (!data.qr_code || !data.secret) {
                 throw new Error('Dados MFA incompletos na resposta');
             }
             
+            // Atualiza os elementos do DOM
             elements.mfaQrCode.src = data.qr_code;
             elements.mfaSecret.textContent = data.secret;
-            
-            // Armazena temporariamente o secret no estado
             appState.mfaSecret = data.secret;
+            
+            // Força a exibição dos elementos
+            elements.mfaQrCode.style.display = 'block';
+            elements.mfaSecret.style.display = 'block';
+            
+            // Atualiza o estado da UI
+            appState.currentState = AuthStates.MFA_SETUP;
+            updateUI();
+            
+            // Foca no campo de código
+            elements.mfaSetupCodeInput.focus();
         } else {
             showAlert(data.message || 'Erro ao configurar MFA', 'error');
         }
     } catch (error) {
         console.error('Erro no setup MFA:', error);
-        showAlert('Falha na configuração do MFA', 'error');
+        showAlert('Falha na configuração do MFA: ' + error.message, 'error');
     }
 }
 
@@ -285,7 +320,6 @@ async function confirmMfaSetup() {
     }
     
     try {
-        // Adicionado secret que é necessário para verificação no backend
         const data = await makeRequest('confirm_mfa', { 
             code,
             secret: appState.mfaSecret,
@@ -294,7 +328,13 @@ async function confirmMfaSetup() {
         
         if (data.success) {
             showAlert('MFA configurado com sucesso!', 'success');
-            window.location.href = 'perfil.html';
+            // Atualizar estado local
+            appState.mfaEnabled = true;
+            updateUI();
+            // Redirecionar após pequeno delay
+            setTimeout(() => {
+                window.location.href = '/bcs-expcriativa3/perfil.html';
+            }, 1500);
         } else {
             showAlert(data.message || 'Código inválido', 'error');
         }
@@ -352,12 +392,24 @@ async function enableMfa() {
         return;
     }
 
+     // Verificar se MFA já está ativado
+    if (appState.mfaEnabled) {
+        showAlert('Autenticação em dois fatores já está ativada', 'info');
+        return;
+    }
+
     try {
 
-        // Verifique se já existe userData
-        if (!appState.userData) {
-            appState.userData = { email };
+        const sessionCheck = await makeRequest('check_session');
+        if (!sessionCheck || !sessionCheck.authenticated) {
+            showAlert('Por favor, faça login primeiro', 'error');
+            return;
         }
+        
+        appState.userData = {
+            email: sessionCheck.email,
+            userId: sessionCheck.user_id
+        };
 
         const data = await makeRequest('setup_mfa', { 
             email,
@@ -366,17 +418,21 @@ async function enableMfa() {
         
         if (data.success) {
             appState.currentState = AuthStates.MFA_SETUP;
-            appState.userData.userId = data.user_id || appState.userData.userId;
+            appState.userData = {
+                email: email,
+                userId: data.user_id || null
+            };
             
-            // Verifica se os elementos existem antes de acessá-los
-            if (elements.mfaQrCode) {
+            // Atualizar elementos do MFA
+            if (data.qr_code && elements.mfaQrCode) {
                 elements.mfaQrCode.src = data.qr_code;
             }
-            if (elements.mfaSecret) {
+            if (data.secret && elements.mfaSecret) {
                 elements.mfaSecret.textContent = data.secret;
             }
             
             updateUI();
+            showAlert('Escaneie o QR Code ou insira o código manualmente', 'info');
         } else {
             showAlert(data.message || 'Erro ao configurar MFA', 'error');
         }
@@ -514,8 +570,22 @@ function setupEventListeners() {
 // ==============================================
 
 document.addEventListener('DOMContentLoaded', () => {
+
+    // Método 1: Tenta obter da meta tag
+    const csrfMetaTag = document.querySelector('meta[name="csrf-token"]');
+    
+    // Método 2: Fallback - tenta obter de um input hidden (adicione no HTML se necessário)
+    const csrfInput = document.querySelector('input[name="csrf_token"]');
+    
+    // Método 3: Fallback - tenta obter da sessão via endpoint especial
+    if (!csrfMetaTag?.content && !csrfInput?.value) {
+        fetchCsrfToken();
+        return;
+    }
+
     // Verifique se o token CSRF existe
-    appState.csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    appState.csrfToken = csrfMetaTag?.content || csrfInput?.value;
+    console.log('Token CSRF inicializado:', appState.csrfToken);
     
     if (!appState.csrfToken) {
         console.error('Token CSRF não encontrado');
@@ -523,19 +593,35 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // Verifique se os elementos principais existem
-    if (!elements.loginForm || !elements.enableMfaBtn) {
-        console.error('Elementos do DOM não encontrados');
-        showAlert('Erro na inicialização da página. Recarregue.', 'error');
-        return;
+    setupEventListeners();
+    updateUI()
+
+});
+
+// função para buscar o token se não estiver na página
+async function fetchCsrfToken() {
+
+    console.log('Solicitando novo token CSRF do servidor...');
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}?action=get_csrf`, {
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            appState.csrfToken = data.token;
+            console.log('Token CSRF obtido via API:', appState.csrfToken);
+            setupEventListeners();
+            updateUI();
+        } else {
+            throw new Error('Falha ao obter token CSRF');
+        }
+    } catch (error) {
+        console.error('Erro ao buscar token CSRF:', error);
+        showAlert('Erro crítico de segurança. Recarregando...', 'error');
+        setTimeout(() => window.location.reload(), 3000);
     }
 
-    // Configure os event listeners
-    try {
-        setupEventListeners();
-        updateUI();
-    } catch (error) {
-        console.error('Erro na inicialização:', error);
-        showAlert('Erro ao carregar a página. Recarregue.', 'error');
-    }
-});
+   
+}

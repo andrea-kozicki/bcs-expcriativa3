@@ -401,6 +401,19 @@ select.input-adm:focus {
 /* ============== */
 /* BUTTON STYLES */
 /* ============== */
+
+#mfaStatus strong {
+    color: var(--success-color);
+}
+
+#mfaStatus strong[data-status="disabled"] {
+    color: var(--danger-color);
+}
+
+#mfaStatus strong[data-status="enabled"] {
+    color: var(--success-color);
+}
+
 .btn-primary,
 .btn-success,
 .btn-warning,
@@ -583,6 +596,42 @@ select.input-adm:focus {
     animation: fadeIn 0.5s;
 }
 
+.mfa-section.active {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+}
+
+#mfa-qrcode {
+    width: 200px;
+    height: 200px;
+    margin: 0 auto;
+    display: block;
+    border: 1px solid #ddd;
+    padding: 10px;
+    background: white;
+}
+
+#mfa-secret {
+    font-size: 16px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    color: var(--primary-color);
+    background: var(--second-color);
+    padding: 8px 12px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+/* Garantir que o QR Code seja exibido quando a seção estiver ativa */
+.mfa-section.active #mfa-qrcode,
+.mfa-section.active #mfa-secret {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+}
+
 .mfa-header h3 {
     color: var(--main-bg-color);
     margin-bottom: 15px;
@@ -595,23 +644,26 @@ select.input-adm:focus {
 }
 
 .step-number {
-    display: inline-block;
-    width: 25px;
-    height: 25px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
     background: var(--site-color);
-    color: var(--fourth-color);
+    color: white;
     border-radius: 50%;
-    text-align: center;
     margin-right: 10px;
+    font-weight: bold;
 }
 
 .qrcode-container {
-    margin: 15px auto;
-    padding: 15px;
+    margin: 15px 0;
+    padding: 20px;
     background: var(--fourth-color);
     border-radius: 8px;
     text-align: center;
     max-width: 300px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .qrcode {

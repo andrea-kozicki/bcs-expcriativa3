@@ -16,6 +16,17 @@ ini_set('error_log', __DIR__.'/php/php_errors.log');
 // CONFIGURAÇÕES INICIAIS E HEADERS
 // ==============================================
 
+
+//inicio de sessão
+session_start();
+
+//Geração do token de sessão
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    $_SESSION['csrf_generated'] = time();
+    error_log("Novo token CSRF gerado: " . $_SESSION['csrf_token']);
+}
+
 // Permite requisições OPTIONS (pré-voo CORS)
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
@@ -40,6 +51,8 @@ ini_set('session.cookie_secure', isset($_SERVER['HTTPS']));
 ini_set('session.use_strict_mode', 1);
 ini_set('session.cookie_lifetime', 86400);
 ini_set('session.gc_maxlifetime', 86400);
+ini_set('session.gc_maxlifetime', 3600); // 1 hora
+session_set_cookie_params(3600);
 
 // Verifique se o diretório de sessão tem permissões de escrita
 if (!is_writable(session_save_path())) {
@@ -47,10 +60,7 @@ if (!is_writable(session_save_path())) {
     die(json_encode(['success' => false, 'message' => 'Erro de configuração do servidor']));
 }
 
-// Verifique se o session_start() está no lugar certo
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+//Parâmtros do cookie de sessão
 session_set_cookie_params([
     'lifetime' => 86400,       // 1 dia
     'path' => '/',
@@ -61,7 +71,7 @@ session_set_cookie_params([
 ]);
 
 
-//Verificação da sessão
+//Verificação da sessão ativa
 if (session_status() !== PHP_SESSION_ACTIVE) {
     error_log('Session not active');
     http_response_code(500);
@@ -76,6 +86,9 @@ header("Access-Control-Allow-Headers: Content-Type, X-CSRF-Token, Authorization,
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Max-Age: 86400"); // cache preflight por 1 dia
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+
 
 // Configurações de erro (desative em produção)
 error_reporting(E_ALL);
@@ -90,6 +103,7 @@ require_once __DIR__.'/../vendor/autoload.php';
 use PragmaRX\Google2FA\Google2FA;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\Image\ImagickImageBackEnd;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd; // Alternativa caso Imagick não esteja disponível
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
 
@@ -129,20 +143,38 @@ if (!verificarTabelaUsuarios($pdo)) {
 // GERENCIAMENTO DE TOKENS CSRF
 // ==============================================
 
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+// Verificação reforçada de CSRF
+function verifyCsrfToken($inputToken) {
+    if (empty($_SESSION['csrf_token']) || empty($inputToken)) {
+        error_log('Token CSRF ausente');
+        return false;
+    }
+    
+    if (!hash_equals($_SESSION['csrf_token'], $inputToken)) {
+        error_log('Token CSRF inválido');
+        return false;
+    }
+    
+    // Verifica timeout (1 hora)
+    if (time() - ($_SESSION['csrf_generated'] ?? 0) > 3600) {
+        error_log('Token CSRF expirado');
+        unset($_SESSION['csrf_token']);
+        return false;
+    }
+    
+    return true;
 }
 
-//Timeout para CSRF
-// Adicionar na geração do token
-$_SESSION['csrf_generated'] = time();
-
-// Na verificação:
-if (time() - $_SESSION['csrf_generated'] > 3600) {
-    unset($_SESSION['csrf_token']);
+// Use esta função em todas as ações que precisam de CSRF
+if (!verifyCsrfToken($input['csrf_token'] ?? '')) {
     http_response_code(403);
-    die(json_encode(['success' => false, 'message' => 'Token expirado']));
+    die(json_encode([
+        'success' => false,
+        'message' => 'Token CSRF inválido ou expirado',
+        'requires_new_token' => true
+    ]));
 }
+
 
 // ==============================================
 // ROTEAMENTO DE REQUISIÇÕES
@@ -169,10 +201,14 @@ if (empty($_SERVER['CONTENT_TYPE']) || stripos($_SERVER['CONTENT_TYPE'], 'applic
 
 // Verificação CSRF
 if (empty($input['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $input['csrf_token'])) {
+    error_log('Falha na verificação CSRF. Sessão: ' . ($_SESSION['csrf_token'] ?? 'vazio') . 
+              ' Recebido: ' . ($input['csrf_token'] ?? 'vazio'));
+    
     http_response_code(403);
     die(json_encode([
         'success' => false, 
-        'message' => 'Token CSRF inválido'
+        'message' => 'Token CSRF inválido ou expirado',
+        'requires_reload' => true // Adicione esta flag
     ]));
 }
 
@@ -189,6 +225,13 @@ try {
     $google2fa = new Google2FA();
     
     switch ($input['action']) {
+        case 'get_csrf':
+            die(json_encode([
+                'success' => true,
+                'token' => $_SESSION['csrf_token']
+            ]));
+            break;
+        
         case 'login':
             handleLogin($pdo, $google2fa, $input);
             break;
@@ -204,7 +247,7 @@ try {
         case 'confirm_mfa':
             handleConfirmMfa($pdo, $google2fa, $input);
             break;
-            
+
         default:
             http_response_code(400);
             die(json_encode([
@@ -393,12 +436,24 @@ function handleSetupMfa($pdo, $google2fa, $input) {
     );
     
     // Gera a imagem do QR Code
-    $renderer = new ImageRenderer(
-        new RendererStyle(300),
-        new ImagickImageBackEnd()
-    );
-    $writer = new Writer($renderer);
-    $qrCodeImage = 'data:image/png;base64,' . base64_encode($writer->writeString($qrCodeUrl));
+    
+    
+    try {
+        $renderer = new ImageRenderer(
+            new RendererStyle(300),
+            new ImagickImageBackEnd()
+        );
+        $writer = new Writer($renderer);
+        $qrCodeImage = 'data:image/png;base64,' . base64_encode($writer->writeString($qrCodeUrl));
+    } catch (Exception $e) {
+        // Fallback para SVG se Imagick falhar
+        $renderer = new ImageRenderer(
+            new RendererStyle(300),
+            new SvgImageBackEnd()
+        );
+        $writer = new Writer($renderer);
+        $qrCodeImage = 'data:image/svg+xml;base64,' . base64_encode($writer->writeString($qrCodeUrl));
+    }
     
     // Armazena temporariamente no servidor
     $_SESSION['mfa_setup'] = [
@@ -454,16 +509,21 @@ function handleConfirmMfa($pdo, $google2fa, $input) {
         die(json_encode(['success' => false, 'message' => 'Código inválido']));
     }
     
+    
     // Atualiza o banco de dados
     try {
         $stmt = $pdo->prepare("UPDATE usuarios SET mfa_secret = ?, mfa_enabled = 1 WHERE id = ?");
         $stmt->execute([$secret, $user_id]);
         
+        // Atualizar sessão
+        $_SESSION['mfa_enabled'] = true;
+        
         unset($_SESSION['mfa_setup']);
         
         die(json_encode([
             'success' => true,
-            'message' => 'MFA ativado com sucesso'
+            'message' => 'MFA ativado com sucesso',
+            'redirect' => '/bcs-expcriativa3/perfil.html'  // Caminho completo
         ]));
     } catch (PDOException $e) {
         error_log("Erro ao ativar MFA: " . $e->getMessage());
@@ -521,3 +581,13 @@ function handleCheckMfaStatus($pdo, $input) {
     
     die(json_encode(['success' => false]));
 }
+
+//Teste
+
+$response = [
+    'success' => true,
+    'qr_code' => 'data:image/png;base64,...', // QR code em base64
+    'secret' => 'JBSWY3DPEHPK3PXP', // Código secreto para inserção manual
+    'user_id' => $user_id
+];
+echo json_encode($response);

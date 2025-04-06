@@ -13,8 +13,9 @@ session_start();
     <link rel="stylesheet" href="./css/sitecss.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;700&display=swap" rel="stylesheet">
-    <meta name="csrf-token" content="<?php echo $_SESSION['csrf_token']; ?>">
     <meta name="csrf-token" content="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
+    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
+
 </head>
 <body>
     <!-- Barra de Navegação -->
@@ -107,7 +108,12 @@ session_start();
                 <div class="mfa-options">
                     <!-- Status do MFA -->
                     <div id="mfaStatus">
-                        <span>Autenticação em Dois Fatores: <strong>Desativada</strong></span>
+                        <span>Autenticação em Dois Fatores: 
+                            <strong id="mfaStatusText" 
+                                data-status="<?php echo isset($_SESSION['mfa_enabled']) && $_SESSION['mfa_enabled'] ? 'enabled' : 'disabled'; ?>">
+                                <?php echo isset($_SESSION['mfa_enabled']) && $_SESSION['mfa_enabled'] ? 'Ativada' : 'Desativada'; ?>  
+                            </strong>
+                        </span>
                     </div>
 
                      <!-- Botão para Ativar MFA -->
