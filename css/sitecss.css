@@ -973,6 +973,10 @@ select.input-adm:focus {
     color: var(--danger-color);
 }
 
+/* fim classes para pagina redefinesenha.html e novasenha.html */
+
+
+/* popup de contato */
 .popup {
     position: fixed;
     top: 20px;
@@ -1004,6 +1008,6 @@ select.input-adm:focus {
 .popup.show {
     opacity: 1;
 }
+/* fim classes para popup */
 
-/* fim classes para pagina redefinesenha.html e novasenha.html */
 /* Fim conteudo */

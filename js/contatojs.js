@@ -100,7 +100,7 @@ document.querySelector(".form-adm").addEventListener("submit", function (event) 
         showPopup(erros.join("<br>"), "error");
     } else {
         showPopup("Formulário Enviado! Aguarde um Retorno ", "success");
-        this.reset(); // Limpa o formulário
+        this.reset(); 
     }
 });
 
