@@ -12,6 +12,9 @@
 // URL base da API
 const API_BASE_URL = window.location.origin + '/php/login.php';
 
+// Adicione este log para verificar
+console.log('URL da API:', API_BASE_URL);
+
 // Estados da aplicação
 const AuthStates = {
     LOGIN: 'login',
@@ -99,16 +102,44 @@ async function makeRequest(action, data = {}) {
                 'Content-Type': 'application/json',
                 'X-CSRF-Token': appState.csrfToken
             },
-            body: JSON.stringify({ ...data, action })
+            body: JSON.stringify({ 
+                ...data, 
+                action,
+                csrf_token: appState.csrfToken // Adicionado para consistência com backend
+            })
         });
         
+        // Adicione este log para debug
+        console.log('Resposta da API:', {
+            status: response.status,
+            statusText: response.statusText,
+            url: response.url
+        });
+
+
         if (!response.ok) {
             throw new Error(`Erro HTTP: ${response.status}`);
         }
         
-        return await response.json();
+        const responseData = await response.json();
+        
+        // Verificação adicional de estrutura de resposta
+        if (!responseData || typeof responseData.success === 'undefined') {
+            throw new Error('Resposta inválida do servidor');
+        }
+        
+        return responseData;
     } catch (error) {
-        console.error('Erro na requisição:', error);
+        console.error('Detalhes do erro:', {
+            error: error.message,
+            config: {
+                url: API_BASE_URL,
+                method: 'POST',
+                body: JSON.stringify({...data, action})
+            }
+        });
+
+        showAlert('Erro na comunicação com o servidor', 'error');
         throw error;
     } finally {
         toggleLoader(false);
@@ -188,19 +219,29 @@ async function handleLogin() {
  */
 async function startMfaSetup() {
     try {
+        // Adicionado user_id que é esperado pelo backend
         const data = await makeRequest('setup_mfa', {
             email: appState.userData.email,
             user_id: appState.userData.userId
         });
         
         if (data.success) {
+            // Verificação de campos obrigatórios na resposta
+            if (!data.qr_code || !data.secret) {
+                throw new Error('Dados MFA incompletos na resposta');
+            }
+            
             elements.mfaQrCode.src = data.qr_code;
             elements.mfaSecret.textContent = data.secret;
+            
+            // Armazena temporariamente o secret no estado
+            appState.mfaSecret = data.secret;
         } else {
             showAlert(data.message || 'Erro ao configurar MFA', 'error');
         }
     } catch (error) {
-        showAlert('Erro na comunicação com o servidor', 'error');
+        console.error('Erro no setup MFA:', error);
+        showAlert('Falha na configuração do MFA', 'error');
     }
 }
 
@@ -216,7 +257,12 @@ async function confirmMfaSetup() {
     }
     
     try {
-        const data = await makeRequest('confirm_mfa', { code });
+        // Adicionado secret que é necessário para verificação no backend
+        const data = await makeRequest('confirm_mfa', { 
+            code,
+            secret: appState.mfaSecret,
+            user_id: appState.userData.userId
+        });
         
         if (data.success) {
             showAlert('MFA configurado com sucesso!', 'success');
@@ -225,7 +271,8 @@ async function confirmMfaSetup() {
             showAlert(data.message || 'Código inválido', 'error');
         }
     } catch (error) {
-        showAlert('Erro ao confirmar MFA', 'error');
+        console.error('Erro na confirmação MFA:', error);
+        showAlert('Falha ao confirmar MFA', 'error');
     }
 }
 

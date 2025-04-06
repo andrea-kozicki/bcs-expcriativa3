@@ -291,63 +291,39 @@ function handleVerifyMfa($pdo, $google2fa, $input) {
 /**
  * Configura o MFA para um usuário
  */
+/**
+ * Configura o MFA para um usuário
+ */
 function handleSetupMfa($pdo, $google2fa, $input) {
     $user_id = (int)($input['user_id'] ?? 0);
     $email = filter_var($input['email'] ?? '', FILTER_SANITIZE_EMAIL);
-    $senha = $input['senha'] ?? '';
     
-    // Validação do email
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    // Validação mais rigorosa
+    if ($user_id <= 0 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         http_response_code(400);
-        die(json_encode(['success' => false, 'message' => 'Email inválido']));
+        die(json_encode(['success' => false, 'message' => 'Dados inválidos']));
     }
 
     // Busca usuário no banco de dados
-    $stmt = $pdo->prepare("SELECT id, senha_hash, mfa_enabled, mfa_secret FROM usuarios WHERE email = ?");
-    $stmt->execute([$user_id]);
+    $stmt = $pdo->prepare("SELECT id, email, mfa_enabled FROM usuarios WHERE id = ? AND email = ?");
+    $stmt->execute([$user_id, $email]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    // Verificação de credenciais
-    if (!$user || !password_verify($senha, $user['senha_hash'])) {
-        http_response_code(401);
-        die(json_encode(['success' => false, 'message' => 'Credenciais inválidas']));
-    }
-
     if (!$user) {
         http_response_code(404);
         die(json_encode(['success' => false, 'message' => 'Usuário não encontrado']));
     }
     
-    // Se MFA não estiver ativado, retorna para o frontend configurar
-    if (!$user['mfa_enabled']) {
+    // Se MFA já estiver ativado
+    if (!empty($user['mfa_enabled'])) {
         die(json_encode([
-            'success' => true, 
-            'mfa_setup_required' => true,
-            'email' => $email
+            'success' => false, 
+            'message' => 'MFA já está ativado para este usuário'
         ]));
     }
     
-    // Se MFA estiver ativado, gera token para verificação
-    $mfa_token = bin2hex(random_bytes(16));
-    $_SESSION['mfa_tokens'][$mfa_token] = [
-        'user_id' => $user['id'],
-        'secret' => $secret,
-        'expires' => time() + 300 // 5 minutos
-    ];
-    
-    die(json_encode([
-        'success' => true,
-        'mfa_required' => true,
-        'mfa_token' => $mfa_token,
-        'qr_code' => $qrCodeImage,
-        'secret' => $secret
-    ]));
-
     // Gera uma chave secreta única
     $secret = $google2fa->generateSecretKey();
-    $qrCodeUrl = $google2fa->getQRCodeUrl(config('app.name'), $email, $secret);
-    
-    // Configuração do QR Code
     $qrCodeUrl = $google2fa->getQRCodeUrl(
         'Sua Aplicação',  // Nome do serviço
         $user['email'],   // Identificador do usuário
@@ -373,7 +349,8 @@ function handleSetupMfa($pdo, $google2fa, $input) {
     die(json_encode([
         'success' => true,
         'qr_code' => $qrCodeImage,
-        'secret' => $secret,  // Para inserção manual
+        'secret' => $secret,
+        'user_id' => $user_id, // Adicionado para referência no frontend
         'message' => 'Escaneie o QR Code com seu aplicativo autenticador'
     ]));
 }
@@ -382,30 +359,57 @@ function handleSetupMfa($pdo, $google2fa, $input) {
  * Confirma a ativação do MFA
  */
 function handleConfirmMfa($pdo, $google2fa, $input) {
+    $code = $input['code'] ?? '';
+    $secret = $input['secret'] ?? '';
+    $user_id = (int)($input['user_id'] ?? 0);
     
-    if (empty($_SESSION['mfa_setup'])) {
+    // Validações básicas
+    if (empty($code) || empty($secret) || $user_id <= 0) {
+        http_response_code(400);
+        die(json_encode(['success' => false, 'message' => 'Dados inválidos']));
+    }
+    
+    // Verifica se a sessão de setup existe
+    if (empty($_SESSION['mfa_setup']) || 
+        $_SESSION['mfa_setup']['user_id'] != $user_id ||
+        $_SESSION['mfa_setup']['secret'] != $secret) {
         http_response_code(400);
         die(json_encode(['success' => false, 'message' => 'Sessão inválida']));
     }
     
     $setup_data = $_SESSION['mfa_setup'];
-    $code = $input['code'] ?? '';
     
+    // Verifica se expirou
+    if (time() > $setup_data['expires']) {
+        unset($_SESSION['mfa_setup']);
+        http_response_code(401);
+        die(json_encode(['success' => false, 'message' => 'Sessão expirada']));
+    }
     
     // Verifica o código
-    if (!$google2fa->verifyKey($setup_data['secret'], $code)) {
+    if (!$google2fa->verifyKey($secret, $code)) {
         http_response_code(401);
         die(json_encode(['success' => false, 'message' => 'Código inválido']));
     }
     
     // Atualiza o banco de dados
-    $stmt = $pdo->prepare("UPDATE usuarios SET mfa_secret = ?, mfa_enabled = 1 WHERE id = ?");
-    $stmt->execute([$setup_data['secret'], $setup_data['user_id']]);
-    
-    unset($_SESSION['mfa_setup']);
-    
-    die(json_encode(['success' => true]));
+    try {
+        $stmt = $pdo->prepare("UPDATE usuarios SET mfa_secret = ?, mfa_enabled = 1 WHERE id = ?");
+        $stmt->execute([$secret, $user_id]);
+        
+        unset($_SESSION['mfa_setup']);
+        
+        die(json_encode([
+            'success' => true,
+            'message' => 'MFA ativado com sucesso'
+        ]));
+    } catch (PDOException $e) {
+        error_log("Erro ao ativar MFA: " . $e->getMessage());
+        http_response_code(500);
+        die(json_encode(['success' => false, 'message' => 'Erro ao ativar MFA']));
+    }
 }
+
 
 /**
  * Verifica a estrutura da tabela de usuários
