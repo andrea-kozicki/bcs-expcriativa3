@@ -10,7 +10,7 @@
 // ==============================================
 
 // URL base da API
-const API_BASE_URL = window.location.origin + '/php/login.php';
+const API_BASE_URL = window.location.origin + '/bcs-expcriativa3/php/login.php';
 
 // Adicione este log para verificar
 console.log('URL da API:', API_BASE_URL);
@@ -93,6 +93,10 @@ function toggleLoader(show = true) {
  * @param {object} data - Dados a serem enviados
  */
 async function makeRequest(action, data = {}) {
+
+    console.log('Enviando requisição para:', API_BASE_URL);
+    console.log('Dados enviados:', {action, ...data});
+
     toggleLoader(true);
     
     try {
@@ -109,8 +113,13 @@ async function makeRequest(action, data = {}) {
                 csrf_token: appState.csrfToken // Adicionado para consistência com backend
             })
         });
+
+
         
         // Adicione este log para debug
+
+        console.log('Resposta bruta:', response);
+
         console.log('Resposta da API:', {
             status: response.status,
             statusText: response.statusText,
@@ -139,6 +148,8 @@ async function makeRequest(action, data = {}) {
         
         return responseData;
     } catch (error) {
+        console.error('Erro completo:', error);
+
         console.error('Detalhes do erro:', {
             error: error.message,
             config: {
@@ -203,7 +214,9 @@ async function handleLogin() {
             if (data.mfa_setup_required) {
                 // Usuário precisa configurar MFA
                 appState.currentState = AuthStates.MFA_SETUP;
-                appState.userData = { email, userId: data.user_id };
+                appState.userData = { email, 
+                    userId: data.user_id
+                };
                 startMfaSetup();
             } else if (data.mfa_required) {
                 // Usuário precisa verificar código MFA

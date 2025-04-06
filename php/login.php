@@ -10,7 +10,7 @@
 // LOGGING
 // ==============================================
 ini_set('log_errors', 1);
-ini_set('error_log', __DIR__.'/php_errors.log');
+ini_set('error_log', __DIR__.'/php/php_errors.log');
 
 // ==============================================
 // CONFIGURAÇÕES INICIAIS E HEADERS
@@ -33,10 +33,24 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Configuração de sessão segura
+
 ini_set('session.cookie_httponly', 1);
 ini_set('session.cookie_samesite', 'Lax');
 ini_set('session.cookie_secure', isset($_SERVER['HTTPS']));
+ini_set('session.use_strict_mode', 1);
+ini_set('session.cookie_lifetime', 86400);
+ini_set('session.gc_maxlifetime', 86400);
 
+// Verifique se o diretório de sessão tem permissões de escrita
+if (!is_writable(session_save_path())) {
+    error_log('Diretório de sessão não tem permissão de escrita: ' . session_save_path());
+    die(json_encode(['success' => false, 'message' => 'Erro de configuração do servidor']));
+}
+
+// Verifique se o session_start() está no lugar certo
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 session_set_cookie_params([
     'lifetime' => 86400,       // 1 dia
     'path' => '/',
@@ -45,7 +59,7 @@ session_set_cookie_params([
     'httponly' => true,        // Acessível apenas via HTTP
     'samesite' => 'Lax'        // Proteção contra CSRF
 ]);
-session_start();
+
 
 //Verificação da sessão
 if (session_status() !== PHP_SESSION_ACTIVE) {
@@ -56,9 +70,9 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
 
 // Headers para CORS e JSON
-header("Access-Control-Allow-Origin: " . ($_SERVER['HTTP_ORIGIN'] ?? 'http://127.0.0.1:5000'));
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, X-CSRF-Token");
+header("Access-Control-Allow-Origin: " . ($_SERVER['HTTP_ORIGIN'] ?? $_SERVER['HTTP_REFERER'] ?? 'http://localhost'));
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE");
+header("Access-Control-Allow-Headers: Content-Type, X-CSRF-Token, Authorization, X-Requested-With");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Max-Age: 86400"); // cache preflight por 1 dia
@@ -247,6 +261,7 @@ function handleLogin($pdo, $google2fa, $input) {
         die(json_encode([
             'success' => true, 
             'mfa_setup_required' => true,
+            'user_id' => $user['id'],  // Adicionado user_id
             'email' => $email
         ]));
     }
@@ -280,6 +295,12 @@ function handleVerifyMfa($pdo, $google2fa, $input) {
     }
     
     $mfa_data = $_SESSION['mfa_tokens'][$mfa_token];
+
+     // Inicializa contador de tentativas se não existir
+     if (!isset($mfa_data['tentativas'])) {
+        $mfa_data['tentativas'] = 3;
+        $_SESSION['mfa_tokens'][$mfa_token] = $mfa_data;
+    }
     
     // Verifica se expirou
     if (time() > $mfa_data['expires']) {
@@ -334,14 +355,16 @@ function handleVerifyMfa($pdo, $google2fa, $input) {
  * Configura o MFA para um usuário
  */
 function handleSetupMfa($pdo, $google2fa, $input) {
-    $user_id = (int)($input['user_id'] ?? 0);
+    
     $email = filter_var($input['email'] ?? '', FILTER_SANITIZE_EMAIL);
     
     // Validação mais rigorosa
-    if ($user_id <= 0 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    if (empty($input['user_id'])) {
         http_response_code(400);
-        die(json_encode(['success' => false, 'message' => 'Dados inválidos']));
+        die(json_encode(['success' => false, 'message' => 'ID do usuário não fornecido']));
     }
+    
+    $user_id = (int)$input['user_id'];
 
     // Busca usuário no banco de dados
     $stmt = $pdo->prepare("SELECT id, email, mfa_enabled FROM usuarios WHERE id = ? AND email = ?");

@@ -14,6 +14,7 @@ session_start();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;700&display=swap" rel="stylesheet">
     <meta name="csrf-token" content="<?php echo $_SESSION['csrf_token']; ?>">
+    <meta name="csrf-token" content="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
 </head>
 <body>
     <!-- Barra de Navegação -->
@@ -178,6 +179,6 @@ session_start();
         </div>
     </div>
     
-    <script src="js/loginjs.js"></script>
+    <script src="./js/loginjs.js"></script>
 </body>
 </html>
