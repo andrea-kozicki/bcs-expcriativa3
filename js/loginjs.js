@@ -98,6 +98,7 @@ async function makeRequest(action, data = {}) {
     try {
         const response = await fetch(API_BASE_URL, {
             method: 'POST',
+            credentials: 'include',
             headers: { 
                 'Content-Type': 'application/json',
                 'X-CSRF-Token': appState.csrfToken
@@ -121,6 +122,14 @@ async function makeRequest(action, data = {}) {
             throw new Error(`Erro HTTP: ${response.status}`);
         }
         
+        if (response.status === 403) {
+            const errorData = await response.json().catch(() => null);
+            if (errorData?.message === 'Token CSRF inválido ou ausente') {
+                window.location.reload();
+                return;
+            }
+        }
+
         const responseData = await response.json();
         
         // Verificação adicional de estrutura de resposta
@@ -218,6 +227,12 @@ async function handleLogin() {
  * Inicia o processo de configuração do MFA
  */
 async function startMfaSetup() {
+    // Adicionar verificação de user_id em startMfaSetup
+    const data = await makeRequest('setup_mfa', {
+        email: appState.userData.email,
+        user_id: appState.userData.userId // Garantir que está sendo enviado
+    });
+
     try {
         // Adicionado user_id que é esperado pelo backend
         const data = await makeRequest('setup_mfa', {

@@ -7,15 +7,17 @@
  */
 
 // ==============================================
+// LOGGING
+// ==============================================
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__.'/php_errors.log');
+
+// ==============================================
 // CONFIGURAÇÕES INICIAIS E HEADERS
 // ==============================================
 
 // Permite requisições OPTIONS (pré-voo CORS)
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    header("Access-Control-Allow-Origin: *");
-    header("Access-Control-Allow-Methods: POST, OPTIONS");
-    header("Access-Control-Allow-Headers: Content-Type, X-CSRF-Token");
-    header("Content-Type: application/json");
     http_response_code(200);
     exit();
 }
@@ -31,6 +33,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Configuração de sessão segura
+ini_set('session.cookie_httponly', 1);
+ini_set('session.cookie_samesite', 'Lax');
+ini_set('session.cookie_secure', isset($_SERVER['HTTPS']));
+
 session_set_cookie_params([
     'lifetime' => 86400,       // 1 dia
     'path' => '/',
@@ -41,8 +47,16 @@ session_set_cookie_params([
 ]);
 session_start();
 
+//Verificação da sessão
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    error_log('Session not active');
+    http_response_code(500);
+    die(json_encode(['success' => false, 'message' => 'Erro de sessão']));
+}
+
+
 // Headers para CORS e JSON
-header("Access-Control-Allow-Origin: " . ($_SERVER['HTTP_ORIGIN'] ?? '*'));
+header("Access-Control-Allow-Origin: " . ($_SERVER['HTTP_ORIGIN'] ?? 'http://127.0.0.1:5000'));
 header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, X-CSRF-Token");
 header("Content-Type: application/json; charset=UTF-8");
@@ -105,11 +119,30 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
+//Timeout para CSRF
+// Adicionar na geração do token
+$_SESSION['csrf_generated'] = time();
+
+// Na verificação:
+if (time() - $_SESSION['csrf_generated'] > 3600) {
+    unset($_SESSION['csrf_token']);
+    http_response_code(403);
+    die(json_encode(['success' => false, 'message' => 'Token expirado']));
+}
+
 // ==============================================
 // ROTEAMENTO DE REQUISIÇÕES
 // ==============================================
 
-$input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
+$input = json_decode(file_get_contents('php://input'), true);
+if (json_last_error() !== JSON_ERROR_NONE) {
+    http_response_code(400);
+    die(json_encode([
+        'success' => false, 
+        'message' => 'JSON inválido',
+        'error' => json_last_error_msg()
+    ]));
+}
 
 // Verificação de Content-Type
 if (empty($_SERVER['CONTENT_TYPE']) || stripos($_SERVER['CONTENT_TYPE'], 'application/json') === false) {
@@ -188,6 +221,14 @@ function handleLogin($pdo, $google2fa, $input) {
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         http_response_code(400);
         die(json_encode(['success' => false, 'message' => 'Email inválido']));
+    }
+
+    //Proteção Bruteforce
+
+    $_SESSION['login_attempts'] = ($_SESSION['login_attempts'] ?? 0) + 1;
+    if ($_SESSION['login_attempts'] > 5) {
+        http_response_code(429);
+        die(json_encode(['success' => false, 'message' => 'Muitas tentativas. Tente mais tarde.']));
     }
 
     // Busca usuário no banco de dados
@@ -288,9 +329,7 @@ function handleVerifyMfa($pdo, $google2fa, $input) {
     ]));
 }
 
-/**
- * Configura o MFA para um usuário
- */
+
 /**
  * Configura o MFA para um usuário
  */
