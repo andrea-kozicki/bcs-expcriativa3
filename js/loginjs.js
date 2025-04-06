@@ -1,323 +1,403 @@
-// Adicione no início do seu loginjs.js
+/**
+ * Script de Autenticação com MFA (Multi-Factor Authentication)
+ * 
+ * Este script implementa a interface de login com autenticação em dois fatores,
+ * integrando com a API backend no arquivo login.php
+ */
+
+// ==============================================
+// CONFIGURAÇÕES GLOBAIS E CONSTANTES
+// ==============================================
+
+// URL base da API
 const API_BASE_URL = window.location.origin + '/php/login.php';
 
-// Adicione um log para verificar a URL completa
-console.log('Tentando acessar:', window.location.origin + '/php/login.php');
+// Estados da aplicação
+const AuthStates = {
+    LOGIN: 'login',
+    MFA_SETUP: 'mfa_setup',
+    MFA_VERIFY: 'mfa_verify'
+};
 
-// Teste se o arquivo existe fazendo uma requisição GET
-fetch(window.location.origin + '/php/login.php')
-  .then(response => console.log('Resposta GET:', response.status))
-  .catch(error => console.error('Erro no teste GET:', error));
+// Elementos do DOM
+const elements = {
+    loginForm: document.getElementById('formlogin'),
+    mfaSetupSection: document.getElementById('mfa-setup'),
+    mfaVerifySection: document.getElementById('mfa-verification'),
+    mfaStatus: document.getElementById('mfaStatus'),
+    enableMfaBtn: document.getElementById('enableMfaBtn'),
+    emailInput: document.getElementById('email'),
+    passwordInput: document.getElementById('senha'),
+    mfaCodeInput: document.getElementById('mfa-code'),
+    mfaSetupCodeInput: document.getElementById('mfa-setup-code'),
+    mfaQrCode: document.getElementById('mfa-qrcode'),
+    mfaSecret: document.getElementById('mfa-secret'),
+    remainingAttempts: document.getElementById('tentativas-restantes'),
+    verifyMfaBtn: document.getElementById('verify-mfa'),
+    confirmMfaSetupBtn: document.getElementById('confirm-mfa-setup'),
+    mfaTimeout: document.getElementById('mfa-timeout')
+};
 
+// Estado da aplicação
+const appState = {
+    currentState: AuthStates.LOGIN,
+    mfaToken: null,
+    remainingAttempts: 3,
+    csrfToken: document.querySelector('meta[name="csrf-token"]')?.content,
+    userData: null
+};
 
-/* Inicio Dropdown Navbar */
-let dropdownContainer = document.querySelector(".dropdown-container");
-let avatar = document.querySelector(".avatar");
+// ==============================================
+// FUNÇÕES UTILITÁRIAS
+// ==============================================
 
-dropMenu(avatar);
-dropMenu(dropdownContainer);
-
-function dropMenu(selector) {
-    //console.log(selector);
-    selector.addEventListener("click", () => {
-        let dropdownMenu = selector.querySelector(".dropdown-menu");
-        dropdownMenu.classList.contains("active") ? dropdownMenu.classList.remove("active") : dropdownMenu.classList.add("active");
-    });
-}
-/* Fim Dropdown Navbar */
-
-/* Inicio Sidebar Toggle / bars */
-let sidebar = document.querySelector(".sidebar");
-let bars = document.querySelector(".bars");
-
-bars.addEventListener("click", () => {
-    sidebar.classList.contains("active") ? sidebar.classList.remove("active") : sidebar.classList.add("active");
-});
-
-window.matchMedia("(max-width: 768px)").matches ? sidebar.classList.remove("active") : sidebar.classList.add("active");
-/* Fim Sidebar Toggle / bars */
-
-function actionDropdown(id) {
-    closeDropdownAction();
-    document.getElementById("actionDropdown" + id).classList.toggle("show-dropdown-action");
-}
-
-window.onclick = function (event) {
-    if (!event.target.matches(".dropdown-btn-action")) {
-        /*document.getElementById("actionDropdown").classList.remove("show-dropdown-action");*/
-        closeDropdownAction();
-    }
-}
-
-function closeDropdownAction() {
-    var dropdowns = document.getElementsByClassName("dropdown-action-item");
-    var i;
-    for (i = 0; i < dropdowns.length; i++) {
-        var openDropdown = dropdowns[i]
-        if (openDropdown.classList.contains("show-dropdown-action")) {
-            openDropdown.classList.remove("show-dropdown-action");
-        }
-    }
-}
-
-
-/* Inicio dropdown sidebar */
-
-var dropdownSidebar = document.getElementsByClassName("dropdown-btn");
-var i;
-
-for (i = 0; i < dropdownSidebar.length; i++) {
-    dropdownSidebar[i].addEventListener("click", function () {
-        this.classList.toggle("active");
-        var dropdownContent = this.nextElementSibling;
-        if (dropdownContent.style.display === "block") {
-            dropdownContent.style.display = "none";
-        } else {
-            dropdownContent.style.display = "block";
-        }
-    });
-}
-/* Fim dropdown sidebar */
-
-/* login */
-
-document.addEventListener('DOMContentLoaded', function() {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-    
-    if (!csrfToken) {
-        console.error('CSRF token não encontrado!');
-        showAlert('Erro de segurança. Por favor, recarregue a página.', 'error');
-        return;
-    }
-
-    const loginForm = document.getElementById('formlogin');
-    const mfaSection = document.getElementById('mfaVerification');
-    const mfaForm = document.getElementById('formMFA');
-    const mfaStatus = document.getElementById('mfaStatus');
-    const enableMfaBtn = document.getElementById('enableMfaBtn');
-    
-    let mfaState = {
-        token: null,
-        remainingAttempts: 3
-    };
-
-    // Login tradicional
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const email = document.getElementById('email').value.trim();
-        const senha = document.getElementById('senha').value;
-        
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            showAlert('Por favor, insira um e-mail válido.', 'error');
-            return;
-        }
-    
-        try {
-            const data = await makeRequest('login', { email, senha });
-            
-            if (data.success) {
-                if (data.mfa_required) {
-                    mfaState.token = data.mfa_token;
-                    loginForm.style.display = 'none';
-                    mfaSection.style.display = 'block';
-                } else {
-                    window.location.href = './perfil.html'; //em substituição ao dashboard.php
-                }
-            } else {
-                showAlert(data.message || 'Erro no login', 'error');
-            }
-        } catch (error) {
-            showAlert('Erro na comunicação com o servidor', 'error');
-        }
-    });
-    
-   // Função melhorada para mostrar alertas
-   function showAlert(message, type = 'success') {
-    // Remove alertas existentes primeiro
-    const existingAlerts = document.querySelectorAll('.alert');
-    existingAlerts.forEach(alert => alert.remove());
-    
+/**
+ * Exibe um alerta na tela
+ * @param {string} message - Mensagem a ser exibida
+ * @param {string} type - Tipo de alerta (success, error, etc.)
+ */
+function showAlert(message, type = 'success') {
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${type}`;
     alertDiv.textContent = message;
-    
     document.body.appendChild(alertDiv);
     
     setTimeout(() => {
-        alertDiv.style.opacity = '0';
-        setTimeout(() => alertDiv.remove(), 300);
+        alertDiv.remove();
     }, 5000);
 }
 
-    // Verificação MFA
-    mfaForm?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const code = document.getElementById('mfaCode').value.trim();
+/**
+ * Mostra/Oculta um loader
+ * @param {boolean} show - Se true, mostra o loader
+ */
+function toggleLoader(show = true) {
+    const loader = document.querySelector('.loader');
+    if (show) {
+        if (!loader) {
+            const newLoader = document.createElement('div');
+            newLoader.className = 'loader';
+            document.body.appendChild(newLoader);
+        }
+    } else if (loader) {
+        loader.remove();
+    }
+}
+
+/**
+ * Faz uma requisição para a API
+ * @param {string} action - Ação a ser executada
+ * @param {object} data - Dados a serem enviados
+ */
+async function makeRequest(action, data = {}) {
+    toggleLoader(true);
+    
+    try {
+        const response = await fetch(API_BASE_URL, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': appState.csrfToken
+            },
+            body: JSON.stringify({ ...data, action })
+        });
         
-        if (!/^\d{6}$/.test(code)) {
-            showAlert('O código deve ter exatamente 6 dígitos', 'error');
-            return;
+        if (!response.ok) {
+            throw new Error(`Erro HTTP: ${response.status}`);
         }
         
-        try {
-            const data = await makeRequest('verify_mfa', {
-                mfa_token: mfaState.token,
-                code: code
-            });
+        return await response.json();
+    } catch (error) {
+        console.error('Erro na requisição:', error);
+        throw error;
+    } finally {
+        toggleLoader(false);
+    }
+}
+
+/**
+ * Atualiza a interface com base no estado atual
+ */
+function updateUI() {
+    // Esconde todas as seções primeiro
+    elements.loginForm.closest('.content-adm').style.display = 'block';
+    elements.mfaSetupSection.style.display = 'none';
+    elements.mfaVerifySection.style.display = 'none';
+
+    // Mostra a seção apropriada
+    switch(appState.currentState) {
+        case AuthStates.LOGIN:
+            elements.loginForm.closest('.content-adm').style.display = 'block';
+            break;
+        case AuthStates.MFA_SETUP:
+            elements.mfaSetupSection.style.display = 'block';
+            break;
+        case AuthStates.MFA_VERIFY:
+            elements.mfaVerifySection.style.display = 'block';
+            elements.remainingAttempts.textContent = 
+                `Tentativas restantes: ${appState.remainingAttempts}`;
+            break;
+    }
+}
+
+// ==============================================
+// MANIPULAÇÃO DE AUTENTICAÇÃO
+// ==============================================
+
+/**
+ * Manipula o login do usuário
+ */
+async function handleLogin() {
+    const email = elements.emailInput.value.trim();
+    const senha = elements.passwordInput.value;
+
+    if (!email || !senha) {
+        showAlert('Por favor, preencha todos os campos', 'error');
+        return;
+    }
+
+    try {
+        const data = await makeRequest('login', { email, senha });
+        
+        if (data.success) {
+            if (data.mfa_setup_required) {
+                // Usuário precisa configurar MFA
+                appState.currentState = AuthStates.MFA_SETUP;
+                appState.userData = { email, userId: data.user_id };
+                startMfaSetup();
+            } else if (data.mfa_required) {
+                // Usuário precisa verificar código MFA
+                appState.currentState = AuthStates.MFA_VERIFY;
+                appState.mfaToken = data.mfa_token;
+                appState.userData = { email };
+            } else {
+                // Login sem MFA
+                window.location.href = data.redirect || 'perfil.html';
+            }
+            updateUI();
+        } else {
+            showAlert(data.message || 'Erro no login', 'error');
+        }
+    } catch (error) {
+        showAlert('Erro na comunicação com o servidor', 'error');
+    }
+}
+
+/**
+ * Inicia o processo de configuração do MFA
+ */
+async function startMfaSetup() {
+    try {
+        const data = await makeRequest('setup_mfa', {
+            email: appState.userData.email,
+            user_id: appState.userData.userId
+        });
+        
+        if (data.success) {
+            elements.mfaQrCode.src = data.qr_code;
+            elements.mfaSecret.textContent = data.secret;
+        } else {
+            showAlert(data.message || 'Erro ao configurar MFA', 'error');
+        }
+    } catch (error) {
+        showAlert('Erro na comunicação com o servidor', 'error');
+    }
+}
+
+/**
+ * Confirma a configuração do MFA
+ */
+async function confirmMfaSetup() {
+    const code = elements.mfaSetupCodeInput.value.trim();
+    
+    if (!/^\d{6}$/.test(code)) {
+        showAlert('O código deve ter 6 dígitos', 'error');
+        return;
+    }
+    
+    try {
+        const data = await makeRequest('confirm_mfa', { code });
+        
+        if (data.success) {
+            showAlert('MFA configurado com sucesso!', 'success');
+            window.location.href = 'perfil.html';
+        } else {
+            showAlert(data.message || 'Código inválido', 'error');
+        }
+    } catch (error) {
+        showAlert('Erro ao confirmar MFA', 'error');
+    }
+}
+
+/**
+ * Verifica o código MFA
+ */
+async function verifyMfaCode() {
+    const code = elements.mfaCodeInput.value.trim();
+    
+    if (!/^\d{6}$/.test(code)) {
+        showAlert('O código deve ter 6 dígitos', 'error');
+        return;
+    }
+    
+    try {
+        const data = await makeRequest('verify_mfa', {
+            mfa_token: appState.mfaToken,
+            code
+        });
+        
+        if (data.success) {
+            showAlert('Autenticação bem-sucedida!', 'success');
+            window.location.href = data.redirect || 'perfil.html';
+        } else {
+            appState.remainingAttempts--;
+            updateUI();
             
-            if (data.success) {
-                showAlert('Autenticação bem-sucedida!', 'success');
-                setTimeout(() => {
-                    window.location.href = data.redirect || 'perfil.html';
-                }, 1500);
+            if (appState.remainingAttempts <= 0) {
+                showAlert('Número máximo de tentativas excedido', 'error');
+                appState.currentState = AuthStates.LOGIN;
+                updateUI();
             } else {
                 showAlert(data.message || 'Código inválido', 'error');
-                if (data.tentativas_restantes !== undefined) {
-                    document.getElementById('tentativas-restantes').textContent = 
-                        `Tentativas restantes: ${data.tentativas_restantes}`;
-                }
             }
-        } catch (error) {
-            showAlert(error.message || 'Falha na verificação', 'error');
         }
-    });
-
-    // Ativar MFA
-    enableMfaBtn.addEventListener('click', async () => {
-        const email = document.getElementById('email').value;
-        
-        if (!email) {
-            alert('Por favor, faça login primeiro');
-            return;
-        }
-
-        try {
-            const response = await fetch('/php/login.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': csrfToken
-                },
-                body: JSON.stringify({
-                    action: 'setup_mfa',
-                    email: email
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                // Mostrar modal com QR code
-                const modal = `
-                    <div class="modal">
-                        <h3>Configurar Autenticação em Dois Fatores</h3>
-                        <p>Escaneie este QR code com seu aplicativo autenticador:</p>
-                        <img src="${data.qr_code}" alt="QR Code">
-                        <p>Ou insira manualmente: <strong>${data.secret}</strong></p>
-                        <p>Depois insira o código gerado:</p>
-                        <input type="text" id="setupCode" placeholder="Código de 6 dígitos">
-                        <button id="confirmMfa">Confirmar</button>
-                    </div>
-                `;
-                
-                document.body.insertAdjacentHTML('beforeend', modal);
-                document.getElementById('confirmMfa').addEventListener('click', confirmMfaSetup);
-            } else {
-                alert(data.message || 'Erro ao configurar MFA');
-            }
-        } catch (error) {
-            alert('Erro na comunicação com o servidor');
-        }
-    });
-
-    function confirmMfaSetup() {
-        const code = document.getElementById('setupCode').value;
-        
-        if (!/^\d{6}$/.test(code)) {
-            alert('Código deve ter 6 dígitos');
-            return;
-        }
-        
-        fetch('/php/login.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-Token': csrfToken
-            },
-            body: JSON.stringify({
-                action: 'confirm_mfa',
-                code: code
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('MFA configurado com sucesso!');
-                document.querySelector('.modal').remove();
-                mfaStatus.innerHTML = 'Autenticação em Dois Fatores: <strong>Ativada</strong>';
-                enableMfaBtn.textContent = 'MFA Ativado';
-            } else {
-                alert(data.message || 'Código inválido');
-            }
-        })
-        .catch(error => {
-            alert('Erro ao confirmar MFA');
-        });
+    } catch (error) {
+        showAlert('Falha na verificação', 'error');
     }
+}
 
-    //Tratamento de erros
-    async function makeRequest(action, data = {}) {
-        
-        const loader = document.createElement('div');
-        loader.className = 'loader';
-        document.body.appendChild(loader);
-        
-        try {
-            const response = await fetch(API_BASE_URL, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': csrfToken
-                },
-                body: JSON.stringify({
-                    ...data,
-                    action
-                })
-            })
-            
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || `Erro HTTP: ${response.status}`);
-            }
-            
-            return await response.json();
-        } catch (error) {
-            console.error('Erro na requisição:', error);
-            throw new Error(error.message || 'Falha na comunicação com o servidor');
-        }
-    }
-
-
-    /* Exemplo de uso no login
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        try {
-            const data = await makeRequest('/php/login.php', {
-                action: 'login',
-                email: document.getElementById('email').value,
-                senha: document.getElementById('senha').value
-            });
+/**
+ * Ativa o MFA para um usuário existente
+ */
+async function enableMfa() {
+    const email = elements.emailInput.value.trim();
     
-            if (data.success) {
-                // Processar sucesso
-            } else {
-                alert(data.message || 'Erro no login');
-            }
-        } catch (error) {
-            alert('Erro na comunicação. Verifique o console para detalhes.');
-            console.error('Detalhes do erro:', error);
+    if (!email) {
+        showAlert('Por favor, faça login primeiro', 'error');
+        return;
+    }
+
+    try {
+        const data = await makeRequest('setup_mfa', { email });
+        
+        if (data.success) {
+            appState.currentState = AuthStates.MFA_SETUP;
+            appState.userData = { email };
+            elements.mfaQrCode.src = data.qr_code;
+            elements.mfaSecret.textContent = data.secret;
+            updateUI();
+        } else {
+            showAlert(data.message || 'Erro ao configurar MFA', 'error');
         }
-    }); */
+    } catch (error) {
+        showAlert('Erro na comunicação com o servidor', 'error');
+    }
+}
+
+// ==============================================
+// CONFIGURAÇÃO DE EVENTOS
+// ==============================================
+
+//**
+/* Configura os dropdowns da navbar e sidebar
+*/
+function setupDropdowns() {
+   // Dropdown do avatar (navbar)
+   document.querySelector(".avatar")?.addEventListener("click", function(e) {
+       e.stopPropagation();
+       this.querySelector(".dropdown-menu")?.classList.toggle("active");
+   });
+
+   // Dropdown dos gêneros (sidebar) - CORREÇÃO PRINCIPAL
+   const dropdownBtn = document.querySelector(".sidebar .dropdown-btn");
+   if (dropdownBtn) {
+       dropdownBtn.addEventListener("click", function(e) {
+           e.stopPropagation();
+           this.classList.toggle("active");
+           
+           // Alterna o dropdown container
+           const dropdownContent = this.nextElementSibling;
+           if (dropdownContent) {
+               dropdownContent.classList.toggle("active");
+               
+               // Alterna o ícone
+               const icon = this.querySelector(".fa-caret-down");
+               if (icon) {
+                   icon.classList.toggle("fa-rotate-180");
+               }
+           }
+       });
+   }
+
+   // Fecha todos os dropdowns ao clicar fora
+   document.addEventListener("click", function() {
+       // Fecha dropdown do avatar
+       document.querySelectorAll(".dropdown-menu").forEach(dropdown => {
+           dropdown.classList.remove("active");
+       });
+       
+       // Fecha dropdown da sidebar
+       document.querySelectorAll(".sidebar .dropdown-container").forEach(dropdown => {
+           dropdown.classList.remove("active");
+       });
+       
+       // Remove estado ativo dos botões e reseta ícones
+       document.querySelectorAll(".sidebar .dropdown-btn").forEach(btn => {
+           btn.classList.remove("active");
+           const icon = btn.querySelector(".fa-caret-down");
+           if (icon) icon.classList.remove("fa-rotate-180");
+       });
+   });
+
+   // Toggle da sidebar em mobile
+   document.querySelector(".bars")?.addEventListener("click", function(e) {
+       e.stopPropagation();
+       document.querySelector(".sidebar").classList.toggle("active");
+   });
+}
+
+/**
+ * Configura todos os eventos da aplicação
+ */
+function setupEventListeners() {
+    // Formulário de login
+    elements.loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        handleLogin();
+    });
+
+    // Botão de ativar MFA
+    elements.enableMfaBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        enableMfa();
+    });
+
+    // Confirmação de setup MFA
+    elements.confirmMfaSetupBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        confirmMfaSetup();
+    });
+
+    // Verificação de código MFA
+    elements.verifyMfaBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        verifyMfaCode();
+    });
+
+    // Configura dropdowns
+    setupDropdowns();
+}
+
+// ==============================================
+// INICIALIZAÇÃO
+// ==============================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (!appState.csrfToken) {
+        showAlert('Erro de segurança. Recarregue a página.', 'error');
+        return;
+    }
+
+    setupEventListeners();
+    updateUI();
 });
