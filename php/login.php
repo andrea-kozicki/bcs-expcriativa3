@@ -6,11 +6,100 @@
  * usando Google Authenticator e geração de QR Codes.
  */
 
+ //Verificação temporária
+
+ header('Content-Type: application/json');
+
+// Teste simples
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $data = json_decode(file_get_contents('php://input'), true);
+    file_put_contents('debug.log', print_r($data, true), FILE_APPEND);
+    
+    echo json_encode([
+        'status' => 'success',
+        'message' => 'Teste recebido',
+        'your_data' => $data
+    ]);
+    exit;
+}
+
+http_response_code(500);
+echo json_encode(['error' => 'Método não permitido']);
+
+
 // ==============================================
 // LOGGING
 // ==============================================
+// Ativar logging máximo
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__.'/php/php_errors.log');
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// Log personalizado
+file_put_contents(__DIR__.'/php_errors.log', "Script acessado em: ".date('Y-m-d H:i:s')."\n", FILE_APPEND);
+
+// Verificar se o script está sendo acessado
+file_put_contents(__DIR__.'/php_errors.log', "REQUEST_METHOD: ".$_SERVER['REQUEST_METHOD']."\n", FILE_APPEND);
+file_put_contents(__DIR__.'/php_errors.log', "INPUT: ".file_get_contents('php://input')."\n", FILE_APPEND);
+
+//Verificação de qual é o diretório da sessão
+error_log("Diretório de sessão: " . session_save_path());
+
+//Verificação de erros de caminho no arquivo php
+error_log("Script login.php acessado"); // Verifique no terminal
+
+// Resposta temporária para teste
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => true,
+        'message' => 'Teste OK',
+        'received_data' => file_get_contents('php://input')
+    ]);
+    exit;
+}
+
+// Log detalhado
+file_put_contents('debug.log', date('Y-m-d H:i:s')." - Script acessado\n", FILE_APPEND);
+
+//Configuração armazenamento da sessão
+$sessionPath = __DIR__ . '/../sessions';
+if (!file_exists($sessionPath)) {
+    mkdir($sessionPath, 0700, true);
+}
+session_save_path($sessionPath);
+ini_set('session.gc_probability', 1);
+ini_set('session.gc_divisor', 100);
+ini_set('session.gc_maxlifetime', 1440);
+
+// Verificação estendida de sessão
+$sessionPath = session_save_path();
+error_log("Verificando diretório de sessão: " . $sessionPath);
+error_log("Existe: " . (file_exists($sessionPath) ? 'Sim' : 'Não'));
+error_log("Legível: " . (is_readable($sessionPath) ? 'Sim' : 'Não'));
+error_log("Gravável: " . (is_writable($sessionPath) ? 'Sim' : 'Não'));
+
+if (!is_writable($sessionPath)) {
+    // Tentar criar se não existir
+    if (!file_exists($sessionPath)) {
+        mkdir($sessionPath, 0700, true);
+    }
+    // Tentar corrigir permissões
+    chmod($sessionPath, 0700);
+    
+    // Verificar novamente
+    if (!is_writable($sessionPath)) {
+        error_log("Falha ao corrigir permissões para: " . $sessionPath);
+        die(json_encode([
+            'success' => false, 
+            'message' => 'Erro de configuração do servidor (sessão)',
+            'session_path' => $sessionPath
+        ]));
+    }
+}
+
 
 // ==============================================
 // CONFIGURAÇÕES INICIAIS E HEADERS
@@ -80,7 +169,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
 
 // Headers para CORS e JSON
-header("Access-Control-Allow-Origin: " . ($_SERVER['HTTP_ORIGIN'] ?? $_SERVER['HTTP_REFERER'] ?? 'http://localhost'));
+header("Access-Control-Allow-Origin: http://127.0.0.1:8080");
 header("Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE");
 header("Access-Control-Allow-Headers: Content-Type, X-CSRF-Token, Authorization, X-Requested-With");
 header("Content-Type: application/json; charset=UTF-8");
@@ -89,6 +178,10 @@ header("Access-Control-Max-Age: 86400"); // cache preflight por 1 dia
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
 
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
 
 // Configurações de erro (desative em produção)
 error_reporting(E_ALL);
@@ -236,16 +329,30 @@ try {
             handleLogin($pdo, $google2fa, $input);
             break;
             
-        case 'verify_mfa':
-            handleVerifyMfa($pdo, $google2fa, $input);
-            break;
-            
         case 'setup_mfa':
-            handleSetupMfa($pdo, $google2fa, $input);
+            requireUserLoggedIn();
+            $response = [
+                'success' => true,
+                'qr_code' => generateQrCode($userEmail, $userSecret),
+                'secret' => $userSecret,
+                'user_id' => $userId
+            ];
             break;
-            
+
+        case 'verify_mfa':
+            if (verifyMfaCode($input['code'], $userSecret)) {
+                $response = ['success' => true, 'redirect' => 'perfil.html'];
+            } else {
+                $response = ['success' => false, 'message' => 'Código inválido'];
+            }
+            break;
+
         case 'confirm_mfa':
-            handleConfirmMfa($pdo, $google2fa, $input);
+            if (confirmMfaSetup($input['code'], $input['secret'], $userId)) {
+                $response = ['success' => true, 'redirect' => 'perfil.html'];
+            } else {
+                $response = ['success' => false, 'message' => 'Falha na confirmação'];
+            }
             break;
 
         default:
@@ -301,11 +408,13 @@ function handleLogin($pdo, $google2fa, $input) {
     
     // Se MFA não estiver ativado, retorna para o frontend configurar
     if (!$user['mfa_enabled']) {
+        error_log("Login: MFA não ativado para usuário {$email}, requer setup");
         die(json_encode([
             'success' => true, 
             'mfa_setup_required' => true,
-            'user_id' => $user['id'],  // Adicionado user_id
-            'email' => $email
+            'user_id' => $user['id'],
+            'email' => $email,
+            'debug' => 'MFA setup required' // Adicionado para debug
         ]));
     }
     
@@ -437,7 +546,7 @@ function handleSetupMfa($pdo, $google2fa, $input) {
     
     // Gera a imagem do QR Code
     
-    
+
     try {
         $renderer = new ImageRenderer(
             new RendererStyle(300),
@@ -471,6 +580,27 @@ function handleSetupMfa($pdo, $google2fa, $input) {
         'message' => 'Escaneie o QR Code com seu aplicativo autenticador'
     ]));
 }
+
+
+//Função de geração deo QRCode
+function generateQrCode($email, $secret) {
+    $google2fa = new Google2FA();
+    $qrCodeUrl = $google2fa->getQRCodeUrl(
+        'Sua Aplicação',
+        $email,
+        $secret
+    );
+    
+    $writer = new Writer(
+        new ImageRenderer(
+            new RendererStyle(300),
+            new SvgImageBackEnd()
+        )
+    );
+    
+    return 'data:image/svg+xml;base64,' . base64_encode($writer->writeString($qrCodeUrl));
+}
+
 
 /**
  * Confirma a ativação do MFA
