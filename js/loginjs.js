@@ -1,256 +1,261 @@
 /**
- * Script de Autenticação com MFA (Multi-Factor Authentication)
+ * Sistema de Autenticação - Frontend
  * 
- * Este script implementa a interface de login com autenticação em dois fatores,
- * integrando com a API backend no arquivo login.php
+ * Principais características:
+ * 1. Tratamento robusto de erros
+ * 2. Validação de formulário client-side
+ * 3. Gerenciamento de estado da aplicação
+ * 4. Comunicação segura com a API
+ * 5. Feedback visual para o usuário
+ * 6. Controle completo dos menus dropdown
  */
 
 // ==============================================
-// CONFIGURAÇÕES GLOBAIS E CONSTANTES
+// 1. CONFIGURAÇÕES GLOBAIS
 // ==============================================
 
-//Verificação de token CSRF
-console.log('Inicializando aplicação... Verificando token CSRF');
-
-// URL base da API
-const API_BASE_URL = window.location.origin + '/php/login.php';
-
-// Adicione este log para verificar
-console.log('URL da API:', API_BASE_URL);
-
-// Estados da aplicação
-const AuthStates = {
-    LOGIN: 'login',
-    MFA_SETUP: 'mfa_setup',
-    MFA_VERIFY: 'mfa_verify'
-};
-
-// Elementos do DOM
-const elements = {
-    loginForm: document.getElementById('formlogin'),
-    mfaSetupSection: document.getElementById('mfa-setup'),
-    mfaVerifySection: document.getElementById('mfa-verification'),
-    mfaStatus: document.getElementById('mfaStatus'),
-    enableMfaBtn: document.getElementById('enableMfaBtn'),
-    emailInput: document.getElementById('email'),
-    passwordInput: document.getElementById('senha'),
-    mfaCodeInput: document.getElementById('mfa-code'),
-    mfaSetupCodeInput: document.getElementById('mfa-setup-code'),
-    mfaQrCode: document.getElementById('mfa-qrcode'),
-    mfaSecret: document.getElementById('mfa-secret'),
-    remainingAttempts: document.getElementById('tentativas-restantes'),
-    verifyMfaBtn: document.getElementById('verify-mfa'),
-    confirmMfaSetupBtn: document.getElementById('confirm-mfa-setup'),
-    mfaTimeout: document.getElementById('mfa-timeout')
-};
+// URL base da API - usa a mesma origem do frontend
+const API_BASE_URL = window.location.origin + '/php/login_refeito.php';
 
 // Estado da aplicação
 const appState = {
-    currentState: AuthStates.LOGIN,
-    mfaToken: null,
-    remainingAttempts: 3,
-    csrfToken: null,
-    userData: null,
-    mfaEnabled: document.getElementById('mfaStatusText')?.textContent === 'Ativada'
+    csrfToken: null,    // Token CSRF para proteção contra ataques
+    isLoading: false,   // Indica se uma operação está em progresso
+    dropdowns: {        // Estado dos menus dropdown
+        userMenu: false,
+        genresMenu: false
+    }
 };
 
 // ==============================================
-// FUNÇÕES UTILITÁRIAS
+// 2. ELEMENTOS DO DOM (COM VERIFICAÇÃO DE SEGURANÇA)
 // ==============================================
 
 /**
- * Exibe um alerta na tela
- * @param {string} message - Mensagem a ser exibida
- * @param {string} type - Tipo de alerta (success, error, etc.)
+ * Obtém e valida elementos do DOM necessários
+ * @returns {Object|null} Objeto com elementos ou null se não encontrados
+ */
+function getDOMElements() {
+    const loginForm = document.getElementById('formlogin');
+    
+    if (!loginForm) {
+        console.error('Formulário de login não encontrado!');
+        return null;
+    }
+    
+    return {
+        // Elementos do formulário
+        loginForm,
+        emailInput: loginForm.querySelector('input[name="email"]'),
+        passwordInput: loginForm.querySelector('input[name="senha"]'),
+        submitButton: loginForm.querySelector('button[type="submit"]'),
+        loadingIndicator: document.getElementById('loading-indicator'),
+        
+        // Elementos dos dropdowns
+        avatarDropdown: document.querySelector('.avatar'),
+        userDropdownMenu: document.querySelector('.dropdown-menu.setting'),
+        genresDropdownBtn: document.querySelector('.dropdown-btn'),
+        genresDropdownContainer: document.querySelector('.dropdown-container'),
+        dropdownArrow: document.querySelector('.dropdown-arrow'),
+        
+        // Elementos do menu hamburguer (sidebar)
+        barsIcon: document.querySelector('.fa-bars'),
+        sidebar: document.querySelector('.sidebar')
+    };
+}
+
+// ==============================================
+// 3. FUNÇÕES UTILITÁRIAS
+// ==============================================
+
+/**
+ * Exibe um alerta temporário para o usuário
+ * @param {string} message Mensagem a ser exibida
+ * @param {string} type Tipo de alerta (success, error, etc.)
  */
 function showAlert(message, type = 'success') {
+    // Criar elemento do alerta
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${type}`;
     alertDiv.textContent = message;
+    
+    // Adicionar ao corpo do documento
     document.body.appendChild(alertDiv);
     
+    // Remover após 5 segundos com animação
     setTimeout(() => {
-        alertDiv.style.animation = 'slideOut 0.3s ease forwards';
-        alertDiv.addEventListener('animationend', () => {
-            alertDiv.remove();
-        });
+        alertDiv.style.opacity = '0';
+        setTimeout(() => alertDiv.remove(), 300);
     }, 5000);
 }
 
 /**
- * Mostra/Oculta um loader
- * @param {boolean} show - Se true, mostra o loader
+ * Atualiza o estado de carregamento da aplicação
+ * @param {boolean} isLoading Indica se está carregando
  */
-function toggleLoader(show = true) {
-    const loader = document.querySelector('.loader');
-    if (show) {
-        if (!loader) {
-            const newLoader = document.createElement('div');
-            newLoader.className = 'loader';
-            document.body.appendChild(newLoader);
-        }
-    } else if (loader) {
-        loader.remove();
-    }
-}
-
-/**
- * Faz uma requisição para a API
- * @param {string} action - Ação a ser executada
- * @param {object} data - Dados a serem enviados
- */
-async function makeRequest(action, data = {}) {
-
-    // Verificação reforçada do token
-     if (!appState.csrfToken) {
-        console.error('Token CSRF não disponível na requisição');
-        await fetchCsrfToken();
-        if (!appState.csrfToken) {
-            showAlert('Erro de segurança. Recarregando...', 'error');
-            window.location.reload();
-            return;
-        }
-    }
-
-    try {
-        
-        toggleLoader(true);
-        
-        console.log('Enviando para:', API_BASE_URL, 'Ação:', action, 'Dados:', data)
-
-        const response = await fetch(API_BASE_URL, {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 
-                'Content-Type': 'application/json',
-                'X-CSRF-Token': appState.csrfToken
-            },
-            body: JSON.stringify({ 
-                ...data, 
-                action,
-                csrf_token: appState.csrfToken
-            })
-        });
-
-        // Adicione este log para debug
-        console.log('Resposta bruta:', response);
-        console.log('Resposta da API:', {
-            status: response.status,
-            statusText: response.statusText,
-            url: response.url
-        });
-
-        // Verificar se a resposta é JSON válido
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('Resposta não é JSON válido');
-        }
-
-        const responseData = await response.json();
-
-        
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => null);
-            
-            if (errorData?.requires_reload) {
-                window.location.reload();
-                return;
-            }
-            
-            throw new Error(errorData?.message || `Erro HTTP: ${response.status}`);
-        }
-        
-        // Tratamento especial para erros CSRF
-        if (response.status === 403) {
-            const errorData = await response.json();
-            if (errorData.message.includes('CSRF')) {
-                console.warn('Token CSRF inválido ou expirado, obtendo novo...');
-                await fetchCsrfToken();
-                return makeRequest(action, data); // Retry
-            }
-        }
-
-        // Verificação adicional de estrutura de resposta
-        if (!responseData) {
-            throw new Error('Resposta inválida do servidor');
-        }
-        
-        return responseData;
-
-    } catch (error) {
-        console.error('Erro completo:', error);
-
-        console.error('Detalhes do erro:', {
-            error: error.message,
-            config: {
-                url: API_BASE_URL,
-                method: 'POST',
-                body: JSON.stringify({...data, action})
-            }
-        });
-
-        showAlert('Erro na comunicação com o servidor', 'error');
-        throw error;
-    } finally {
-        toggleLoader(false);
-    }
-}
-
-/**
- * Atualiza a interface com base no estado atual
- */
-
-function updateUI() {
-    console.log('Atualizando UI, estado atual:', appState.currentState); // DEBUG
+function setLoadingState(isLoading) {
+    const elements = getDOMElements();
+    if (!elements) return;
     
-    // Esconde todas as seções primeiro
-    elements.mfaSetupSection.style.display = 'none';
-    elements.mfaVerifySection.style.display = 'none';
+    // Atualizar estado global
+    appState.isLoading = isLoading;
     
-    // Mostra a seção apropriada
-    switch(appState.currentState) {
-        case AuthStates.MFA_SETUP:
-            console.log('Mostrando seção MFA_SETUP'); // DEBUG
-            elements.mfaSetupSection.style.display = 'block';
-            elements.mfaSetupSection.classList.add('active');
-            break;
-
-        case AuthStates.MFA_VERIFY:
-            console.log('Mostrando seção MFA_VERIFY'); // DEBUG
-            elements.mfaVerifySection.style.display = 'block';
-            elements.mfaVerifySection.classList.add('active');
-            elements.remainingAttempts.textContent = 
-                `Tentativas restantes: ${appState.remainingAttempts}`;
-            break;
+    // Mostrar/ocultar indicador de carregamento
+    if (elements.loadingIndicator) {
+        elements.loadingIndicator.style.display = isLoading ? 'block' : 'none';
     }
     
-    // Atualiza o status do MFA
-    if (elements.mfaStatusText) {
-        const status = appState.mfaEnabled ? 'enabled' : 'disabled';
-        console.log('Atualizando status MFA:', status); // DEBUG
-        elements.mfaStatusText.textContent = status === 'enabled' ? 'Ativada' : 'Desativada';
-        elements.mfaStatusText.dataset.status = status;
+    // Habilitar/desabilitar botão de submit
+    if (elements.submitButton) {
+        elements.submitButton.disabled = isLoading;
     }
 }
 
 // ==============================================
-// MANIPULAÇÃO DE AUTENTICAÇÃO
+// 4. CONTROLE DOS MENUS DROPDOWN
 // ==============================================
 
-
-//Validação do formulário
-
-// Adicionar validação antes do submit
-function validateLoginForm() {
-    const email = elements.emailInput.value.trim();
-    const senha = elements.passwordInput.value;
+/**
+ * Alterna o menu dropdown do usuário (avatar)
+ */
+function toggleUserDropdown() {
+    const elements = getDOMElements();
+    if (!elements) return;
     
-    if (!email || !senha) {
+    appState.dropdowns.userMenu = !appState.dropdowns.userMenu;
+    
+    if (appState.dropdowns.userMenu) {
+        elements.userDropdownMenu.classList.add('active');
+    } else {
+        elements.userDropdownMenu.classList.remove('active');
+    }
+    
+    // Fecha o menu de gêneros se estiver aberto
+    if (appState.dropdowns.genresMenu) {
+        toggleGenresDropdown();
+    }
+}
+
+/**
+ * Alterna o menu dropdown de gêneros
+ */
+function toggleGenresDropdown() {
+    const elements = getDOMElements();
+    if (!elements) return;
+    
+    appState.dropdowns.genresMenu = !appState.dropdowns.genresMenu;
+    
+    if (appState.dropdowns.genresMenu) {
+        elements.genresDropdownBtn.classList.add('active');
+        elements.genresDropdownContainer.classList.add('active');
+        elements.dropdownArrow.classList.add('rotate');
+    } else {
+        elements.genresDropdownBtn.classList.remove('active');
+        elements.genresDropdownContainer.classList.remove('active');
+        elements.dropdownArrow.classList.remove('rotate');
+    }
+    
+    // Fecha o menu do usuário se estiver aberto
+    if (appState.dropdowns.userMenu) {
+        toggleUserDropdown();
+    }
+}
+
+/**
+ * Alterna a sidebar (menu lateral)
+ */
+function toggleSidebar() {
+    const elements = getDOMElements();
+    if (!elements) return;
+    
+    elements.sidebar.classList.toggle('active');
+}
+
+/**
+ * Fecha todos os menus dropdowns
+ */
+function closeAllDropdowns() {
+    const elements = getDOMElements();
+    if (!elements) return;
+    
+    appState.dropdowns.userMenu = false;
+    appState.dropdowns.genresMenu = false;
+    
+    elements.userDropdownMenu.classList.remove('active');
+    elements.genresDropdownBtn.classList.remove('active');
+    elements.genresDropdownContainer.classList.remove('active');
+    elements.dropdownArrow.classList.remove('rotate');
+}
+
+/**
+ * Configura os event listeners para os dropdowns
+ */
+function setupDropdownListeners() {
+    const elements = getDOMElements();
+    if (!elements) return;
+    
+    // Menu do usuário (avatar)
+    if (elements.avatarDropdown) {
+        elements.avatarDropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleUserDropdown();
+        });
+    }
+    
+    // Menu de gêneros
+    if (elements.genresDropdownBtn) {
+        elements.genresDropdownBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleGenresDropdown();
+        });
+    }
+    
+    // Menu hamburguer (sidebar)
+    if (elements.barsIcon) {
+        elements.barsIcon.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleSidebar();
+        });
+    }
+    
+    // Fecha menus ao clicar fora
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.dropdown-menu') && 
+            !e.target.closest('.avatar') && 
+            !e.target.closest('.dropdown-btn') && 
+            !e.target.closest('.dropdown-container')) {
+            closeAllDropdowns();
+        }
+    });
+}
+
+// ==============================================
+// 5. VALIDAÇÃO DE FORMULÁRIO
+// ==============================================
+
+/**
+ * Valida um endereço de email
+ * @param {string} email Email a ser validado
+ * @returns {boolean} True se válido, false caso contrário
+ */
+function isValidEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+}
+
+/**
+ * Valida os dados do formulário de login
+ * @param {string} email Email do usuário
+ * @param {string} password Senha do usuário
+ * @returns {boolean} True se válido, false caso contrário
+ */
+function validateForm(email, password) {
+    if (!email || !password) {
         showAlert('Por favor, preencha todos os campos', 'error');
         return false;
     }
     
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!isValidEmail(email)) {
         showAlert('Por favor, insira um email válido', 'error');
         return false;
     }
@@ -258,457 +263,203 @@ function validateLoginForm() {
     return true;
 }
 
-
+// ==============================================
+// 6. COMUNICAÇÃO COM A API
+// ==============================================
 
 /**
- * Manipula o login do usuário
+ * Obtém um novo token CSRF do servidor
+ * @returns {Promise<string>} Promise que resolve com o token
  */
-async function handleLogin() {
-
-    console.log('Iniciando handleLogin'); // DEBUG
-
-    if (!validateLoginForm()) return;
-
-    const email = elements.emailInput.value.trim();
-    const senha = elements.passwordInput.value;
-
-    console.log('Credenciais:', {email, senha}); // DEBUG
-
-
-    if (!email || !senha) {
-        showAlert('Por favor, preencha todos os campos', 'error');
-        return;
-    }
-
+async function fetchCsrfToken() {
     try {
-        console.log('Fazendo requisição para API...'); // DEBUG
-        const data = await makeRequest('login', { email, senha });
-        console.log('Resposta da API:', data); // DEBUG
-        
-        if (data.success) {
-            console.log('Login bem-sucedido, ocultando formulário...'); // DEBUG
-            document.getElementById('basiclogin').style.display = 'none';
-            
-            console.log('Exibindo seção pós-login...'); // DEBUG
-            document.getElementById('post-login').style.display = 'block';
-
-            if (data.mfa_setup_required) {
-                console.log('MFA setup required'); // DEBUG
-                appState.currentState = AuthStates.MFA_SETUP;
-                appState.userData = { email, userId: data.user_id };
-                startMfaSetup();
-            } else if (data.mfa_required) {
-                console.log('MFA verification required'); // DEBUG
-                appState.currentState = AuthStates.MFA_VERIFY;
-                appState.mfaToken = data.mfa_token;
-                appState.userData = { email };
-            } else {
-                console.log('Redirecionando para perfil...'); // DEBUG
-                window.location.href = data.redirect || 'perfil.html';
-            }
-            updateUI();
-        } else {
-            console.log('Erro no login:', data.message); // DEBUG
-            showAlert(data.message || 'Erro no login', 'error');
-        }
-    } catch (error) {
-        console.error('Erro no handleLogin:', error); // DEBUG
-        showAlert('Erro na comunicação com o servidor', 'error');
-    }
-}
-
-
-// Testar a conexão com a API
-async function testApiConnection() {
-    try {
-        const response = await fetch(API_BASE_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-Token': appState.csrfToken
-            },
-            body: JSON.stringify({
-                action: 'test',
-                csrf_token: appState.csrfToken
-            })
+        // Fazer requisição para obter token
+        const response = await fetch(`${API_BASE_URL}?action=get_csrf`, {
+            method: 'GET',
+            credentials: 'include'  // Inclui cookies para sessão
         });
         
-        const data = await response.json();
-        console.log('Teste de conexão com API:', data);
-        return data.success === true;
-    } catch (error) {
-        console.error('Falha no teste de conexão com API:', error);
-        return false;
-    }
-}
-
-
-// ==============================================
-// MFA IMPLEMENTAÇÃO COMPLETA
-// ==============================================
-
-/**
- * Inicia o setup do MFA
- */
-async function startMfaSetup() {
-    try {
-        // Mostra a seção de setup primeiro
-        appState.currentState = AuthStates.MFA_SETUP;
-        updateUI();
-        
-        const response = await makeRequest('setup_mfa', {
-            email: appState.userData.email,
-            user_id: appState.userData.userId
-        });
-
-        if (response.success) {
-            // Atualiza os elementos da UI
-            elements.mfaQrCode.src = response.qr_code;
-            elements.mfaSecret.textContent = response.secret;
-            appState.mfaSecret = response.secret;
+        // Verificar se a resposta está OK
+        if (!response.ok) {
+            // Tentar extrair mensagem de erro da resposta
+            let errorMsg = 'Falha ao obter token de segurança';
             
-            // Garante que os elementos estão visíveis
-            elements.mfaQrCode.style.display = 'block';
-            elements.mfaSecret.style.display = 'block';
-            
-            // Foca no campo de código
-            elements.mfaSetupCodeInput.focus();
-        } else {
-            throw new Error(response.message || 'Erro ao configurar MFA');
-        }
-    } catch (error) {
-        console.error('Erro no setup MFA:', error);
-        showAlert('Falha na configuração: ' + error.message, 'error');
-        resetToLogin();
-    }
-}
-
-/**
- * Verifica um código MFA
- */
-async function verifyMfa() {
-    const code = elements.mfaCodeInput.value.trim();
-    
-    if (!/^\d{6}$/.test(code)) {
-        showAlert('Código deve ter 6 dígitos', 'error');
-        return;
-    }
-
-    try {
-        const response = await makeRequest('verify_mfa', {
-            mfa_token: appState.mfaToken,
-            code: code
-        });
-
-        if (response.success) {
-            showAlert('Autenticação concluída!', 'success');
-            window.location.href = response.redirect || 'perfil.html';
-        } else {
-            handleFailedAttempt(response);
-        }
-    } catch (error) {
-        console.error('Erro na verificação MFA:', error);
-        showAlert('Falha na verificação: ' + error.message, 'error');
-    }
-}
-
-/**
- * Confirma a ativação do MFA
- */
-async function confirmMfaSetup() {
-    const code = elements.mfaSetupCodeInput.value.trim();
-    
-    if (!/^\d{6}$/.test(code)) {
-        showAlert('Código deve ter 6 dígitos', 'error');
-        return;
-    }
-
-    try {
-        const response = await makeRequest('confirm_mfa', {
-            code: code,
-            secret: appState.mfaSecret,
-            user_id: appState.userData.userId
-        });
-
-        if (response.success) {
-            showAlert('MFA ativado com sucesso!', 'success');
-            appState.mfaEnabled = true;
-            updateUI();
-            setTimeout(() => {
-                window.location.href = response.redirect || 'perfil.html';
-            }, 1500);
-        } else {
-            throw new Error(response.message || 'Código inválido');
-        }
-    } catch (error) {
-        console.error('Erro na confirmação MFA:', error);
-        showAlert('Falha na ativação: ' + error.message, 'error');
-    }
-}
-
-/**
- * Ativa o MFA para usuário logado
- */
-async function enableMfaForUser() {
-    if (!appState.userData?.email) {
-        showAlert('Faça login primeiro', 'error');
-        return;
-    }
-
-    try {
-        const response = await makeRequest('setup_mfa', {
-            email: appState.userData.email,
-            user_id: appState.userData.userId
-        });
-
-        if (response.success) {
-            appState.currentState = AuthStates.MFA_SETUP;
-            elements.mfaQrCode.src = response.qr_code;
-            elements.mfaSecret.textContent = response.secret;
-            appState.mfaSecret = response.secret;
-            updateUI();
-        } else {
-            throw new Error(response.message || 'Erro ao ativar MFA');
-        }
-    } catch (error) {
-        console.error('Erro ao ativar MFA:', error);
-        showAlert('Falha: ' + error.message, 'error');
-    }
-}
-
-// Helper functions
-function handleFailedAttempt(response) {
-    appState.remainingAttempts--;
-    elements.remainingAttempts.textContent = `Tentativas restantes: ${appState.remainingAttempts}`;
-    
-    if (appState.remainingAttempts <= 0) {
-        showAlert('Tentativas esgotadas', 'error');
-        resetToLogin();
-    } else {
-        showAlert(response.message || 'Código inválido', 'error');
-    }
-}
-
-function resetToLogin() {
-    appState.currentState = AuthStates.LOGIN;
-    appState.remainingAttempts = 3;
-    updateUI();
-}
-
-
-// ==============================================
-// CONFIGURAÇÃO DE EVENTOS
-// ==============================================
-
-//**
-/* Configura os dropdowns da navbar e sidebar
-*/
-// Atualize a função setupDropdowns para ser mais robusta
-function setupDropdowns() {
-    // Dropdown do avatar (navbar)
-    const avatar = document.querySelector(".avatar");
-    if (avatar) {
-        avatar.addEventListener("click", function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const menu = this.querySelector(".dropdown-menu");
-            if (menu) {
-                menu.classList.toggle("active");
-
-                // Fecha outros menus abertos
-                document.querySelectorAll(".dropdown-menu").forEach(d => {
-                    if (d !== menu) d.classList.remove("active");
-                });
-            }
-        });
-    }
-
-    // Dropdown dos gêneros (sidebar)
-    const dropdownBtn = document.querySelector(".sidebar .dropdown-btn");
-    if (dropdownBtn) {
-        dropdownBtn.addEventListener("click", function(e) {
-            e.stopPropagation();
-            this.classList.toggle("active");
-            
-            const dropdownContent = this.nextElementSibling;
-            if (dropdownContent && dropdownContent.classList.contains("dropdown-container")) {
-                dropdownContent.classList.toggle("active");
-                
-                const icon = this.querySelector(".fa-caret-down");
-                if (icon) {
-                    icon.classList.toggle("fa-rotate-180");
+            try {
+                const errorData = await response.json();
+                if (errorData.message) {
+                    errorMsg = errorData.message;
                 }
+            } catch (e) {
+                console.error('Erro ao analisar resposta:', e);
             }
-        });
-    }
-
-    // Fecha todos os dropdowns ao clicar fora
-    document.addEventListener("click", function(e) {
-        // Verifica se o clique foi fora dos dropdowns
-        if (!e.target.closest('.dropdown-menu') && !e.target.closest('.dropdown-btn')) {
-            document.querySelectorAll(".dropdown-menu").forEach(dropdown => {
-                dropdown.classList.remove("active");
-            });
             
-            document.querySelectorAll(".sidebar .dropdown-container").forEach(dropdown => {
-                dropdown.classList.remove("active");
-            });
-            
-            document.querySelectorAll(".sidebar .dropdown-btn").forEach(btn => {
-                btn.classList.remove("active");
-                const icon = btn.querySelector(".fa-caret-down");
-                if (icon) icon.classList.remove("fa-rotate-180");
-            });
+            throw new Error(errorMsg);
         }
-    });
-
-    // Toggle da sidebar em mobile
-    const bars = document.querySelector(".bars");
-    if (bars) {
-        bars.addEventListener("click", function(e) {
-            e.stopPropagation();
-            const sidebar = document.querySelector(".sidebar");
-            if (sidebar) {
-                sidebar.classList.toggle("active");
-            }
-        });
+        
+        // Extrair dados da resposta
+        const data = await response.json();
+        
+        // Verificar estrutura da resposta
+        if (!data.success || !data.token) {
+            throw new Error('Resposta inválida do servidor');
+        }
+        
+        return data.token;
+    } catch (error) {
+        console.error('Erro no token CSRF:', error);
+        showAlert('Erro ao obter token de segurança. Por favor, recarregue a página.', 'error');
+        throw error;
     }
 }
 
 /**
- * Configura todos os eventos da aplicação
+ * Faz uma requisição para a API
+ * @param {string} action Ação a ser executada
+ * @param {Object} data Dados a serem enviados
+ * @returns {Promise<Object>} Promise com a resposta da API
+ */
+async function makeApiRequest(action, data = {}) {
+    try {
+        // Ativar estado de carregamento
+        setLoadingState(true);
+        
+        // Garantir que temos um token CSRF (exceto para obter o próprio token)
+        if (!appState.csrfToken && action !== 'get_csrf') {
+            appState.csrfToken = await fetchCsrfToken();
+        }
+        
+        // Adicionar token CSRF se disponível
+        if (appState.csrfToken) {
+            data.csrf_token = appState.csrfToken;
+        }
+        
+        // Fazer requisição para a API
+        const response = await fetch(`${API_BASE_URL}?action=${action}`, {
+            method: 'POST',
+            credentials: 'include',  // Importante para cookies de sessão
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        // Verificar se a resposta está vazia
+        const responseText = await response.text();
+        if (!responseText) {
+            throw new Error('Resposta vazia do servidor');
+        }
+        
+        // Parse da resposta JSON
+        const result = JSON.parse(responseText);
+        
+        // Verificar se houve erro na requisição
+        if (!response.ok) {
+            throw new Error(result.message || 'Requisição falhou');
+        }
+        
+        return result;
+    } catch (error) {
+        console.error(`Erro na requisição (${action}):`, error);
+        
+        // Mensagem amigável para o usuário
+        let userMessage = error.message;
+        if (error instanceof SyntaxError) {
+            userMessage = 'Resposta inválida do servidor';
+        } else if (error.message.includes('Failed to fetch')) {
+            userMessage = 'Erro de conexão com o servidor';
+        }
+        
+        showAlert(userMessage, 'error');
+        throw error;
+    } finally {
+        // Desativar estado de carregamento
+        setLoadingState(false);
+    }
+}
+
+// ==============================================
+// 7. MANIPULADOR DE LOGIN
+// ==============================================
+
+/**
+ * Manipula o envio do formulário de login
+ * @param {Event} event Evento de submit
+ */
+async function handleLogin(event) {
+    // Prevenir comportamento padrão do formulário
+    if (event) {
+        event.preventDefault();
+    }
+    
+    // Obter elementos do DOM
+    const elements = getDOMElements();
+    if (!elements) return;
+    
+    // Obter valores dos campos
+    const email = elements.emailInput.value.trim();
+    const password = elements.passwordInput.value;
+    
+    // Validar formulário
+    if (!validateForm(email, password)) {
+        return;
+    }
+    
+    try {
+        // Fazer requisição de login
+        const response = await makeApiRequest('login', {
+            email: email,
+            senha: password
+        });
+        
+        // Redirecionar com base na resposta
+        if (response.success) {
+            if (response.mfa_required) {
+                window.location.href = `mfa_verification.html?user_id=${response.user_id}`;
+            } else {
+                window.location.href = 'perfil.html';
+            }
+        }
+    } catch (error) {
+        console.error('Erro no processo de login:', error);
+    }
+}
+
+// ==============================================
+// 8. CONFIGURAÇÃO DE EVENT LISTENERS
+// ==============================================
+
+/**
+ * Configura os event listeners necessários
  */
 function setupEventListeners() {
-    console.log('Configurando event listeners...');
+    const elements = getDOMElements();
+    if (!elements) return;
     
-    // Formulário de login
-    if (elements.loginForm) {
-        let isSubmitting = false;
-        elements.loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (isSubmitting) return;
-            
-            isSubmitting = true;
-            handleLogin().finally(() => {
-                isSubmitting = false;
-            });
-        });
-    }
-
-    // Botão de ativar MFA
-    elements.enableMfaBtn?.addEventListener('click', (e) => {
-        e.preventDefault();
-        enableMfaForUser();
-    });
-
-    // Confirmação de setup MFA
-    elements.confirmMfaSetupBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        confirmMfaSetup();
-    });
-
-    // Verificação de código MFA
-    elements.verifyMfaBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        verifyMfa();
-    });
-
-    // Configura dropdowns
-    setupDropdowns();
+    // Adicionar listener para o formulário de login
+    elements.loginForm.addEventListener('submit', handleLogin);
+    
+    // Configurar listeners para os dropdowns
+    setupDropdownListeners();
 }
 
 // ==============================================
-// INICIALIZAÇÃO
+// 9. INICIALIZAÇÃO DA APLICAÇÃO
 // ==============================================
 
-document.addEventListener('DOMContentLoaded', () => {
-
-    // Método 1: Tenta obter da meta tag
-    const csrfMetaTag = document.querySelector('meta[name="csrf-token"]');
-    
-    // Método 2: Fallback - tenta obter de um input hidden (adicione no HTML se necessário)
-    const csrfInput = document.querySelector('input[name="csrf_token"]');
-    
-    // Método 3: Fallback - tenta obter da sessão via endpoint especial
-    if (!csrfMetaTag?.content && !csrfInput?.value) {
-        fetchCsrfToken();
-        return;
-    }
-
-    // Verifique se o token CSRF existe
-    appState.csrfToken = csrfMetaTag?.content || csrfInput?.value;
-    console.log('Token CSRF inicializado:', appState.csrfToken);
-    
-    if (!appState.csrfToken) {
-        console.error('Token CSRF não encontrado');
-        showAlert('Erro de segurança. Recarregue a página.', 'error');
-        return;
-    } else {
-        console.log('Token CSRF encontrado:', appState.csrfToken);
-        setupEventListeners();
-        updateUI();
-    }
-
-});
-
-// função para buscar o token se não estiver na página
-async function fetchCsrfToken() {
-
-    console.log('Solicitando novo token CSRF do servidor...');
-    
+/**
+ * Inicializa a aplicação
+ */
+async function initializeApp() {
     try {
-        const response = await fetch(`${API_BASE_URL}?action=get_csrf`, {
-            credentials: 'include',
-            headers: {
-                'Accept': 'application/json'
-            }
-        });
+        // Configurar listeners
+        setupEventListeners();
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('Resposta não é JSON válido');
-        }
-        
-        const data = await response.json();
-        if (!data.token) {
-            throw new Error('Token CSRF não recebido');
-        }
-        
-        appState.csrfToken = data.token;
-        console.log('Token CSRF obtido via API:', appState.csrfToken);
-        
+        // Obter token CSRF antecipadamente
+        appState.csrfToken = await fetchCsrfToken();
     } catch (error) {
-        console.error('Erro ao buscar token CSRF:', error);
-        showAlert('Erro crítico de segurança. Recarregando...', 'error');
-        setTimeout(() => window.location.reload(), 3000);
+        console.error('Erro na inicialização:', error);
     }
-
-   
 }
 
-//Responsividade do sidebar para mobile
-
-document.addEventListener('DOMContentLoaded', function() {
-    const sidebar = document.querySelector('.sidebar');
-    const dropdownBtns = document.querySelectorAll('.dropdown-btn');
-    
-    // Toggle para mobile
-    document.querySelector('.bars').addEventListener('click', function() {
-        sidebar.classList.toggle('active');
-    });
-    
-    // Melhorar dropdown para mobile
-    dropdownBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            if (window.innerWidth <= 768) {
-                this.classList.toggle('active');
-                const dropdownContent = this.nextElementSibling;
-                dropdownContent.classList.toggle('active');
-            }
-        });
-    });
-});
+// Iniciar a aplicação quando o DOM estiver pronto
+document.addEventListener('DOMContentLoaded', initializeApp);
