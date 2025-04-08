@@ -274,7 +274,94 @@ function updateNavigationButtons() {
 function initializeApp() {
     setupDropdownListeners();
     initCarousel();
+    
 }
 
 // Inicia quando o DOM estiver pronto
 document.addEventListener('DOMContentLoaded', initializeApp);
+
+/* ============================================== */
+/* 6. AJUSTES DE RESPONSIVIDADE DINÂMICA */
+/* ============================================== */
+
+/**
+ * Ajusta o carrossel para diferentes tamanhos de tela
+ */
+function initCarousel() {
+    const container = document.querySelector('.carousel-container');
+    const slides = document.querySelector('.carousel-slides');
+    const slideItems = document.querySelectorAll('.carousel-slide');
+    const controlsContainer = document.querySelector('.carousel-controls');
+    
+    if (!container || !slides || slideItems.length === 0) return;
+    
+    // Configuração inicial
+    let currentIndex = 0;
+    const totalSlides = slideItems.length;
+    let intervalId = null;
+    
+    // Cria os controles
+    slideItems.forEach((_, index) => {
+        const control = document.createElement('button');
+        control.classList.add('carousel-control');
+        if (index === 0) control.classList.add('active');
+        control.addEventListener('click', () => goToSlide(index));
+        controlsContainer.appendChild(control);
+    });
+    
+    const controls = document.querySelectorAll('.carousel-control');
+    
+    // Função para ir para um slide específico
+    function goToSlide(index) {
+        currentIndex = index;
+        slides.style.transform = `translateX(-${currentIndex * 100}%)`;
+        updateControls();
+        resetInterval();
+    }
+    
+    // Atualiza os controles visuais
+    function updateControls() {
+        controls.forEach((control, index) => {
+            control.classList.toggle('active', index === currentIndex);
+        });
+    }
+    
+    // Avança para o próximo slide
+    function nextSlide() {
+        currentIndex = (currentIndex + 1) % totalSlides;
+        goToSlide(currentIndex);
+    }
+    
+    // Reinicia o intervalo de autoplay
+    function resetInterval() {
+        clearInterval(intervalId);
+        intervalId = setInterval(nextSlide, 4000);
+    }
+    
+    // Inicia o carrossel
+    function startCarousel() {
+        resetInterval();
+    }
+    
+    // Ajusta o tamanho do carrossel
+    function adjustCarouselSize() {
+        const isMobile = window.innerWidth <= 768;
+        const isLandscape = window.innerWidth > window.innerHeight;
+        
+        if (isMobile) {
+            container.style.aspectRatio = isLandscape ? '16/9' : '1/1';
+            container.style.maxHeight = isLandscape ? '80vh' : '70vh';
+        } else {
+            container.style.aspectRatio = '16/9';
+            container.style.maxHeight = '';
+        }
+    }
+    
+    // Event listeners
+    window.addEventListener('resize', adjustCarouselSize);
+    window.addEventListener('orientationchange', adjustCarouselSize);
+    
+    // Inicialização
+    adjustCarouselSize();
+    startCarousel();
+}

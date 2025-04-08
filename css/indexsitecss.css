@@ -351,57 +351,65 @@ body {
 /* ============== */
 /* CARROSSEL STYLES */
 /* ============== */
-.slider {
-    margin: 0 auto;
+.wrapper {
     width: 100%;
-    max-width: 800px;
-    height: 800px;
-    overflow: hidden;
-    position: relative;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    background-color: #f5f5f5; /* Fundo para áreas não ocupadas pela imagem */
+    padding: 20px;
+    box-sizing: border-box;
 }
 
-.slides {
+.row {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.carousel-container {
+    width: 100%;
+    max-width: 1200px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    aspect-ratio: 16/9; /* Proporção inicial */
+}
+
+.carousel-slides {
+    display: flex;
     width: 100%;
     height: 100%;
-    display: flex;
     transition: transform 0.5s ease;
 }
 
-.slide {
+.carousel-slide {
     min-width: 100%;
-    position: relative;
-    flex-shrink: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #f5f5f5; /* Fundo para áreas não ocupadas pela imagem */
+    background-color: #f5f5f5;
 }
 
-.slide img {
-    max-width: 100%;
-    max-height: 100%;
+.carousel-slide img {
     width: auto;
     height: auto;
-    object-fit: contain; /* Alterado de 'cover' para 'contain' */
-    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
-/* Navegação manual - Versão corrigida */
-.manual-nav {
+.carousel-controls {
     position: absolute;
     bottom: 20px;
     left: 0;
     right: 0;
     display: flex;
     justify-content: center;
-    z-index: 10;
     gap: 10px;
+    z-index: 10;
 }
 
-.manual-btn {
+.carousel-control {
     width: 12px;
     height: 12px;
     border-radius: 50%;
@@ -409,73 +417,40 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     border: none;
-    padding: 0;
 }
 
-.manual-btn:hover, 
-.manual-btn.active {
+.carousel-control.active {
     background-color: var(--third-color);
     transform: scale(1.2);
 }
 
-/* Navegação automática - Versão corrigida */
-.nav-auto {
-    position: absolute;
-    bottom: 20px;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: center;
-    z-index: 10;
-    gap: 10px;
-}
-
-.nav-auto div {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.5);
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.nav-auto div.active {
-    background-color: var(--third-color);
-    transform: scale(1.2);
-}
-
-/* Esconde os radio buttons */
-.slides input[type="radio"] {
-    display: none;
-}
-
-/* Container para as imagens */
-.image-container {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    position: relative;
-}
-
-.slide img {
-    transition: all 0.3s ease;
-}
-
-.slide img:hover {
-    transform: scale(1.02);
-}
-
-/* Ajuste para telas menores */
-@media (max-width: 600px) {
-    .slider {
-        height: 300px;
+/* Responsividade */
+@media (max-width: 768px) {
+    .wrapper {
+        padding: 10px;
     }
     
-    .image-container {
+    .carousel-container {
+        aspect-ratio: 1/1;
+        max-height: 70vh;
+    }
+    
+    .carousel-slide img {
         padding: 10px;
+    }
+    
+    @media (orientation: landscape) {
+        .carousel-container {
+            aspect-ratio: 16/9;
+            max-height: 80vh;
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    .carousel-container {
+        aspect-ratio: 3/4;
+        max-height: 60vh;
     }
 }
 
@@ -494,7 +469,16 @@ body {
     }
     
     .slider {
-        max-width: 100%;
+        aspect-ratio: 1/1; /* Quadrado em mobile */
+        max-height: 70vh;
+    }
+    
+    /* Ajuste para paisagem em mobile */
+    @media (orientation: landscape) {
+        .slider {
+            aspect-ratio: 16/9;
+            max-height: 80vh;
+        }
     }
 }
 
@@ -532,5 +516,237 @@ body {
     .slide img {
         max-width: 95%;
         max-height: 95%;
+    }
+}
+
+/* ==================== */
+/* MELHORIAS NA RESPONSIVIDADE */
+/* ==================== */
+
+/* Ajustes gerais para mobile */
+@media (max-width: 768px) {
+    /* Navbar mais compacta */
+    .navbar {
+        padding: 5px 10px;
+    }
+    
+    .navbar .bars {
+        margin-right: 10px;
+    }
+    
+    .avatar img {
+        width: 35px;
+        height: 35px;
+    }
+
+    /* Sidebar mobile */
+    .content .sidebar {
+        position: fixed;
+        transform: translateX(-100%);
+        z-index: 900;
+        width: 0;
+        height: calc(100vh - 60px);
+        transition: transform 0.3s ease, width 0.3s ease;
+    }
+    
+    .content .sidebar.active {
+        width: 250px;
+        transform: translateX(0);
+    }
+
+    /* Espaçamento do conteúdo */
+    .wrapper {
+        padding: 10px;
+        width: 100vw;
+    }
+
+    /* Carrossel mobile */
+    .slider {
+        height: auto;
+        max-height: 50vh;
+        aspect-ratio: 3/4;
+        max-width: 100%;
+    }
+
+    .slide img {
+        max-width: 95%;
+        max-height: 95%;
+        padding: 5px;
+    }
+
+    /* Controles do carrossel */
+    .manual-nav, .nav-auto {
+        bottom: -30px;
+    }
+    
+    .manual-btn, .nav-auto div {
+        width: 10px;
+        height: 10px;
+    }
+}
+
+/* Ajustes para telas muito pequenas */
+@media (max-width: 480px) {
+    .slider {
+        aspect-ratio: 2/3;
+        max-height: 45vh;
+    }
+    
+    .dropdown-menu {
+        width: 180px;
+    }
+    
+    .sidebar-nav .icon {
+        font-size: 20px;
+    }
+}
+
+/* Correção para tablets em modo retrato */
+@media (min-width: 481px) and (max-width: 768px) and (orientation: portrait) {
+    .slider {
+        aspect-ratio: 4/3;
+        max-height: 55vh;
+    }
+}
+
+/* Ajuste para quando o teclado aparece em mobile */
+@media (max-height: 500px) {
+    .slider {
+        max-height: 40vh;
+    }
+    
+    .content .sidebar {
+        height: calc(100vh - 50px);
+    }
+}
+
+/* ==================== */
+/* CARROSSEL RESPONSIVO */
+/* ==================== */
+
+.slider {
+    margin: 0 auto;
+    width: 100%;
+    max-width: 1200px; /* Aumentado para telas grandes */
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    background-color: var(--bg-color);
+    aspect-ratio: 16/9; /* Proporção inicial */
+}
+
+.slides {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    transition: transform 0.5s ease;
+}
+
+.slide {
+    min-width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.slide img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
+
+/* Controles do carrossel */
+.manual-nav, .nav-auto {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    z-index: 10;
+}
+
+.manual-btn, .nav-auto div {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.manual-btn:hover, 
+.manual-btn.active,
+.nav-auto div.active {
+    background-color: var(--third-color);
+    transform: scale(1.2);
+}
+
+/* ==================== */
+/* RESPONSIVIDADE */
+/* ==================== */
+
+/* Telas médias (tablets) */
+@media (max-width: 1024px) {
+    .slider {
+        max-width: 90%;
+        aspect-ratio: 4/3;
+    }
+}
+
+/* Telas pequenas (mobiles grandes) */
+@media (max-width: 768px) {
+    .slider {
+        max-width: 100%;
+        aspect-ratio: 1/1;
+        border-radius: 0;
+    }
+    
+    .slide {
+        padding: 15px;
+    }
+    
+    .manual-nav, .nav-auto {
+        bottom: 15px;
+    }
+}
+
+/* Telas muito pequenas (mobiles pequenos) */
+@media (max-width: 480px) {
+    .slider {
+        aspect-ratio: 3/4;
+    }
+    
+    .slide {
+        padding: 10px;
+    }
+    
+    .manual-btn, .nav-auto div {
+        width: 10px;
+        height: 10px;
+    }
+}
+
+/* Modo paisagem em dispositivos móveis */
+@media (max-width: 768px) and (orientation: landscape) {
+    .slider {
+        aspect-ratio: 16/9;
+        max-height: 90vh;
+    }
+}
+
+/* Ajuste para telas altas */
+@media (min-height: 800px) {
+    .slider {
+        max-height: 80vh;
     }
 }
