@@ -1,88 +1,280 @@
-/* Inicio Dropdown Navbar */
-let dropdownContainer = document.querySelector(".dropdown-container");
-let avatar = document.querySelector(".avatar");
+/**
+ * SISTEMA PRINCIPAL - LIVRARIA
+ * 
+ * Organizado por funcionalidades principais
+ * Comentários detalhados para cada seção
+ */
 
-dropMenu(avatar);
-dropMenu(dropdownContainer);
+/* ============================================== */
+/* 1. ESTADO GLOBAL DA APLICAÇÃO */
+/* ============================================== */
+const appState = {
+    // Controle dos menus dropdown
+    dropdowns: {
+        userMenu: false,
+        genresMenu: false
+    },
+    
+    // Controle do carrossel
+    carousel: {
+        currentSlide: 0,
+        interval: null,
+        totalSlides: 0,
+        slider: null,
+        slides: null,
+        manualBtns: null,
+        autoBtns: null
+    }
+};
 
-function dropMenu(selector) {
-    //console.log(selector);
-    selector.addEventListener("click", () => {
-        let dropdownMenu = selector.querySelector(".dropdown-menu");
-        dropdownMenu.classList.contains("active") ? dropdownMenu.classList.remove("active") : dropdownMenu.classList.add("active");
+/* ============================================== */
+/* 2. GERENCIAMENTO DE ELEMENTOS DO DOM */
+/* ============================================== */
+
+/**
+ * Obtém todos os elementos DOM necessários
+ * @returns {Object} Objeto com referências aos elementos
+ */
+function getDOMElements() {
+    return {
+        // Elementos da navbar
+        avatar: document.querySelector('.avatar'),
+        userDropdown: document.querySelector('.dropdown-menu.setting'),
+        
+        // Elementos da sidebar
+        genresBtn: document.querySelector('.dropdown-btn'),
+        genresDropdown: document.querySelector('.dropdown-container'),
+        dropdownArrow: document.querySelector('.dropdown-btn .fa-caret-down'),
+        sidebar: document.querySelector('.sidebar'),
+        barsIcon: document.querySelector('.fa-bars'),
+        
+        // Elementos do carrossel
+        slider: document.querySelector('.slider'),
+        slides: document.querySelector('.slides'),
+        manualBtns: document.querySelectorAll('.manual-btn'),
+        autoBtns: document.querySelectorAll('.nav-auto div')
+    };
+}
+
+/* ============================================== */
+/* 3. CONTROLE DOS MENUS DROPDOWN */
+/* ============================================== */
+
+/**
+ * Alterna o menu dropdown do usuário
+ */
+function toggleUserDropdown() {
+    const elements = getDOMElements();
+    appState.dropdowns.userMenu = !appState.dropdowns.userMenu;
+    
+    if (appState.dropdowns.userMenu) {
+        elements.userDropdown.classList.add('active');
+        closeOtherDropdowns('user');
+    } else {
+        elements.userDropdown.classList.remove('active');
+    }
+}
+
+/**
+ * Alterna o menu dropdown de gêneros
+ */
+function toggleGenresDropdown() {
+    const elements = getDOMElements();
+    appState.dropdowns.genresMenu = !appState.dropdowns.genresMenu;
+    
+    if (appState.dropdowns.genresMenu) {
+        elements.genresDropdown.classList.add('active');
+        elements.dropdownArrow.classList.add('rotate');
+        closeOtherDropdowns('genres');
+    } else {
+        elements.genresDropdown.classList.remove('active');
+        elements.dropdownArrow.classList.remove('rotate');
+    }
+}
+
+/**
+ * Fecha outros dropdowns abertos
+ * @param {string} current - Dropdown atual que deve permanecer aberto
+ */
+function closeOtherDropdowns(current) {
+    const elements = getDOMElements();
+    
+    if (current !== 'user' && appState.dropdowns.userMenu) {
+        toggleUserDropdown();
+    }
+    
+    if (current !== 'genres' && appState.dropdowns.genresMenu) {
+        toggleGenresDropdown();
+    }
+}
+
+/**
+ * Alterna a sidebar entre estados expandido/recolhido
+ */
+function toggleSidebar() {
+    const elements = getDOMElements();
+    elements.sidebar.classList.toggle('active');
+}
+
+/**
+ * Configura os listeners para os dropdowns
+ */
+function setupDropdownListeners() {
+    const elements = getDOMElements();
+    
+    // Avatar do usuário
+    if (elements.avatar) {
+        elements.avatar.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleUserDropdown();
+        });
+    }
+    
+    // Menu de gêneros
+    if (elements.genresBtn) {
+        elements.genresBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleGenresDropdown();
+        });
+    }
+    
+    // Botão para alternar sidebar
+    if (elements.barsIcon) {
+        elements.barsIcon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleSidebar();
+        });
+    }
+    
+    // Fecha dropdowns ao clicar fora
+    document.addEventListener('click', () => {
+        if (appState.dropdowns.userMenu) toggleUserDropdown();
+        if (appState.dropdowns.genresMenu) toggleGenresDropdown();
     });
 }
-/* Fim Dropdown Navbar */
 
-/* Inicio Sidebar Toggle / bars */
-let sidebar = document.querySelector(".sidebar");
-let bars = document.querySelector(".bars");
+/* ============================================== */
+/* 4. CONTROLE DO CARROSSEL */
+/* ============================================== */
 
-bars.addEventListener("click", () => {
-    sidebar.classList.contains("active") ? sidebar.classList.remove("active") : sidebar.classList.add("active");
-});
-
-window.matchMedia("(max-width: 768px)").matches ? sidebar.classList.remove("active") : sidebar.classList.add("active");
-/* Fim Sidebar Toggle / bars */
-
-function actionDropdown(id) {
-    closeDropdownAction();
-    document.getElementById("actionDropdown" + id).classList.toggle("show-dropdown-action");
+/**
+ * Inicializa o carrossel com configurações padrão
+ */
+function initCarousel() {
+    const elements = getDOMElements();
+    if (!elements.slider) return;
+    
+    // Configura estado inicial
+    appState.carousel = {
+        currentSlide: 0,
+        interval: null,
+        totalSlides: document.querySelectorAll('.slide').length,
+        slider: elements.slider,
+        slides: elements.slides,
+        manualBtns: elements.manualBtns,
+        autoBtns: elements.autoBtns
+    };
+    
+    // Configura navegação manual
+    setupManualNavigation();
+    
+    // Configura navegação automática
+    setupAutoNavigation();
+    
+    // Inicia autoplay
+    startCarousel();
 }
 
-window.onclick = function (event) {
-    if (!event.target.matches(".dropdown-btn-action")) {
-        /*document.getElementById("actionDropdown").classList.remove("show-dropdown-action");*/
-        closeDropdownAction();
+/**
+ * Configura os botões de navegação manual
+ */
+function setupManualNavigation() {
+    appState.carousel.manualBtns.forEach((btn, index) => {
+        btn.addEventListener('click', () => goToSlide(index));
+    });
+    
+    // Ativa o primeiro botão
+    if (appState.carousel.manualBtns.length > 0) {
+        appState.carousel.manualBtns[0].classList.add('active');
     }
 }
 
-function closeDropdownAction() {
-    var dropdowns = document.getElementsByClassName("dropdown-action-item");
-    var i;
-    for (i = 0; i < dropdowns.length; i++) {
-        var openDropdown = dropdowns[i]
-        if (openDropdown.classList.contains("show-dropdown-action")) {
-            openDropdown.classList.remove("show-dropdown-action");
-        }
+/**
+ * Configura os botões de navegação automática
+ */
+function setupAutoNavigation() {
+    appState.carousel.autoBtns.forEach((btn, index) => {
+        btn.addEventListener('click', () => goToSlide(index));
+    });
+    
+    // Ativa o primeiro botão
+    if (appState.carousel.autoBtns.length > 0) {
+        appState.carousel.autoBtns[0].classList.add('active');
     }
 }
 
+/**
+ * Inicia o autoplay do carrossel
+ */
+function startCarousel() {
+    clearInterval(appState.carousel.interval);
+    appState.carousel.interval = setInterval(() => {
+        nextSlide();
+    }, 4000);
+}
 
-/* Inicio dropdown sidebar */
+/**
+ * Avança para o próximo slide
+ */
+function nextSlide() {
+    const nextIndex = (appState.carousel.currentSlide + 1) % appState.carousel.totalSlides;
+    goToSlide(nextIndex);
+}
 
-var dropdownSidebar = document.getElementsByClassName("dropdown-btn");
-var i;
+/**
+ * Navega para um slide específico
+ * @param {number} index - Índice do slide desejado
+ */
+function goToSlide(index) {
+    // Atualiza estado
+    appState.carousel.currentSlide = index;
+    
+    // Move o carrossel
+    appState.carousel.slides.style.transform = `translateX(-${index * 100}%)`;
+    
+    // Atualiza indicadores visuais
+    updateNavigationButtons();
+    
+    // Reinicia o intervalo
+    startCarousel();
+}
 
-for (i = 0; i < dropdownSidebar.length; i++) {
-    dropdownSidebar[i].addEventListener("click", function () {
-        this.classList.toggle("active");
-        var dropdownContent = this.nextElementSibling;
-        if (dropdownContent.style.display === "block") {
-            dropdownContent.style.display = "none";
-        } else {
-            dropdownContent.style.display = "block";
-        }
+/**
+ * Atualiza os botões de navegação
+ */
+function updateNavigationButtons() {
+    const { currentSlide, autoBtns, manualBtns } = appState.carousel;
+    
+    autoBtns.forEach((btn, i) => {
+        btn.classList.toggle('active', i === currentSlide);
+    });
+    
+    manualBtns.forEach((btn, i) => {
+        btn.classList.toggle('active', i === currentSlide);
     });
 }
-/* Fim dropdown sidebar */
 
-/* carrossel */
+/* ============================================== */
+/* 5. INICIALIZAÇÃO DA APLICAÇÃO */
+/* ============================================== */
 
-let count = 1;
-document.getElementById("radio1").checked = true;
-
-setInterval (function() {
-    nextImage();
-}, 4000)
-
-function nextImage(){
-    count++;
-    if(count > 5) {
-        count = 1;
-    }
-
-    document.getElementById("radio" + count).checked = true;
+/**
+ * Inicializa todos os componentes da aplicação
+ */
+function initializeApp() {
+    setupDropdownListeners();
+    initCarousel();
 }
 
-/*fim carrossel */
+// Inicia quando o DOM estiver pronto
+document.addEventListener('DOMContentLoaded', initializeApp);
