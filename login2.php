@@ -11,7 +11,7 @@ session_start();
 
     <!-- Meta Tags e Links -->
     <link rel="shortcut icon" href="./imagens/estrela.ico" type="image/x-icon">
-    <link rel="stylesheet" href="./css/sitecss.css">
+    <link rel="stylesheet" href="./css/sitecsslogin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;700&display=swap" rel="stylesheet">
 
@@ -40,7 +40,7 @@ session_start();
                 <img src="./imagens/user-pic.jpg" alt="usuario" width="40">
                 <div class="dropdown-menu setting">
                     <div class="item">
-                        <span class="fa-solid fa-door-open"></span> <a href="./login.html">Login</a>
+                        <span class="fa-solid fa-door-open"></span> <a href="./login2.php">Login</a>
                     </div>
                     <div class="item">
                         <span class="fa-solid fa-user"></span><a href="./perfil.html">Perfil</a>
