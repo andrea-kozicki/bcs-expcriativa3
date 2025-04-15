@@ -185,7 +185,16 @@ function initializeApp() {
 document.addEventListener('DOMContentLoaded', initializeApp);
 
 
+/* ============================================== */
+/* 5. AÇÕES DOS BOTÕES */
+/* ============================================== */
 
+
+//Botão voltar quando se está ná página do produto
+
+document.getElementById('voltarBtn').addEventListener('click', function() {
+    window.history.back();
+  });
 
 
 
