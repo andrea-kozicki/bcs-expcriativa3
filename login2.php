@@ -10,8 +10,8 @@ session_start();
     <title>Login com Autenticação em Dois Fatores</title>
 
     <!-- Meta Tags e Links -->
-    <link rel="shortcut icon" href="./imagens/estrela.ico" type="image/x-icon">
-    <link rel="stylesheet" href="./css/sitecsslogin.css">
+    <link rel="shortcut icon" href="/imagens/estrela.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/css/sitecsslogin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;700&display=swap" rel="stylesheet">
 
@@ -31,22 +31,22 @@ session_start();
             <div class="bars">
                 <i class="fa-solid fa-bars fa-xl"></i>
             </div>
-            <img src="./imagens/estrela.ico" class="logo" />
+            <img src="/imagens/estrela.ico" class="logo" />
         </div>
 
         <!--Menu da barra de navegação superior-->
         <div class="navbar-content">
             <div class="avatar">
-                <img src="./imagens/user-pic.jpg" alt="usuario" width="40">
+                <img src="/imagens/user-pic.jpg" alt="usuario" width="40">
                 <div class="dropdown-menu setting">
                     <div class="item">
-                        <span class="fa-solid fa-door-open"></span> <a href="./login2.php">Login</a>
+                        <span class="fa-solid fa-door-open"></span> <a href="/login2.php">Login</a>
                     </div>
                     <div class="item">
-                        <span class="fa-solid fa-user"></span><a href="./perfil.html">Perfil</a>
+                        <span class="fa-solid fa-user"></span><a href="/perfil.html">Perfil</a>
                     </div>
                     <div class="item">
-                        <span class="fa-solid fa-door-open"></span><a href="./index.html">Sair</a>
+                        <span class="fa-solid fa-door-open"></span><a href="/index.html">Sair</a>
                     </div>
                 </div>
             </div>
@@ -68,15 +68,15 @@ session_start();
             </button>
 
             <div class="dropdown-container">
-                <a href="./romance.html" class="sidebar-nav"><i class="icon fa-solid fa-heart"></i><span>Romance</span></a>
-                <a href="./biografias.html" class="sidebar-nav"><i class="icon fa-solid fa-pen-nib"></i><span>Biografias</span></a>
-                <a href="./poesias.html" class="sidebar-nav"><i class="icon fa-solid fa-feather"></i><span>Poesias</span></a>
-                <a href="./contos.html" class="sidebar-nav"><i class="icon fa-solid fa-comment"></i><span>Contos</span></a>
+                <a href="/romance.html" class="sidebar-nav"><i class="icon fa-solid fa-heart"></i><span>Romance</span></a>
+                <a href="/biografias.html" class="sidebar-nav"><i class="icon fa-solid fa-pen-nib"></i><span>Biografias</span></a>
+                <a href="/poesias.html" class="sidebar-nav"><i class="icon fa-solid fa-feather"></i><span>Poesias</span></a>
+                <a href="/contos.html" class="sidebar-nav"><i class="icon fa-solid fa-comment"></i><span>Contos</span></a>
             </div>
 
-            <a href="./contato.html" class="sidebar-nav"> <i class="icon fa-solid fa-envelope"></i><span>Contato</span></a>
+            <a href="/contato.html" class="sidebar-nav"> <i class="icon fa-solid fa-envelope"></i><span>Contato</span></a>
 
-            <a href="./sobre.html" class="sidebar-nav"> <i class="icon fa-solid fa-eye"></i><span>Sobre a livraria</span></a>
+            <a href="/sobre.html" class="sidebar-nav"> <i class="icon fa-solid fa-eye"></i><span>Sobre a livraria</span></a>
         </div>
 
         <!-- Fim da Sidebar -->
@@ -84,9 +84,9 @@ session_start();
         <!-- Inicio do conteudo principal da área de login -->
         <div class="wrapper">
             <div class="row">
-                <div class="top-list">
-                    <span class="title-content">Faça o seu login</span>
-                </div>
+                
+                    <span class="title-content">Faça o seu login :)</span>
+                
 
                 <!-- Formulário de Login Principal -->
                 <div id="basiclogin" class="content-adm">
@@ -105,8 +105,8 @@ session_start();
                         </div>
                         <br>
                         <button type="submit" class="btn-success" id="entrar">Entrar</button>
-                        <button type="button" class="btn-success"> <a href="./redefinesenha.html">Esqueci minha senha</a></button>
-                        <button type="button" class="btn-success"> <a href="./cadastro.html">Cadastre-se</a></button>
+                        <button type="button" class="btn-success"> <a href="/redefinesenha.html">Esqueci minha senha</a></button>
+                        <button type="button" class="btn-success"> <a href="/cadastro.html">Cadastre-se</a></button>
                     </form>
 
                     
@@ -209,7 +209,7 @@ session_start();
 
         </div>
 
-        <script src="./js/loginjs.js"></script>
+        <script src="/js/loginjs.js"></script>
 
 </body>
 
