@@ -547,8 +547,14 @@ body {
     padding: 10px;
 }
 
+.title-content{
+    align-items: center;
+}
+
+
 .form-adm,
-.form-redef-senha {
+.form-redef-senha,
+.form-cadastro {
     width: 100%;
     position: relative;
     margin: 10px auto 0 auto;
@@ -562,6 +568,14 @@ body {
     /*grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));*/
     gap: 20px 30px;
     margin-bottom: 20px;
+}
+
+.top-list .title-content {
+    color: var(--main-bg-color);
+    font-size: 18px;
+    margin-bottom: 20px;
+    display: block;
+    
 }
 
 .title-input {
