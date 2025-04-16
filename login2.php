@@ -36,6 +36,14 @@ session_start();
 
         <!--Menu da barra de navegação superior-->
         <div class="navbar-content">
+
+            <div class="cart-icon">
+                <a href="/carrinho.html">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span class="cart-count">0</span>
+                </a>
+            </div>
+            
             <div class="avatar">
                 <img src="/imagens/user-pic.jpg" alt="usuario" width="40">
                 <div class="dropdown-menu setting">
@@ -100,13 +108,13 @@ session_start();
                         <div class="row-input">
                             <div class="column">
                                 <label class="title-input">Senha</label>
-                                <input type="password" name="senha" id="senha" class="input-adm" placeholder="Digite sua senha" minlength="12" maxlength="64" required>
+                                <input type="password" name="senha" id="senha" class="input-adm" placeholder="Digite sua senha" minlength="12" maxlength="20" required>
                             </div>
                         </div>
                         <br>
                         <button type="submit" class="btn-success" id="entrar">Entrar</button>
                         <button type="button" class="btn-success"> <a href="/redefinesenha.html">Esqueci minha senha</a></button>
-                        <button type="button" class="btn-success"> <a href="/cadastro.html">Cadastre-se</a></button>
+                        <button type="button" class="btn-success"> <a href="/cadastro.php">Cadastre-se</a></button>
                     </form>
 
                     

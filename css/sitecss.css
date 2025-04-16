@@ -735,3 +735,42 @@ select.input-adm:focus {
 .fade-enter, .fade-leave-to {
     opacity: 0;
 }
+
+/* ================== */
+/* CART ICON STYLES */
+/* ================== */
+.cart-icon {
+    position: relative;
+    margin-right: 20px;
+    font-size: 1.5rem;
+    color: var(--main-color);
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.cart-icon:hover {
+    transform: scale(1.1);
+    color: var(--active-color);
+}
+
+.cart-icon a {
+    color: inherit;
+    display: flex;
+    align-items: center;
+}
+
+.cart-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: var(--danger-color);
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
