@@ -204,7 +204,6 @@ unset($_SESSION['error_messages'], $_SESSION['success_message']);
                                     </div>
                                 </div>
 
-                                <small class="password-instructions">Mínimo 12 caracteres...</small>
                                 <?php if (isset($errorMessages['senha'])): ?>
                                     <span class="error-message"><?= htmlspecialchars($errorMessages['senha']) ?></span>
                                 <?php endif; ?>

@@ -500,6 +500,7 @@
     font-size: 12px;
     margin-top: var(--spacing-xs);
     display: block;
+    order: 3; /* Garante que fica depois do medidor */
   }
   
   /* Popup de mensagem */
@@ -540,6 +541,9 @@
     position: relative;
     margin-bottom: var(--spacing-xs); /* Isso ajuda no espaçamento */;
     height: 48px; /* Altura fixa para evitar deslocamento */
+    .password-container {
+        order: 1; /* Garante que fica primeiro */
+    }
 }
 
 .password-container .input-adm {
@@ -575,7 +579,7 @@
   }
   
   .password-strength-container {
-    order: 1; /* Coloca o medidor antes da mensagem */
+    order: 2; /* Coloca depois do campo */
     width: 100%;
     margin-top: var(--spacing-xs);
     background-color: var(--white);
@@ -762,13 +766,22 @@
       max-width: 100%;
     }
 
+    .password-container {
+        margin-bottom: var(--spacing-xs);
+    }
+
     .password-strength-container {
         width: 100%;
         box-sizing: border-box;
+        margin-top: var(--spacing-xs);
     }
     
     .password-strength-meter {
         width: 100%;
+    }
+
+    .error-message {
+        margin-top: var(--spacing-xs);
     }
   }
   

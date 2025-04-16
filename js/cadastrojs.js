@@ -339,6 +339,9 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     function setupRealTimeValidation() {
         Object.keys(regexPatterns).forEach(fieldId => {
+            // Exclui o campo de senha da validação em tempo real
+            if (fieldId === 'senha') return;
+            
             const input = document.getElementById(fieldId);
             if (input) {
                 // Validação ao sair do campo
@@ -447,14 +450,27 @@ document.addEventListener('DOMContentLoaded', function() {
     function showError(input, message) {
         input.classList.add('error');
         
+        // Remove mensagens de erro existentes
+        clearError(input);
+        
         const errorDiv = document.createElement('div');
         errorDiv.className = 'error-message';
         errorDiv.textContent = message;
         
-        // Insere a mensagem após o campo
-        input.parentNode.insertBefore(errorDiv, input.nextSibling);
+        // Para o campo de senha, insira após o container de força
+        if (input.id === 'senha') {
+            const passwordContainer = input.closest('.form-col');
+            const strengthContainer = passwordContainer.querySelector('.password-strength-container');
+            if (strengthContainer) {
+                strengthContainer.insertAdjacentElement('afterend', errorDiv);
+            } else {
+                input.parentNode.insertBefore(errorDiv, input.nextSibling);
+            }
+        } else {
+            // Para outros campos, mantenha o comportamento padrão
+            input.parentNode.insertBefore(errorDiv, input.nextSibling);
+        }
         
-        // Foca no campo com erro
         input.focus();
     }
 
