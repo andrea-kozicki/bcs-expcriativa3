@@ -48,6 +48,7 @@
 
 body {
     background-color: var(--main-color);
+    overflow-x: hidden;
 }
 
 /* ============================================== */
@@ -188,15 +189,17 @@ body {
 .content .sidebar {
     color: var(--main-color);
     height: calc(100vh - 60px);
-    width: 60px;
-    position: sticky;
+    width: 0; /* Alterado de 60px para 0 */
+    position: fixed; /* Alterado de sticky para fixed */
     top: 60px;
+    left: 0;
     background-color: var(--main-bg-color);
     box-shadow: 0 1px 4px 1px rgba(0, 0, 0, 0.12);
     overflow-y: auto;
     overflow-x: hidden;
     transition: width 0.3s ease-in-out;
     flex-shrink: 0;
+    z-index: 900;
 }
 
 .content .sidebar.active {
@@ -350,228 +353,222 @@ body {
 }
 
 /* ============================================== */
-/* 7. CARROSSEL */
+/* 7. CARROSSEL - VERSÃO ESTÁVEL E RESPONSIVA */
 /* ============================================== */
-.slider,
+
 .carousel-container {
-    margin: 0 auto;
-    width: 100%;
-    max-width: 1200px;
+    margin: 20px auto;
+    width: 96%;
+    max-width: 1400px;
+    height: 80vh; /* Aumentei de 65vh para 80vh */
+    min-height: 400px; /* Aumentei o mínimo */
+    max-height: 900px; /* Aumentei o máximo */
     position: relative;
     overflow: hidden;
     border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     background-color: var(--bg-color);
-    aspect-ratio: 16/9;
+    display: flex;
+    flex-direction: column;
 }
 
-.slides,
+.sidebar.active ~ .wrapper .carousel-container {
+    margin-left: 20px;
+}
+
+
 .carousel-slides {
+    flex: 1; /* Ocupa todo espaço disponível */
     width: 100%;
     height: 100%;
     display: flex;
-    transition: transform 0.5s ease;
+    transition: transform 0.5s ease-out;
+    position: relative;
+    will-change: transform;
+    margin-left: -100%; /* Compensa qualquer espaço residual */
 }
 
-.slide,
 .carousel-slide {
     min-width: 100%;
     display: flex;
     justify-content: center;
+    width: 100%;
+    flex-shrink: 0;
     align-items: center;
-    padding: 20px;
+    padding: 10px;
     box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+    transform: translateZ(0); /* Força aceleração de hardware */
+    backface-visibility: hidden; /* Evita artefatos visuais */
 }
 
-.slide img,
 .carousel-slide img {
-    max-width: 100%;
-    max-height: 100%;
     width: auto;
     height: auto;
+    max-width: 90%;
+    max-height: 90%;
     object-fit: contain;
     display: block;
     margin: 0 auto;
 }
 
-/* Controles do carrossel */
-.manual-btn,
-.carousel-control {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.5);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: none;
-}
-
-.manual-btn:hover, 
-.manual-btn.active,
-.carousel-control:hover,
-.carousel-control.active {
-    background-color: var(--third-color);
-    transform: scale(1.2);
-}
-
-/* Container dos controles */
 .carousel-controls {
     position: absolute;
-    bottom: 20px;
+    bottom: 10px;
     left: 0;
     right: 0;
     display: flex;
     justify-content: center;
-    gap: 10px;
+    gap: 12px;
     z-index: 10;
+    margin-top: 20px; /* Espaço entre livros e controles */
+    padding: 10px 0;
+}
+
+/* Controles mais visíveis */
+.carousel-control {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--third-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid rgba(255,255,255,0.5);
+}
+
+.carousel-control:hover, 
+.carousel-control.active {
+    
+    transform: scale(1.3);
+    background-color: var(--active-color);
+}
+
+/* Transição suave quando a sidebar abre/fecha */
+.content {
+    transition: margin-left 0.3s ease;
+}
+
+/* Quando a sidebar está ativa */
+.sidebar.active ~ .wrapper {
+    margin-left: 250px;
+}
+
+/* Melhoria nos controles do carrossel */
+.carousel-controls {
+    background-color: rgba(0,0,0,0.2);
+    padding: 8px 0;
+    border-radius: 20px;
+    width: fit-content;
+    margin: 0 auto;
+}
+
+.carousel-control {
+    margin: 0 5px;
 }
 
 /* ============================================== */
-/* 8. RESPONSIVIDADE */
+/* RESPONSIVIDADE SEGURA */
 /* ============================================== */
+
+/* Tablets */
 @media (max-width: 1024px) {
-    /* Ajustes para tablets */
-    .slider,
     .carousel-container {
-        max-width: 90%;
-        aspect-ratio: 4/3;
+        height: 75vh;
+        min-height: 380px;
+    }
+    
+    .carousel-slide img {
+        max-width: 92%;
+        max-height: 92%;
     }
 }
 
+/* Dispositivos móveis - correção definitiva */
 @media (max-width: 768px) {
-    /* Ajustes para mobile geral */
-    
-    /* Navbar mais compacta */
-    .navbar {
-        padding: 5px 10px;
+    .content {
+        position: relative; /* Garante o posicionamento correto */
     }
     
-    .navbar .bars {
-        margin-right: 10px;
-    }
-    
-    .avatar img {
-        width: 35px;
-        height: 35px;
-    }
-    
-    /* Sidebar mobile */
-    .content .sidebar {
-        position: fixed;
-        transform: translateX(-100%);
-        z-index: 900;
-        width: 0;
-        height: calc(100vh - 60px);
-        transition: transform 0.3s ease, width 0.3s ease;
-    }
-    
-    .content .sidebar.active {
-        width: 250px;
-        transform: translateX(0);
-    }
-    
-    /* Espaçamento do conteúdo */
-    .wrapper {
-        padding: 10px;
-        width: 100vw;
-    }
-    
-    /* Carrossel mobile */
-    .slider,
     .carousel-container {
-        aspect-ratio: 1/1;
-        max-height: 70vh;
-        border-radius: 0;
+        height: 70vh;
+        min-height: 350px;
+        width: 98%;
     }
     
-    .slide,
+    .carousel-slide img {
+        max-width: 95%;
+        max-height: 95%;
+    }
+    
     .carousel-slide {
-        padding: 15px;
+        padding: 5px;
     }
     
-    /* Carrinho */
-    .cart-container {
-        margin-right: 10px;
+    /* Garante que o carrossel não sobreponha a sidebar */
+    .sidebar.active ~ .wrapper .carousel-container {
+        width: calc(100% - 40px);
     }
-    
-    .cart-icon {
-        font-size: 18px;
-        width: 35px;
-        height: 35px;
-    }
-    
-    .cart-count {
-        width: 16px;
-        height: 16px;
-        font-size: 9px;
-    }
-    
-    /* Dropdown */
-    .dropdown-menu {
-        width: 180px;
-    }
-}
 
-@media (max-width: 480px) {
-    /* Ajustes para mobile pequeno */
-    .slider,
-    .carousel-container {
-        aspect-ratio: 3/4;
-        max-height: 60vh;
+    .carousel-controls {
+        bottom: 5px;
+        gap: 10px;
     }
     
-    .slide,
-    .carousel-slide {
-        padding: 10px;
-    }
-    
-    .manual-btn,
     .carousel-control {
         width: 10px;
         height: 10px;
     }
 }
 
-/* Modo paisagem em dispositivos móveis */
-@media (max-width: 768px) and (orientation: landscape) {
-    .slider,
+/* Celulares pequenos - ajuste fino */
+@media (max-width: 480px) {
     .carousel-container {
-        aspect-ratio: 16/9;
-        max-height: 80vh;
-    }
-}
-
-/* Ajuste para telas altas */
-@media (min-height: 800px) {
-    .slider,
-    .carousel-container {
-        max-height: 80vh;
-    }
-}
-
-/* Correção para tablets em modo retrato */
-@media (min-width: 481px) and (max-width: 768px) and (orientation: portrait) {
-    .slider,
-    .carousel-container {
-        aspect-ratio: 4/3;
-        max-height: 55vh;
-    }
-}
-
-/* Ajuste para quando o teclado aparece em mobile */
-@media (max-height: 500px) {
-    .slider,
-    .carousel-container {
-        max-height: 40vh;
+        height: 65vh;
+        min-height: 320px;
+        border-radius: 0;
     }
     
-    .content .sidebar {
-        height: calc(100vh - 50px);
+    .carousel-slide img {
+        max-width: 98%;
+        max-height: 98%;
+    }
+
+    .carousel-slide {
+        padding: 2px;
+    }
+
+    .carousel-control {
+        width: 12px;
+        height: 12px;
+    }
+    
+    /* Correção extra para evitar cortes */
+    .carousel-slides {
+        padding: 0 1%;
+    }
+
+    
+}
+
+
+/* Ajuste fino para telas muito altas */
+@media (min-height: 1000px) {
+    .carousel-container {
+        max-height: 1000px;
     }
 }
 
-/* Animação para dropdown */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+@media (min-width: 1600px) {
+    .carousel-slide img {
+        max-width: 70%;
+    }
+}
+
+/* Modo paisagem - ajuste seguro */
+@media (max-width: 768px) and (orientation: landscape) {
+    .carousel-container {
+        height: 85vh;
+        max-height: 500px;
+    }
 }

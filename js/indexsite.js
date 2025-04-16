@@ -114,6 +114,12 @@ function closeOtherDropdowns(current) {
 function toggleSidebar() {
     const elements = getDOMElements();
     elements.sidebar.classList.toggle('active');
+    document.body.classList.toggle('sidebar-active');
+    
+    // Fecha outros menus quando a sidebar é aberta
+    if (elements.sidebar.classList.contains('active')) {
+        closeOtherDropdowns('sidebar');
+    }
 }
 
 /**
@@ -122,6 +128,20 @@ function toggleSidebar() {
 function setupDropdownListeners() {
     const elements = getDOMElements();
     
+    document.addEventListener('click', (e) => {
+        const elements = getDOMElements();
+        const isSidebarClick = elements.sidebar.contains(e.target);
+        const isBarsClick = elements.barsIcon.contains(e.target);
+        
+        if (!isSidebarClick && !isBarsClick && elements.sidebar.classList.contains('active')) {
+            toggleSidebar();
+        }
+        
+        // Fecha outros dropdowns
+        if (appState.dropdowns.userMenu) toggleUserDropdown();
+        if (appState.dropdowns.genresMenu) toggleGenresDropdown();
+    });
+
     // Avatar do usuário
     if (elements.avatar) {
         elements.avatar.addEventListener('click', (e) => {
@@ -151,6 +171,25 @@ function setupDropdownListeners() {
         if (appState.dropdowns.userMenu) toggleUserDropdown();
         if (appState.dropdowns.genresMenu) toggleGenresDropdown();
     });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const sidebar = document.querySelector('.sidebar');
+        const barsIcon = document.querySelector('.fa-bars');
+        
+        barsIcon.addEventListener('click', function(e) {
+            e.stopPropagation();
+            sidebar.classList.toggle('active');
+            document.body.classList.toggle('sidebar-active');
+        });
+        
+        // Fecha a sidebar ao clicar fora
+        document.addEventListener('click', function(e) {
+            if (!sidebar.contains(e.target) && !barsIcon.contains(e.target)) {
+                sidebar.classList.remove('active');
+                document.body.classList.remove('sidebar-active');
+            }
+        });
+    });
 }
 
 /* ============================================== */
@@ -161,7 +200,41 @@ function setupDropdownListeners() {
  * Inicializa o carrossel com configurações padrão
  */
 function initCarousel() {
+    const container = document.querySelector('.carousel-container');
+    const slides = document.querySelector('.carousel-slides');
+    const slideItems = document.querySelectorAll('.carousel-slide');
+    const controlsContainer = document.querySelector('.carousel-controls');
+    
+    // Cria controles visíveis
+    slideItems.forEach((_, index) => {
+        const control = document.createElement('button');
+        control.classList.add('carousel-control');
+        control.setAttribute('aria-label', `Ir para slide ${index + 1}`);
+        controlsContainer.appendChild(control);
+        slide.style.width = `${container.offsetWidth}px`;
+    });
+
+    // Redimensiona quando a janela muda de tamanho
+    window.addEventListener('resize', () => {
+        slideItems.forEach(slide => {
+            slide.style.width = `${container.offsetWidth}px`;
+        });
+    });
+
+    
+     // Cria os controles abaixo do carrossel
+     controlsContainer.innerHTML = ''; // Limpa controles existentes
+     
+     slideItems.forEach((_, index) => {
+         const control = document.createElement('button');
+         control.classList.add('carousel-control');
+         if (index === 0) control.classList.add('active');
+         control.addEventListener('click', () => goToSlide(index));
+         controlsContainer.appendChild(control);
+     });
+    
     const elements = getDOMElements();
+    
     if (!elements.slider) return;
     
     // Configura estado inicial
