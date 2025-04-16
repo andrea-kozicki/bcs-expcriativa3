@@ -220,7 +220,7 @@ function startCarousel() {
     clearInterval(appState.carousel.interval);
     appState.carousel.interval = setInterval(() => {
         nextSlide();
-    }, 4000);
+    }, 6000);
 }
 
 /**
@@ -298,7 +298,7 @@ function initCarousel() {
     // Configuração inicial
     let currentIndex = 0;
     const totalSlides = slideItems.length;
-    let intervalId = null;
+    let intervalId = setInterval(nextSlide, 6000);
     
     // Cria os controles
     slideItems.forEach((_, index) => {
