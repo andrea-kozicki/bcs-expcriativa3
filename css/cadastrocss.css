@@ -1,604 +1,805 @@
 /**
- * Estilos otimizados para a página de Cadastro
- * Versão melhorada com foco em usabilidade e acessibilidade
+ * Estilos para a página de Cadastro - Livraria Estrela
+ * 
+ * Organizado em seções lógicas e comentado para fácil manutenção
+ * 
+ * Seções:
+ * 1. Variáveis e Reset
+ * 2. Estilos Base
+ * 3. Layout Principal
+ * 4. Componentes da Interface
+ *   4.1 Barra de Navegação (Navbar)
+ *   4.2 Menu Lateral (Sidebar)
+ * 5. Formulário de Cadastro
+ *   5.1 Estrutura do Formulário
+ *   5.2 Campos de Entrada
+ *   5.3 Validação e Feedback
+ *   5.4 Campos Especiais (Senha, CEP, etc.)
+ * 6. Responsividade
+ * 7. Animações e Efeitos
  */
 
-/* ==================== */
-/* VARIÁVEIS E ESTILOS BASE */
-/* ==================== */
-@import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap');
+/* ============================================= */
+/* 1. VARIÁVEIS E RESET */
+/* ============================================= */
 
 :root {
-    --site-color: #3a7afe;
-    --main-color: #ebeef6;
-    --active-color: #d4def7;
-    --bg-color: #ecedf0;
-    --second-color: #f1f1f1;
-    --third-color: #9fa7bd;
-    --fourth-color: #fff;
-    --main-bg-color: #192039;
-    --second-bg-color: #1e2746;
-    --fourth-bg-color: #131b38;
+    /* Cores principais */
+    --primary-color: #3a7afe;
+    --primary-light: #d4def7;
+    --background-light: #ebeef6;
+    --background-gray: #ecedf0;
+    --light-gray: #f1f1f1;
+    --medium-gray: #9fa7bd;
+    --white: #fff;
+    
+    /* Cores de fundo escuras */
+    --dark-bg: #192039;
+    --dark-bg-secondary: #1e2746;
+    --dark-bg-tertiary: #131b38;
+    
+    /* Cores de feedback */
     --error-color: #dc3545;
     --success-color: #28a745;
     --warning-color: #ffc107;
-}
-
-* {
+    
+    /* Tipografia */
+    --font-main: 'Ubuntu', sans-serif;
+    --font-size-base: 15px;
+    --line-height-base: 1.6;
+    
+    /* Espaçamentos */
+    --spacing-xs: 5px;
+    --spacing-sm: 10px;
+    --spacing-md: 15px;
+    --spacing-lg: 20px;
+    --spacing-xl: 30px;
+    
+    /* Bordas */
+    --border-radius-sm: 4px;
+    --border-radius-md: 6px;
+    --border-radius-lg: 8px;
+    --border-light: 1.2px solid var(--primary-light);
+    
+    /* Sombras */
+    --shadow-sm: 0 1px 4px 1px rgba(0, 0, 0, 0.12);
+    --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Reset básico */
+  * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: "Ubuntu", sans-serif;
-    text-decoration: none;
-}
-
-body {
-    background-color: var(--main-color);
+  }
+  
+  html {
+    font-size: var(--font-size-base);
+  }
+  
+  body {
+    font-family: var(--font-main);
+    line-height: var(--line-height-base);
     color: #333;
-    line-height: 1.6;
-}
-
-/* ============== */
-/* NAVBAR - Barra superior */
-/* ============== */
-.navbar {
-    color: var(--main-color);
+    background-color: var(--background-light);
+  }
+  
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+  
+  button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  
+  /* ============================================= */
+  /* 2. ESTILOS BASE */
+  /* ============================================= */
+  
+  .container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-md);
+  }
+  
+  /* ============================================= */
+  /* 3. LAYOUT PRINCIPAL */
+  /* ============================================= */
+  
+  .content {
+    display: flex;
+    min-height: calc(100vh - 60px); /* Altura total menos navbar */
+  }
+  
+  .wrapper {
+    flex: 1;
+    padding: var(--spacing-lg);
+    background-color: var(--background-gray);
+  }
+  
+  .row {
+    width: 100%;
+    background-color: var(--white);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-md);
+    padding-left: var(--spacing-md); /* Alinhamento consistente */
+  }
+  
+  /* ============================================= */
+  /* 4. COMPONENTES DA INTERFACE */
+  /* ============================================= */
+  
+  /* 4.1 Barra de Navegação (Navbar) */
+  .navbar {
+    color: var(--white);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: var(--fourth-bg-color);
+    background-color: var(--dark-bg-tertiary);
     position: sticky;
-    box-shadow: 0px 1px 4px 1px rgba(0, 0, 0, 0.12);
-    padding: 5px 15px;
+    box-shadow: var(--shadow-sm);
+    padding: var(--spacing-xs) var(--spacing-md);
     font-size: 17px;
     top: 0;
+    height: 60px;
     z-index: 1000;
-}
-
-.navbar .navbar-content {
+  }
+  
+  .navbar-content {
     display: flex;
     align-items: center;
-}
-
-.navbar .bars {
-    margin-right: 20px;
+  }
+  
+  .navbar .bars {
+    margin-right: var(--spacing-lg);
     cursor: pointer;
     transition: transform 0.3s ease;
-}
-
-.navbar .bars:hover {
+  }
+  
+  .navbar .bars:hover {
     transform: scale(1.1);
-}
-
-.logo {
+  }
+  
+  .logo {
     width: 50px;
     transition: transform 0.3s ease;
-}
-
-.logo:hover {
+  }
+  
+  .logo:hover {
     transform: scale(1.05);
-}
-
-/* Dropdown do usuário */
-.avatar {
+  }
+  
+  /* Dropdown do usuário */
+  .avatar {
     cursor: pointer;
     position: relative;
     display: inline-block;
-}
-
-.avatar img {
+  }
+  
+  .avatar img {
     width: 40px;
     height: 40px;
     border-radius: 50%;
     object-fit: cover;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.avatar:hover img {
+  }
+  
+  .avatar:hover img {
     transform: scale(1.05);
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-}
-
-.dropdown-menu {
+  }
+  
+  .dropdown-menu {
     position: absolute;
     right: 0;
     top: 100%;
-    box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
-    background-color: var(--main-bg-color);
+    box-shadow: var(--shadow-lg);
+    background-color: var(--dark-bg);
     width: 200px;
-    border-radius: 7px;
+    border-radius: var(--border-radius-sm);
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s, transform 0.3s ease;
+    transition: all 0.3s ease;
     transform: translateY(-10px);
     z-index: 1000;
-}
-
-.dropdown-menu.active {
+  }
+  
+  .dropdown-menu.active {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
-}
-
-.dropdown-menu .item {
+  }
+  
+  .dropdown-menu .item {
     display: flex;
     align-items: center;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--second-bg-color);
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--dark-bg-secondary);
     cursor: pointer;
     font-size: 15px;
     transition: background-color 0.3s ease;
-    color: var(--main-color);
-}
-
-.dropdown-menu .item:hover {
-    background-color: var(--second-bg-color);
-}
-
-.dropdown-menu .item span {
-    margin-right: 10px;
+    color: var(--white);
+  }
+  
+  .dropdown-menu .item:hover {
+    background-color: var(--dark-bg-secondary);
+  }
+  
+  .dropdown-menu .item span {
+    margin-right: var(--spacing-sm);
     font-size: 16px;
-}
-
-.dropdown-menu .item a {
-    color: inherit;
-    text-decoration: none;
-    width: 100%;
-}
-
-/* ============== */
-/* SIDEBAR - Menu lateral */
-/* ============== */
-.content {
-    display: flex;
-    min-height: calc(100vh - 60px);
-}
-
-.content .sidebar {
-    color: var(--main-color);
+  }
+  
+  /* 4.2 Menu Lateral (Sidebar) */
+  .sidebar {
+    color: var(--white);
     height: calc(100vh - 60px);
     width: 60px;
     position: sticky;
     top: 60px;
-    background-color: var(--main-bg-color);
-    box-shadow: 0 1px 4px 1px rgba(0, 0, 0, 0.12);
+    background-color: var(--dark-bg);
+    box-shadow: var(--shadow-sm);
     overflow-y: auto;
     overflow-x: hidden;
     transition: width 0.3s ease-in-out;
     flex-shrink: 0;
-}
-
-.content .sidebar.active {
+  }
+  
+  .sidebar.active {
     width: 250px;
-}
-
-/* Itens da sidebar */
-.sidebar .sidebar-nav {
+  }
+  
+  /* Itens da sidebar */
+  .sidebar-nav {
     text-decoration: none;
     display: flex;
     align-items: center;
-    padding: 15px 0;
+    padding: var(--spacing-md) 0;
     position: relative;
     cursor: pointer;
     transition: background-color 0.3s ease;
     font-size: 16px;
     white-space: nowrap;
-    color: var(--main-color);
-}
-
-.sidebar .sidebar-nav:hover {
-    background-color: var(--second-bg-color);
-    color: var(--active-color);
-}
-
-.sidebar .sidebar-nav.active {
-    background-color: var(--second-bg-color);
-    color: var(--active-color);
-}
-
-.sidebar .sidebar-nav.active::before {
+    color: var(--white);
+  }
+  
+  .sidebar-nav:hover {
+    background-color: var(--dark-bg-secondary);
+    color: var(--primary-light);
+  }
+  
+  .sidebar-nav.active {
+    background-color: var(--dark-bg-secondary);
+    color: var(--primary-light);
+  }
+  
+  .sidebar-nav.active::before {
     content: "";
     position: absolute;
     left: 0;
     top: 0;
     height: 100%;
     width: 5px;
-    background-color: var(--site-color);
-}
-
-.sidebar-nav .icon {
+    background-color: var(--primary-color);
+  }
+  
+  .sidebar-nav .icon {
     width: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 22px;
     flex-shrink: 0;
-}
-
-/* Dropdown de gêneros */
-.sidebar .dropdown-btn {
-    padding: 15px 0;
+  }
+  
+  /* Dropdown de gêneros */
+  .dropdown-btn {
+    padding: var(--spacing-md) 0;
     font-size: 16px;
     border: none;
     background: none;
     cursor: pointer;
     display: flex;
     width: 100%;
-    color: var(--main-color);
+    color: var(--white);
     align-items: center;
     transition: background-color 0.3s ease;
-}
-
-.sidebar .dropdown-btn span {
-    margin-right: 5px;
-}
-
-.sidebar .dropdown-btn:hover {
-    background-color: var(--second-bg-color);
-    color: var(--active-color);
-}
-
-.dropdown-btn .icon {
-    width: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 22px;
-    flex-shrink: 0;
-}
-
-.dropdown-arrow {
+  }
+  
+  .dropdown-btn:hover {
+    background-color: var(--dark-bg-secondary);
+    color: var(--primary-light);
+  }
+  
+  .dropdown-arrow {
     transition: transform 0.3s ease;
-    margin-left: 10px;
-}
-
-.dropdown-arrow.rotate {
+    margin-left: var(--spacing-sm);
+  }
+  
+  .dropdown-arrow.rotate {
     transform: rotate(180deg);
-}
-
-.sidebar .dropdown-container {
+  }
+  
+  .dropdown-container {
     display: none;
-    background-color: var(--fourth-bg-color);
+    background-color: var(--dark-bg-tertiary);
     transition: all 0.3s ease;
     overflow: hidden;
-}
-
-.sidebar .dropdown-container.active {
+  }
+  
+  .dropdown-container.active {
     display: block;
     animation: fadeIn 0.3s ease;
-}
-
-.sidebar .dropdown-container .sidebar-nav {
-    padding-left: 10px;
-}
-
-.sidebar .dropdown-container .sidebar-nav .icon {
+  }
+  
+  .dropdown-container .sidebar-nav {
+    padding-left: var(--spacing-sm);
+  }
+  
+  .dropdown-container .sidebar-nav .icon {
     width: 40px;
     font-size: 18px;
-}
-
-/* ============== */
-/* CONTEÚDO PRINCIPAL - Formulário de cadastro */
-/* ============== */
-.wrapper {
-    width: 100%;
-    height: 100%;
-    padding: 20px;
-    background-color: var(--bg-color);
-}
-
-.row {
-    width: 100%;
-    background-color: var(--fourth-color);
-    border-radius: 6px;
-    padding: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-/* Título da página */
-.top-list .title-content {
-    color: var(--main-bg-color);
-    font-size: 22px;
-    margin-bottom: 25px;
-    display: block;
-    text-align: center;
-    font-weight: 500;
-}
-
-/* Formulário de cadastro */
-.form-adm {
+  }
+  
+  /* ============================================= */
+  /* 5. FORMULÁRIO DE CADASTRO */
+  /* ============================================= */
+  
+  /* 5.1 Estrutura do Formulário */
+  .form-adm {
     width: 100%;
     max-width: 800px;
     margin: 0 auto;
-}
-
-.row-input {
-    width: 100%;
-    margin-bottom: 20px;
-    position: relative;
-}
-
-.title-input {
-    color: var(--fourth-bg-color);
-    font-size: 15px;
-    display: block;
-    margin-bottom: 8px;
+  }
+  
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xl);
+  }
+  
+  .field-group {
+    margin-bottom: var(--spacing-xl);
+    padding-bottom: var(--spacing-lg);
+    border-bottom: var(--border-light);
+    padding-top: var(--spacing-md);
+  }
+  
+  .field-group-title {
+    font-size: 18px;
+    color: var(--dark-bg);
+    margin-bottom: var(--spacing-lg);
     font-weight: 500;
-}
-
-.input-adm {
+  }
+  
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-md);
     width: 100%;
-    font-weight: 400;
-    padding: 12px 15px;
-    border-radius: 5px;
-    border: 1.2px solid var(--active-color);
-    font-size: 15px;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .form-col {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: var(--spacing-sm);
+    position: relative; /* Importante para os elementos absolutos internos */
+    min-height: 48px; /* Altura mínima para os campos */
 }
 
-.input-adm:focus {
-    outline: none;
-    border-color: var(--site-color);
-    box-shadow: 0 0 0 3px rgba(58, 122, 254, 0.2);
+  
+  .form-col.full-width {
+    grid-column: 1 / -1;
+  }
+  
+  .form-col.large {
+    grid-column: span 2;
+    min-width: 0; /* Permite que o campo se ajuste corretamente */
 }
 
-.input-adm.error {
-    border-color: var(--error-color);
+.form-col.small {
+    max-width: 120px;
+    min-width: 120px; /* Mantém tamanho fixo para o número */
 }
 
-.input-adm.success {
-    border-color: var(--success-color);
-}
-
-/* Estilos para mensagens de erro */
-.error-message {
-    color: var(--error-color);
-    font-size: 13px;
-    margin-top: 5px;
+  /* 5.2 Campos de Entrada */
+  .title-input {
+    color: var(--dark-bg-tertiary);
+    font-size: 14px;
     display: block;
+    margin-bottom: var(--spacing-xs);
+    margin-top: var(--spacing-sm);
+    font-weight: 500;
+  }
+  
+  .top-list {
+    
+    width: 100%;
+    margin-bottom: var(--spacing-xl);
+    border-bottom: 2px solid var(--primary-light);
+    padding-bottom: var(--spacing-md);
 }
 
-/* Estilo para grupos de campos */
-.field-group {
-    margin-bottom: 30px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid var(--active-color);
+.title-content {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--dark-bg);
+    margin: 0;
+    padding: 0 var(--spacing-md) 0 0; /* Alinhamento com field-group-title */
+    display: inline-block;
 }
 
 .field-group-title {
-    font-size: 18px;
-    color: var(--main-bg-color);
-    margin-bottom: 15px;
-    font-weight: 500;
+    font-size: 1.2rem;
+    color: var(--dark-bg);
+    margin: var(--spacing-lg) 0 var(--spacing-md) 0;
+    padding: 0;
+    border-bottom: 2px solid var(--primary-light);
+    padding-bottom: var(--spacing-sm);
+    width: 100%;
 }
 
-/* Botão de enviar */
-.btn-success {
-    background-color: var(--site-color);
-    color: var(--fourth-color);
-    padding: 12px 25px;
-    border: 1px solid var(--site-color);
-    border-radius: 4px;
+.title-content, 
+.field-group-title {
+    text-align: left;
+    box-sizing: border-box;
+}
+
+  .input-adm {
+    width: 100%;
+    font-weight: 400;
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-sm);
+    border: var(--border-light);
+    font-size: 15px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .input-adm:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(58, 122, 254, 0.2);
+  }
+
+  .input-adm::placeholder {
+    color: var(--medium-gray);
+    opacity: 0.7;
+    font-size: 14px;
+}
+
+.input-adm:focus::placeholder {
+    opacity: 0.5;
+}
+  
+  select.input-adm {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
+  }
+  
+  /* 5.3 Validação e Feedback */
+  .input-adm.error {
+    border-color: var(--error-color);
+  }
+  
+  .input-adm.success {
+    border-color: var(--success-color);
+  }
+  
+  .error-message {
+    color: var(--error-color);
+    font-size: 12px;
+    margin-top: var(--spacing-xs);
+    display: block;
+  }
+  
+  /* Popup de mensagem */
+  .popup {
+    position: fixed;
+    top: var(--spacing-lg);
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: var(--white);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    z-index: 1000;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    transition: opacity 0.3s ease-in-out;
+  }
+  
+  .popup.success {
+    background-color: var(--success-color);
+  }
+  
+  .popup.error {
+    background-color: var(--error-color);
+  }
+  
+  .popup.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  
+  .popup.show {
+    opacity: 1;
+  }
+  
+  /* 5.4 Campos Especiais */
+  /* Campo de senha */
+  .password-container {
+    position: relative;
+    margin-bottom: var(--spacing-xs); /* Isso ajuda no espaçamento */;
+    height: 48px; /* Altura fixa para evitar deslocamento */
+}
+
+.password-container .input-adm {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    padding-right: 40px;
+    box-sizing: border-box;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--medium-gray);
+    cursor: pointer;
+    padding: 0;
+    font-size: 16px;
+    z-index: 2; /* Garante que fique acima do input */
+    margin: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+  
+  .toggle-password:hover {
+    color: var(--primary-color);
+  }
+  
+  .password-strength-container {
+    order: 1; /* Coloca o medidor antes da mensagem */
+    width: 100%;
+    margin-top: var(--spacing-xs);
+    background-color: var(--white);
+    padding: 5px;
+    border-radius: var(--border-radius-sm);
+    border: var(--border-light);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Adicione esta regra para o container de erros */
+.password-container + .error-message {
+    order: 2; /* Garante que a mensagem fica abaixo do medidor */
+    margin-top: var(--spacing-xs);
+}
+  
+  .password-strength-text {
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    color: var(--medium-gray);
+  }
+  
+  .password-strength-meter {
+    height: 4px;
+    background: var(--light-gray);
+    border-radius: 2px;
+    margin-top: 4px;
+    overflow: hidden;
+  }
+  
+  .password-strength-bar {
+    height: 100%;
+    width: 0;
+    transition: width 0.3s ease, background-color 0.3s ease;
+  }
+  
+  /* Espaço para a mensagem de diretrizes */
+.password-instructions {
+    display: block;
+    margin-top: var(--spacing-xs);
+    font-size: 0.75rem;
+    color: var(--medium-gray);
+    line-height: 1.4;
+}
+
+  /* Níveis de força da senha */
+  .strength-level {
+    font-weight: bold;
+  }
+  
+  .strength-weak {
+    color: #ff4444;
+  }
+  
+  .strength-medium {
+    color: #ffbb33;
+  }
+  
+  .strength-strong {
+    color: #00C851;
+  }
+  
+  .password-strength-bar.weak {
+    background-color: #ff4444;
+    width: 25%;
+  }
+  
+  .password-strength-bar.medium {
+    background-color: #ffbb33;
+    width: 50%;
+  }
+  
+  .password-strength-bar.strong {
+    background-color: #00C851;
+    width: 75%;
+  }
+  
+  .password-strength-bar.very-strong {
+    background-color: #007E33;
+    width: 100%;
+  }
+  
+  /* Campo de data */
+  .input-adm[type="text"][name="data_nascimento"] {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3e%3c/rect%3e%3cline x1='16' y1='2' x2='16' y2='6'%3e%3c/line%3e%3cline x1='8' y1='2' x2='8' y2='6'%3e%3c/line%3e%3cline x1='3' y1='10' x2='21' y2='10'%3e%3c/line%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 20px;
+    padding-right: 35px;
+  }
+  
+  /* Botão de enviar */
+  .btn-success {
+    background-color: var(--primary-color);
+    color: var(--white);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border: 1px solid var(--primary-color);
+    border-radius: var(--border-radius-sm);
     cursor: pointer;
     font-size: 16px;
     transition: all 0.3s ease;
     display: block;
     width: 100%;
     max-width: 200px;
-    margin: 30px auto 0;
+    margin: var(--spacing-xl) auto 0;
     font-weight: 500;
-}
-
-.btn-success:hover {
-    background-color: var(--fourth-color);
-    color: var(--site-color);
-}
-
-.btn-success:disabled {
-    background-color: var(--third-color);
-    border-color: var(--third-color);
+  }
+  
+  .btn-success:hover {
+    background-color: var(--white);
+    color: var(--primary-color);
+  }
+  
+  .btn-success:disabled {
+    background-color: var(--medium-gray);
+    border-color: var(--medium-gray);
     cursor: not-allowed;
-}
-
-/* Loader para o botão de submit */
-.btn-loader {
+  }
+  
+  /* Loader para o botão de submit */
+  .btn-loader {
     display: inline-block;
     width: 16px;
     height: 16px;
     border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
-    border-top-color: #fff;
+    border-top-color: var(--white);
     animation: spin 1s ease-in-out infinite;
     margin-right: 8px;
     vertical-align: middle;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* Popup de mensagem */
-.popup {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #333;
-    color: #fff;
-    padding: 15px 25px;
-    border-radius: 8px;
-    font-family: 'Ubuntu', sans-serif;
-    z-index: 1000;
-    box-shadow: 0 0 10px rgba(0,0,0,0.3);
-    transition: opacity 0.3s ease-in-out;
-}
-
-.popup.success {
-    background-color: #28a745;
-}
-
-.popup.error {
-    background-color: #dc3545;
-}
-
-.popup.hidden {
-    opacity: 0;
-    pointer-events: none;
-}
-
-.popup.show {
-    opacity: 1;
-}
-
-
-/* Estilos para máscaras de input */
-.input-mask {
-    position: relative;
-}
-
-.input-mask::after {
-    content: attr(data-mask);
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--third-color);
-    pointer-events: none;
-}
-
-/* Responsividade melhorada */
-@media (max-width: 768px) {
-    /* Navbar */
+  }
+  
+  /* ============================================= */
+  /* 6. RESPONSIVIDADE */
+  /* ============================================= */
+  
+  @media (max-width: 768px) {
     .navbar {
-        padding: 5px 10px;
+      padding: var(--spacing-xs) var(--spacing-sm);
     }
     
     .navbar .bars {
-        margin-right: 10px;
+      margin-right: var(--spacing-sm);
     }
     
     .avatar img {
-        width: 35px;
-        height: 35px;
+      width: 35px;
+      height: 35px;
     }
-
+  
     /* Sidebar mobile */
-    .content .sidebar {
-        position: fixed;
-        transform: translateX(-100%);
-        z-index: 900;
-        width: 0;
-        height: calc(100vh - 60px);
-        transition: transform 0.3s ease, width 0.3s ease;
+    .sidebar {
+      position: fixed;
+      transform: translateX(-100%);
+      z-index: 900;
+      width: 0;
+      height: calc(100vh - 60px);
+      transition: transform 0.3s ease, width 0.3s ease;
     }
     
-    .content .sidebar.active {
-        width: 250px;
-        transform: translateX(0);
+    .sidebar.active {
+      width: 250px;
+      transform: translateX(0);
     }
-
-    /* Content */
+  
     .wrapper {
-        padding: 10px;
-        width: 100vw;
+      padding: var(--spacing-sm);
+      width: 100vw;
+    }
+  
+    .dropdown-menu {
+      width: 180px;
+    }
+    
+    .form-row {
+      grid-template-columns: 1fr;
+      margin-bottom: var(--spacing-md);  /* Adicione esta linha */
+      gap: var(--spacing-md);
+    }
+    
+    .form-col.large,
+    .form-col.small {
+      grid-column: auto;
+      max-width: 100%;
     }
 
-    /* Dropdown menu */
-    .dropdown-menu {
-        width: 180px;
+    .password-strength-container {
+        width: 100%;
+        box-sizing: border-box;
     }
-}
-
-@media (max-width: 480px) {
+    
+    .password-strength-meter {
+        width: 100%;
+    }
+  }
+  
+  @media (max-width: 480px) {
     .dropdown-menu {
-        width: 160px;
+      width: 160px;
     }
     
     .row {
-        padding: 15px;
+      padding: var(--spacing-md);
     }
-}
-
-/* Animação */
-@keyframes fadeIn {
+    
+    .btn-success {
+      max-width: 100%;
+    }
+  }
+  
+  /* ============================================= */
+  /* 7. ANIMAÇÕES E EFEITOS */
+  /* ============================================= */
+  
+  @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
-}
-
-
-/* Estilos para o campo de senha */
-.password-container {
-    position: relative;
-    margin-bottom: 5px;
-}
-
-.toggle-password {
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    color: var(--third-color);
-    z-index: 10;
-}
-
-.toggle-password:hover {
-    color: var(--site-color);
-}
-
-.password-strength-container {
-    margin-top: 8px;
-}
-
-.password-strength-text {
-    font-size: 12px;
-    display: block;
-    color: var(--third-color);
-}
-
-.password-strength-meter {
-    height: 5px;
-    border-radius: 3px;
-    background-color: #e0e0e0;
-    width: 100%;
-    margin-top: 5px;
-    overflow: hidden;
-}
-
-.password-strength-bar {
-    height: 100%;
-    border-radius: 3px;
-    width: 0%;
-    transition: width 0.3s, background-color 0.3s;
-}
-
-/* Cores para os níveis de força */
-.strength-level {
-    font-weight: bold;
-}
-.strength-weak {
-    color: var(--error-color);
-}
-.strength-medium {
-    color: var(--warning-color);
-}
-.strength-strong {
-    color: var(--success-color);
-}
-
-/* Estilo para o campo de data */
-.input-adm[type="text"][name="data_nascimento"] {
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3e%3c/rect%3e%3cline x1='16' y1='2' x2='16' y2='6'%3e%3c/line%3e%3cline x1='8' y1='2' x2='8' y2='6'%3e%3c/line%3e%3cline x1='3' y1='10' x2='21' y2='10'%3e%3c/line%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    background-size: 20px;
-    padding-right: 35px;
-}
-
-/* Melhorar feedback visual dos campos */
-.input-adm:valid:not(:placeholder-shown) {
-    border-color: var(--success-color);
-}
-.input-adm:invalid:not(:placeholder-shown) {
-    border-color: var(--error-color);
-}
+  }
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  
+  /* Transições suaves para elementos interativos */
+  a, button, input, .sidebar-nav, .dropdown-btn {
+    transition: all 0.3s ease;
+  }

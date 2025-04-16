@@ -1,18 +1,51 @@
 /**
  * Script de validação e manipulação do formulário de cadastro
- * Versão melhorada com validação em tempo real e feedback visual
+ * 
+ * Funcionalidades principais:
+ * - Validação em tempo real dos campos
+ * - Máscaras para campos específicos (CPF, telefone, CEP, data)
+ * - Medidor de força da senha
+ * - Toggle para mostrar/esconder senha
+ * - Validação de data de nascimento
+ * - Feedback visual para o usuário
+ * 
+ * Dependências:
+ * - IMask.js (para máscaras de entrada)
+ * - CryptoJS (para hash da senha)
+ * - Font Awesome (para ícones)
  */
 
 document.addEventListener('DOMContentLoaded', function() {
+    // =============================================
+    // CONFIGURAÇÕES INICIAIS E SELEÇÃO DE ELEMENTOS
+    // =============================================
     const form = document.getElementById('cadastroForm');
     const submitBtn = document.getElementById('submitBtn');
     const submitText = document.getElementById('submitText');
     
-    // Objeto com expressões regulares para validação
+    if (!form || !submitBtn || !submitText) {
+        console.error('Elementos do formulário não encontrados');
+        return;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Elementos verificados:');
+        console.log('Formulário:', document.getElementById('cadastroForm'));
+        console.log('Senha:', document.getElementById('senha'));
+        console.log('Senha Hash:', document.getElementById('senha_hash'));
+        console.log('SubmitBtn:', document.getElementById('submitBtn'));
+    });
+
+
+    // =============================================
+    // DEFINIÇÕES DE VALIDAÇÃO
+    // =============================================
+    
+    // Padrões regex para validação
     const regexPatterns = {
         name: /^[a-zA-ZÀ-ÿ\s]{5,}$/,
         email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-        senha: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{12,}$/,
+        senha: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/,
         telefone: /^\(\d{2}\) \d{4,5}-\d{4}$/,
         cpf: /^\d{3}\.\d{3}\.\d{3}-\d{2}$/,
         cep: /^\d{5}-\d{3}$/,
@@ -27,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const errorMessages = {
         name: 'Nome deve ter pelo menos 5 caracteres (apenas letras e espaços)',
         email: 'Por favor, insira um email válido',
-        senha: 'A senha deve conter no mínimo 12 caracteres, incluindo uma letra maiúscula, uma minúscula e um número',
+        senha: 'A senha deve ter no mínimo 12 caracteres, incluindo: uma letra maiúscula, uma minúscula, um número e um caractere especial (@$!%*?&)',
         telefone: 'Por favor, insira um telefone válido (ex: (00) 00000-0000)',
         cpf: 'Por favor, insira um CPF válido (ex: 000.000.000-00)',
         cep: 'Por favor, insira um CEP válido (ex: 00000-000)',
@@ -38,91 +71,75 @@ document.addEventListener('DOMContentLoaded', function() {
         data_nascimento: 'Data de nascimento inválida (formato dd/mm/yyyy)'
     };
 
-    // Configura máscaras e funcionalidades extras
+
+    // Verificação de dependências
+    if (typeof IMask === 'undefined') {
+        console.error('IMask não está carregado. As máscaras não funcionarão.');
+        return;
+    }
+    
+    if (typeof CryptoJS === 'undefined') {
+        console.error('CryptoJS não está carregado. A criptografia da senha não funcionará.');
+    }
+
+
+    // =============================================
+    // FUNÇÕES PRINCIPAIS
+    // =============================================
+
+    /**
+     * Configura todas as máscaras e funcionalidades extras dos campos
+     */
     function setupMasksAndFeatures() {
-        // Máscara para Data de Nascimento (dd/mm/yyyy)
-        const dataNascimentoMask = IMask(document.getElementById('data_nascimento'), {
-            mask: '00/00/0000',
-            blocks: {
-                dd: {
-                    mask: IMask.MaskedRange,
-                    from: 1,
-                    to: 31,
-                    maxLength: 2
-                },
-                mm: {
-                    mask: IMask.MaskedRange,
-                    from: 1,
-                    to: 12,
-                    maxLength: 2
-                },
-                YYYY: {
-                    mask: IMask.MaskedRange,
-                    from: 1900,
-                    to: new Date().getFullYear()
-                }
-            },
-            overwrite: true,
-            autofix: true
-        });
+        setupPasswordToggle();
+        setupPasswordStrengthMeter();
+        setupInputMasks();
+        setupCepAutoComplete();
+    }
 
-        // Toggle para mostrar/esconder senha
-        const senhaInput = document.getElementById('senha');
-        const toggleSenha = document.createElement('span');
-        toggleSenha.className = 'toggle-password';
-        toggleSenha.innerHTML = '<i class="fa fa-eye"></i>';
-        toggleSenha.style.position = 'absolute';
-        toggleSenha.style.right = '10px';
-        toggleSenha.style.top = '50%';
-        toggleSenha.style.transform = 'translateY(-50%)';
-        toggleSenha.style.cursor = 'pointer';
-        toggleSenha.style.color = 'var(--third-color)';
+    /**
+     * Configura o toggle para mostrar/esconder a senha
+     */
+    function setupPasswordToggle() {
+    const toggleSenha = document.querySelector('.password-container .toggle-password');
+    const senhaInput = document.getElementById('senha');
+    
+    if (!toggleSenha || !senhaInput) {
+        console.warn('Elementos de toggle de senha não encontrados');
+        return;
+    }
+    
+    toggleSenha.addEventListener('click', function() {
+        const type = senhaInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        senhaInput.setAttribute('type', type);
         
-        const senhaContainer = senhaInput.parentNode;
-        senhaContainer.style.position = 'relative';
-        senhaContainer.appendChild(toggleSenha);
+        this.innerHTML = type === 'password' 
+            ? '<i class="fa fa-eye"></i>' 
+            : '<i class="fa fa-eye-slash"></i>';
         
-        toggleSenha.addEventListener('click', function() {
-            const type = senhaInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            senhaInput.setAttribute('type', type);
-            this.innerHTML = type === 'password' ? '<i class="fa fa-eye"></i>' : '<i class="fa fa-eye-slash"></i>';
-        });
+        this.style.color = type === 'password' 
+            ? 'var(--medium-gray)' 
+            : 'var(--primary-color)';
+    });
+    }
 
-        // Container para força da senha
-        const strengthContainer = document.createElement('div');
-        strengthContainer.className = 'password-strength-container';
-        strengthContainer.style.marginTop = '5px';
-        
-        const strengthText = document.createElement('small');
-        strengthText.className = 'password-strength-text';
-        strengthText.textContent = 'Força da senha: ';
-        
-        const strengthMeter = document.createElement('div');
-        strengthMeter.className = 'password-strength-meter';
-        strengthMeter.style.height = '5px';
-        strengthMeter.style.borderRadius = '3px';
-        strengthMeter.style.backgroundColor = '#e0e0e0';
-        strengthMeter.style.width = '100%';
-        strengthMeter.style.marginTop = '5px';
-        
-        const strengthBar = document.createElement('div');
-        strengthBar.className = 'password-strength-bar';
-        strengthBar.style.height = '100%';
-        strengthBar.style.borderRadius = '3px';
-        strengthBar.style.width = '0%';
-        strengthBar.style.transition = 'width 0.3s, background-color 0.3s';
-        strengthMeter.appendChild(strengthBar);
-        
-        strengthContainer.appendChild(strengthText);
-        strengthContainer.appendChild(strengthMeter);
-        senhaContainer.appendChild(strengthContainer);
+    /**
+     * Configura o medidor de força da senha
+     */
+    function setupPasswordStrengthMeter() {
+        const passwordInput = document.getElementById('senha');
+        if (passwordInput) {
+            passwordInput.addEventListener('input', function() {
+                const strength = checkPasswordStrength(this.value);
+                updateStrengthMeter(strength);
+            });
+        }
+    }
 
-        senhaInput.addEventListener('input', function() {
-            const strength = checkPasswordStrength(this.value);
-            updateStrengthMeter(strength);
-        });
-
-
+    /**
+     * Configura as máscaras para os campos de formulário
+     */
+    function setupInputMasks() {
         // Máscara para CPF
         IMask(document.getElementById('cpf'), {
             mask: '000.000.000-00'
@@ -140,75 +157,186 @@ document.addEventListener('DOMContentLoaded', function() {
         IMask(document.getElementById('cep'), {
             mask: '00000-000'
         });
+
+        // Máscara SIMPLIFICADA para data de nascimento (dd/mm/aaaa)
+        IMask(document.getElementById('data_nascimento'), {
+            mask: '00/00/0000',
+            blocks: {
+                dd: { mask: IMask.MaskedRange, from: 1, to: 31 },
+                mm: { mask: IMask.MaskedRange, from: 1, to: 12 },
+                yyyy: { mask: IMask.MaskedRange, from: 1900, to: new Date().getFullYear() }
+            },
+            // Garante que sempre mostra com 2 dígitos para dia e mês
+            format: function (value) {
+                const parts = value.split('/');
+                if (parts[0] && parts[0].length === 1) parts[0] = '0' + parts[0];
+                if (parts[1] && parts[1].length === 1) parts[1] = '0' + parts[1];
+                return parts.join('/');
+            }
+        });
     }
 
-    function checkPasswordStrength(password) {
-        let strength = 0;
+    /**
+ * Valida uma data no formato dd/mm/yyyy
+ * @param {string} dateString - Data no formato dd/mm/yyyy
+ * @returns {boolean} True se a data for válida
+ */
+    function validateDate(dateString) {
+        // Verifica o formato básico
+        if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) return false;
         
-        // Contém caracteres minúsculos
-        if (/[a-z]/.test(password)) strength += 20;
+        const parts = dateString.split('/');
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10);
+        const year = parseInt(parts[2], 10);
         
-        // Contém caracteres maiúsculos
-        if (/[A-Z]/.test(password)) strength += 20;
+        // Verifica valores numéricos básicos
+        if (isNaN(day) || isNaN(month) || isNaN(year)) return false;
+        if (month < 1 || month > 12) return false;
+        if (day < 1 || day > 31) return false;
         
-        // Contém números
-        if (/[0-9]/.test(password)) strength += 20;
+        // Verifica meses com 30 dias
+        if ([4, 6, 9, 11].includes(month) && day > 30) return false;
         
-        // Contém caracteres especiais
-        if (/[^a-zA-Z0-9]/.test(password)) strength += 20;
-        
-        // Pontuação por comprimento
-        if (password.length >= 8) strength += 10;
-        if (password.length >= 12) strength += 10;
-        
-        return Math.min(strength, 100); // Máximo de 100%
-    }
-    
-    function updateStrengthMeter(strength) {
-        const strengthBar = document.querySelector('.password-strength-bar');
-        const strengthText = document.querySelector('.password-strength-text .strength-level');
-        
-        let percent = 0;
-        let level = 'Nenhuma';
-        let color = '#e0e0e0';
-        
-        switch(strength) {
-            case 1:
-                percent = 20;
-                level = 'Muito fraca';
-                color = '#dc3545';
-                break;
-            case 2:
-                percent = 40;
-                level = 'Fraca';
-                color = '#ff6b6b';
-                break;
-            case 3:
-                percent = 60;
-                level = 'Moderada';
-                color = '#ffc107';
-                break;
-            case 4:
-                percent = 80;
-                level = 'Forte';
-                color = '#4caf50';
-                break;
-            case 5:
-                percent = 100;
-                level = 'Muito forte';
-                color = '#28a745';
-                break;
+        // Verifica fevereiro e anos bissextos
+        if (month === 2) {
+            const isLeapYear = (year % 400 === 0) || (year % 100 !== 0 && year % 4 === 0);
+            if (day > (isLeapYear ? 29 : 28)) return false;
         }
         
-        strengthBar.style.width = `${percent}%`;
-        strengthBar.style.backgroundColor = color;
-        strengthText.textContent = level;
-        strengthText.className = 'strength-level ' + 
-            (strength <= 1 ? 'strength-weak' : 
-             strength <= 3 ? 'strength-medium' : 'strength-strong');
+        // Verifica se a data não é no futuro
+        const inputDate = new Date(year, month - 1, day);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Ignora a hora para comparação
+        
+        return inputDate <= today;
     }
 
 
+    /**
+     * Configura o preenchimento automático do endereço via CEP
+     */
+    function setupCepAutoComplete() {
+        const cepInput = document.getElementById('cep');
+        if (cepInput) {
+            cepInput.addEventListener('blur', async function() {
+                const cep = this.value.replace(/\D/g, '');
+                if (cep.length === 8) {
+                    try {
+                        // Mostrar estado de carregamento
+                        const estadoSelect = document.getElementById('estado');
+                        estadoSelect.disabled = true;
+                        estadoSelect.innerHTML = '<option value="">Buscando...</option>';
+                        
+                        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                        const data = await response.json();
+                        
+                        if (!data.erro) {
+                            // Preenche os campos
+                            document.getElementById('rua').value = data.logradouro || '';
+                            document.getElementById('cidade').value = data.localidade || '';
+                            
+                            // Atualiza o select de estado
+                            estadoSelect.innerHTML = `<option value="${data.uf}" selected>${data.uf}</option>`;
+                            estadoSelect.disabled = false;
+                            
+                            // Dispara eventos de validação
+                            ['rua', 'cidade', 'estado'].forEach(id => {
+                                const input = document.getElementById(id);
+                                if (input) {
+                                    const event = new Event('change');
+                                    input.dispatchEvent(event);
+                                }
+                            });
+                            
+                            document.getElementById('numero').focus();
+                        } else {
+                            estadoSelect.innerHTML = '<option value="">Selecione...</option>';
+                            estadoSelect.disabled = false;
+                            console.log('CEP não encontrado');
+                        }
+                    } catch (error) {
+                        console.error('Erro ao buscar CEP:', error);
+                        const estadoSelect = document.getElementById('estado');
+                        estadoSelect.innerHTML = '<option value="">Selecione...</option>';
+                        estadoSelect.disabled = false;
+                    }
+                }
+            });
+        }
+    }
+
+
+    /**
+     * Calcula a força da senha com base em vários critérios
+     * @param {string} password - A senha a ser avaliada
+     * @returns {number} Nível de força de 0 a 6
+     */
+    function checkPasswordStrength(password) {
+        if (!password) return 0;
+        
+        let strength = 0;
+        
+        // Verifica comprimento mínimo
+        if (password.length >= 12) strength += 2;
+        
+        // Verifica tipos de caracteres
+        if (/[a-z]/.test(password)) strength += 1; // Letras minúsculas
+        if (/[A-Z]/.test(password)) strength += 1; // Letras maiúsculas
+        if (/[0-9]/.test(password)) strength += 1; // Números
+        if (/[@$!%*?&]/.test(password)) strength += 2; // Caracteres especiais
+        
+        return Math.min(strength, 6); // Limita a 6 níveis
+    }
+    /**
+     * Atualiza o visual do medidor de força da senha
+     * @param {number} strength - Nível de força (0-6)
+     */
+    function updateStrengthMeter(strength) {
+        const strengthBar = document.querySelector('.password-strength-bar');
+        const strengthLevel = document.querySelector('.strength-level');
+        
+        if (!strengthBar || !strengthLevel) return;
+        
+        // Reset classes
+        strengthBar.className = 'password-strength-bar';
+        strengthLevel.className = 'strength-level';
+        
+        // Define o texto e classes com base no nível de força
+        switch(true) {
+            case (strength <= 1):
+                strengthLevel.textContent = 'Muito fraca';
+                strengthLevel.classList.add('strength-weak');
+                strengthBar.classList.add('weak');
+                break;
+            case (strength === 2):
+                strengthLevel.textContent = 'Fraca';
+                strengthLevel.classList.add('strength-weak');
+                strengthBar.classList.add('weak');
+                break;
+            case (strength === 3):
+                strengthLevel.textContent = 'Moderada';
+                strengthLevel.classList.add('strength-medium');
+                strengthBar.classList.add('medium');
+                break;
+            case (strength === 4):
+                strengthLevel.textContent = 'Forte';
+                strengthLevel.classList.add('strength-strong');
+                strengthBar.classList.add('strong');
+                break;
+            case (strength >= 5):
+                strengthLevel.textContent = 'Muito forte';
+                strengthLevel.classList.add('strength-strong');
+                strengthBar.classList.add('very-strong');
+                break;
+            default:
+                strengthLevel.textContent = 'Nenhuma';
+        }
+    }
+
+    /**
+     * Configura a validação em tempo real para todos os campos
+     */
     function setupRealTimeValidation() {
         Object.keys(regexPatterns).forEach(fieldId => {
             const input = document.getElementById(fieldId);
@@ -216,7 +344,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Validação ao sair do campo
                 input.addEventListener('blur', validateField);
                 
-                // Validação em tempo real (com debounce para performance)
+                // Validação em tempo real com debounce (para performance)
                 let timeout;
                 input.addEventListener('input', function(e) {
                     clearTimeout(timeout);
@@ -232,9 +360,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-
-
-    // Valida um campo individual
+    /**
+     * Valida um campo individual do formulário
+     * @param {Event} e - Evento de input ou blur
+     * @returns {boolean} True se o campo for válido
+     */
     function validateField(e) {
         const input = e.target;
         const fieldId = input.id;
@@ -243,7 +373,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         clearError(input);
         
-        // Se o campo estiver vazio e não for obrigatório, considere válido
+        // Campos não obrigatórios vazios são considerados válidos
         if ((!value || value.trim() === '') && !input.required) {
             return true;
         }
@@ -258,7 +388,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return true;
         }
         
-        // Validação com regex
+        // Validação com regex para outros campos
         if (value && regex && !regex.test(value)) {
             showError(input, errorMessages[fieldId]);
             return false;
@@ -270,8 +400,50 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         return true;
     }
-    
-    // Exibe mensagem de erro para um campo
+
+    /**
+     * Valida uma data no formato dd/mm/yyyy
+     * @param {string} dateString - Data no formato dd/mm/yyyy
+     * @returns {boolean} True se a data for válida
+     */
+    function validateDate(dateString) {
+        // Verifica o formato básico
+        if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) return false;
+        
+        const parts = dateString.split('/');
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10);
+        const year = parseInt(parts[2], 10);
+        
+        // Verifica valores numéricos
+        if (isNaN(day) || isNaN(month) || isNaN(year)) return false;
+        
+        // Verifica limites do mês e dia
+        if (month < 1 || month > 12) return false;
+        if (day < 1 || day > 31) return false;
+        
+        // Verifica meses com 30 dias
+        if ([4, 6, 9, 11].includes(month) && day > 30) return false;
+        
+        // Verifica fevereiro e anos bissextos
+        if (month === 2) {
+            const isLeapYear = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+            if (day > (isLeapYear ? 29 : 28)) return false;
+        }
+        
+        // Verifica se a data não é no futuro
+        const inputDate = new Date(year, month - 1, day);
+        const today = new Date();
+        if (inputDate > today) return false;
+        
+        return true;
+    }
+
+    /**
+     * Exibe mensagem de erro para um campo
+     * @param {HTMLElement} input - Elemento de input
+     * @param {string} message - Mensagem de erro
+     */
     function showError(input, message) {
         input.classList.add('error');
         
@@ -279,14 +451,17 @@ document.addEventListener('DOMContentLoaded', function() {
         errorDiv.className = 'error-message';
         errorDiv.textContent = message;
         
-        // Insere após o campo, mas antes do próximo elemento
+        // Insere a mensagem após o campo
         input.parentNode.insertBefore(errorDiv, input.nextSibling);
         
         // Foca no campo com erro
         input.focus();
     }
-    
-    // Remove mensagens de erro de um campo
+
+    /**
+     * Remove mensagens de erro de um campo
+     * @param {HTMLElement} input - Elemento de input
+     */
     function clearError(input) {
         input.classList.remove('error');
         
@@ -295,27 +470,32 @@ document.addEventListener('DOMContentLoaded', function() {
             errorDiv.remove();
         }
     }
-    
-    // Marca campo como válido
+
+    /**
+     * Marca um campo como válido (feedback visual)
+     * @param {HTMLElement} input - Elemento de input
+     */
     function markAsValid(input) {
         input.classList.remove('error');
         input.classList.add('success');
         
-        // Remove a classe success após um tempo para não poluir visualmente
+        // Remove a classe de sucesso após 2 segundos
         setTimeout(() => {
             input.classList.remove('success');
         }, 2000);
     }
-    
-    // Validação geral do formulário
+
+    /**
+     * Valida todo o formulário antes do envio
+     * @returns {boolean} True se todos os campos forem válidos
+     */
     function validateForm() {
         let isValid = true;
         
-        // Valida todos os campos
         Object.keys(regexPatterns).forEach(fieldId => {
             const input = document.getElementById(fieldId);
             if (input) {
-                // Cria um evento artificial para disparar a validação
+                // Dispara validação artificial
                 const event = new Event('blur');
                 input.dispatchEvent(event);
                 
@@ -327,71 +507,76 @@ document.addEventListener('DOMContentLoaded', function() {
         
         return isValid;
     }
-    
-    // Manipulador de envio do formulário
+
+    // =============================================
+    // EVENTO DE SUBMISSÃO DO FORMULÁRIO
+    // =============================================
     form.addEventListener('submit', async function(event) {
         event.preventDefault();
         
-        // Valida o formulário
-        const isValid = validateForm();
-        
-        if (isValid) {
+        if (validateForm()) {
             try {
-                // Mostra loader no botão
+                // Verificação explícita dos elementos
+                const senhaInput = document.getElementById('senha');
+                const senhaHashField = document.getElementById('senha_hash');
+                
+                if (!senhaInput) throw new Error('Campo de senha não encontrado');
+                if (!senhaHashField) throw new Error('Campo senha_hash não encontrado');
+                
+                // Mostra estado de carregamento
                 submitBtn.disabled = true;
                 submitText.innerHTML = '<span class="btn-loader"></span> Processando...';
                 
-                // 1. Obtém o valor da senha em texto puro
-                const senhaValue = document.getElementById('senha').value;
+                // Processamento do hash (com verificação)
+                const senhaValue = senhaInput.value;
+                console.log('Senha original:', senhaValue); // Debug
                 
-                // 2. Gera o hash SHA-256 da senha usando CryptoJS com salt
                 const salt = CryptoJS.lib.WordArray.random(16).toString();
-                const senhaHash = CryptoJS.SHA256(senhaValue + salt).toString();
+                console.log('Salt gerado:', salt); // Debug
                 
-                // 3. Armazena o hash e o salt no campo oculto (serializado)
-                document.getElementById('senha_hash').value = JSON.stringify({
+                const senhaHash = CryptoJS.SHA256(senhaValue + salt).toString();
+                console.log('Hash gerado:', senhaHash); // Debug
+                
+                // Armazena os dados
+                const hashData = {
                     hash: senhaHash,
-                    salt: salt
+                    salt: salt,
+                    timestamp: new Date().toISOString()
+                };
+                
+                senhaHashField.value = JSON.stringify(hashData);
+                console.log('Dados armazenados:', senhaHashField.value); // Debug
+                
+                // Limpa a senha original
+                senhaInput.value = '';
+                
+                // Debug final antes do envio
+                console.log('Formulário pronto para envio. Hash verificado:', 
+                    JSON.parse(senhaHashField.value).hash === senhaHash);
+                
+                form.submit();
+                
+            } catch (error) {
+                console.error('Erro detalhado:', error);
+                console.log('Elementos atuais:', {
+                    senha: document.getElementById('senha'),
+                    senha_hash: document.getElementById('senha_hash')
                 });
                 
-                // 4. Limpa o campo de senha original (não envia em texto puro)
-                document.getElementById('senha').value = '';
-                
-                // Envia o formulário
-                form.submit();
-            } catch (error) {
-                console.error('Erro ao processar formulário:', error);
                 submitBtn.disabled = false;
                 submitText.textContent = 'Enviar';
-                
-                // Mostra mensagem de erro
-                alert('Ocorreu um erro ao processar seu cadastro. Por favor, tente novamente.');
+                alert('Erro no processamento. Verifique o console para detalhes.');
             }
         }
     });
-    
-    // Configura validação em tempo real
-    function setupRealTimeValidation() {
-        // Validação em tempo real para cada campo
-        Object.keys(regexPatterns).forEach(fieldId => {
-            const input = document.getElementById(fieldId);
-            if (input) {
-                input.addEventListener('blur', function(e) {
-                    if (!validateField(e)) {
-                        // Impede a mudança de campo se houver erro
-                        e.preventDefault();
-                        e.stopPropagation();
-                    }
-                });
-            }
-        });
-    }
-    
-    // Inicialização
+
+    // =============================================
+    // INICIALIZAÇÃO
+    // =============================================
     setupMasksAndFeatures();
     setupRealTimeValidation();
     
-    // Validação inicial ao carregar a página (para campos pré-preenchidos)
+    // Valida campos pré-preenchidos ao carregar a página
     if (form) {
         Object.keys(regexPatterns).forEach(fieldId => {
             const input = document.getElementById(fieldId);

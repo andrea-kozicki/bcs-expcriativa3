@@ -289,3 +289,15 @@ try {
     header('Location: ../cadastro.php');
     exit;
 }
+
+if (isset($_POST['senha_hash'])) {
+    $hashData = json_decode($_POST['senha_hash'], true);
+    echo "<pre>Dados recebidos:\n";
+    print_r($hashData);
+    
+    // Verificação do hash
+    $hashVerificado = hash('sha256', $_POST['senha'] . $hashData['salt']) === $hashData['hash'];
+    echo "\nHash verificado: " . ($hashVerificado ? 'SIM' : 'NÃO');
+} else {
+    echo "Erro: Nenhum hash recebido";
+}
