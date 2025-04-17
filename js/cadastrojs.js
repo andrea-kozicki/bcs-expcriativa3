@@ -532,56 +532,44 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (validateForm()) {
             try {
-                // Verificação explícita dos elementos
                 const senhaInput = document.getElementById('senha');
                 const senhaHashField = document.getElementById('senha_hash');
                 
-                if (!senhaInput) throw new Error('Campo de senha não encontrado');
-                if (!senhaHashField) throw new Error('Campo senha_hash não encontrado');
-                
-                // Mostra estado de carregamento
                 submitBtn.disabled = true;
                 submitText.innerHTML = '<span class="btn-loader"></span> Processando...';
                 
-                // Processamento do hash (com verificação)
-                const senhaValue = senhaInput.value;
-                console.log('Senha original:', senhaValue); // Debug
+                // Cria um FormData para enviar todos os campos
+                const formData = new FormData(form);
                 
+                // Remove a senha em texto puro (não vamos enviar)
+                formData.delete('senha');
+                
+                // Adiciona o hash e salt como campos separados
                 const salt = CryptoJS.lib.WordArray.random(16).toString();
-                console.log('Salt gerado:', salt); // Debug
+                const senhaHash = CryptoJS.SHA256(senhaInput.value + salt).toString();
                 
-                const senhaHash = CryptoJS.SHA256(senhaValue + salt).toString();
-                console.log('Hash gerado:', senhaHash); // Debug
+                formData.append('senha_hash', senhaHash);
+                formData.append('salt', salt);
                 
-                // Armazena os dados
-                const hashData = {
-                    hash: senhaHash,
-                    salt: salt,
-                    timestamp: new Date().toISOString()
-                };
+                // Debug: mostra o que será enviado
+                console.log('Dados a serem enviados:', Object.fromEntries(formData));
                 
-                senhaHashField.value = JSON.stringify(hashData);
-                console.log('Dados armazenados:', senhaHashField.value); // Debug
-                
-                // Limpa a senha original
-                senhaInput.value = '';
-                
-                // Debug final antes do envio
-                console.log('Formulário pronto para envio. Hash verificado:', 
-                    JSON.parse(senhaHashField.value).hash === senhaHash);
-                
-                form.submit();
-                
-            } catch (error) {
-                console.error('Erro detalhado:', error);
-                console.log('Elementos atuais:', {
-                    senha: document.getElementById('senha'),
-                    senha_hash: document.getElementById('senha_hash')
+                // Envia via fetch para melhor controle
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData
                 });
                 
+                // Se recebeu redirecionamento, segue automaticamente
+                if (response.redirected) {
+                    window.location.href = response.url;
+                }
+                
+            } catch (error) {
+                console.error('Erro:', error);
                 submitBtn.disabled = false;
-                submitText.textContent = 'Enviar';
-                alert('Erro no processamento. Verifique o console para detalhes.');
+                submitText.textContent = 'Cadastrar';
+                alert('Erro no envio. Verifique o console para detalhes.');
             }
         }
     });

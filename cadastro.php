@@ -15,7 +15,51 @@
 // =============================================
 // 1. CONFIGURAÇÕES INICIAIS E SESSÃO
 // =============================================
-session_start();
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// Verifique primeiro se os arquivos existem
+// Método 100% seguro para includes
+
+// Verifique se já foi incluído
+if (!defined('DB_HOST')) {
+    require_once __DIR__ . '/config.php';
+    require_once __DIR__ . '/php/processa_cadastro.php';
+}
+
+// Verifique se o arquivo de processamento existe
+$processa_path = __DIR__ . '/php/processa_cadastro.php';
+if (!file_exists($processa_path)) {
+    die("Arquivo processa_cadastro.php não encontrado!");
+}
+
+require_once $processa_path;
+
+$base_dir = realpath(dirname(__FILE__));
+$config_path = $base_dir . '/config.php';
+$processa_path = $base_dir . '/php/processa_cadastro.php';
+
+
+if (!file_exists($config_path)) {
+    die("ERRO: config.php não encontrado em: " . $config_path);
+}
+
+if (!file_exists($processa_path)) {
+    die("ERRO: processa_cadastro.php não encontrado em: " . $processa_path);
+}
+
+// Inclui usando require absoluto
+require $config_path;
+require $processa_path;
+
+
+
+
+// Inicia sessão se não estiver iniciada
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Valores padrão para os campos
 $formData = [
@@ -41,18 +85,26 @@ if (isset($_SESSION['form_data'])) {
 $errorMessages = $_SESSION['error_messages'] ?? [];
 $successMessage = $_SESSION['success_message'] ?? '';
 unset($_SESSION['error_messages'], $_SESSION['success_message']);
-
+// Verifica se há mensagens de erro/sucesso
+$erro = $_SESSION['erro'] ?? null;
+$sucesso = $_SESSION['sucesso'] ?? null;
+unset($_SESSION['erro'], $_SESSION['sucesso']);
+?>
 // =============================================
 // 2. CABEÇALHO HTML E METADADOS
 // =============================================
-?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro - Livraria Estrela</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>Cadastro - <?= SITE_NAME ?></title>
+    
+    <!-- Favicon -->
     <link rel="shortcut icon" href="/imagens/estrela.ico" type="image/x-icon">
 
     <!-- CSS -->
@@ -125,8 +177,16 @@ unset($_SESSION['error_messages'], $_SESSION['success_message']);
                     <div class="popup error show"><?= htmlspecialchars($errorMessages['general']) ?></div>
                 <?php endif; ?>
 
+                <?php if ($erro): ?>
+                    <div class="alert erro"><?= $erro ?></div>
+                <?php endif; ?>
+
+                <?php if ($sucesso): ?>
+                    <div class="alert sucesso"><?= $sucesso ?></div>
+                <?php endif; ?>
+
                 <!-- Substituir a seção do formulário por: -->
-                <form class="form-adm" action="php/processa_cadastro.php" method="post" id="cadastroForm" novalidate>
+                <form class="form-adm" action="<?= BASE_PATH ?>/php/processa_cadastro.php" method="post" id="cadastroForm" novalidate>
                     <!-- Seção Dados Pessoais -->
                     <div class="field-group">
                         <div class="field-group-title">Dados Pessoais</div>
@@ -190,7 +250,7 @@ unset($_SESSION['error_messages'], $_SESSION['success_message']);
                                     <input class="input-adm <?= isset($errorMessages['senha']) ? 'error' : '' ?>"
                                         type="password" id="senha" name="senha" maxlength="20" minlength="12" required
                                         pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,20}$" placeholder="Mínimo 12 caracteres">
-                                    
+
                                     <button type="button" class="toggle-password" aria-label="Mostrar senha">
                                         <i class="fa fa-eye"></i>
                                     </button>
