@@ -385,7 +385,7 @@ body {
     transition: transform 0.5s ease-out;
     position: relative;
     will-change: transform;
-    margin-left: -100%; /* Compensa qualquer espaço residual */
+
 }
 
 .carousel-slide {
@@ -572,3 +572,5 @@ body {
         max-height: 500px;
     }
 }
+
+

@@ -192,153 +192,9 @@ function setupDropdownListeners() {
     });
 }
 
-/* ============================================== */
-/* 4. CONTROLE DO CARROSSEL */
-/* ============================================== */
-
-/**
- * Inicializa o carrossel com configurações padrão
- */
-function initCarousel() {
-    const container = document.querySelector('.carousel-container');
-    const slides = document.querySelector('.carousel-slides');
-    const slideItems = document.querySelectorAll('.carousel-slide');
-    const controlsContainer = document.querySelector('.carousel-controls');
-    
-    // Cria controles visíveis
-    slideItems.forEach((_, index) => {
-        const control = document.createElement('button');
-        control.classList.add('carousel-control');
-        control.setAttribute('aria-label', `Ir para slide ${index + 1}`);
-        controlsContainer.appendChild(control);
-        slide.style.width = `${container.offsetWidth}px`;
-    });
-
-    // Redimensiona quando a janela muda de tamanho
-    window.addEventListener('resize', () => {
-        slideItems.forEach(slide => {
-            slide.style.width = `${container.offsetWidth}px`;
-        });
-    });
-
-    
-     // Cria os controles abaixo do carrossel
-     controlsContainer.innerHTML = ''; // Limpa controles existentes
-     
-     slideItems.forEach((_, index) => {
-         const control = document.createElement('button');
-         control.classList.add('carousel-control');
-         if (index === 0) control.classList.add('active');
-         control.addEventListener('click', () => goToSlide(index));
-         controlsContainer.appendChild(control);
-     });
-    
-    const elements = getDOMElements();
-    
-    if (!elements.slider) return;
-    
-    // Configura estado inicial
-    appState.carousel = {
-        currentSlide: 0,
-        interval: null,
-        totalSlides: document.querySelectorAll('.slide').length,
-        slider: elements.slider,
-        slides: elements.slides,
-        manualBtns: elements.manualBtns,
-        autoBtns: elements.autoBtns
-    };
-    
-    // Configura navegação manual
-    setupManualNavigation();
-    
-    // Configura navegação automática
-    setupAutoNavigation();
-    
-    // Inicia autoplay
-    startCarousel();
-}
-
-/**
- * Configura os botões de navegação manual
- */
-function setupManualNavigation() {
-    appState.carousel.manualBtns.forEach((btn, index) => {
-        btn.addEventListener('click', () => goToSlide(index));
-    });
-    
-    // Ativa o primeiro botão
-    if (appState.carousel.manualBtns.length > 0) {
-        appState.carousel.manualBtns[0].classList.add('active');
-    }
-}
-
-/**
- * Configura os botões de navegação automática
- */
-function setupAutoNavigation() {
-    appState.carousel.autoBtns.forEach((btn, index) => {
-        btn.addEventListener('click', () => goToSlide(index));
-    });
-    
-    // Ativa o primeiro botão
-    if (appState.carousel.autoBtns.length > 0) {
-        appState.carousel.autoBtns[0].classList.add('active');
-    }
-}
-
-/**
- * Inicia o autoplay do carrossel
- */
-function startCarousel() {
-    clearInterval(appState.carousel.interval);
-    appState.carousel.interval = setInterval(() => {
-        nextSlide();
-    }, 6000);
-}
-
-/**
- * Avança para o próximo slide
- */
-function nextSlide() {
-    const nextIndex = (appState.carousel.currentSlide + 1) % appState.carousel.totalSlides;
-    goToSlide(nextIndex);
-}
-
-/**
- * Navega para um slide específico
- * @param {number} index - Índice do slide desejado
- */
-function goToSlide(index) {
-    // Atualiza estado
-    appState.carousel.currentSlide = index;
-    
-    // Move o carrossel
-    appState.carousel.slides.style.transform = `translateX(-${index * 100}%)`;
-    
-    // Atualiza indicadores visuais
-    updateNavigationButtons();
-    
-    // Reinicia o intervalo
-    startCarousel();
-}
-
-/**
- * Atualiza os botões de navegação
- */
-function updateNavigationButtons() {
-    const { currentSlide, autoBtns, manualBtns } = appState.carousel;
-    
-    autoBtns.forEach((btn, i) => {
-        btn.classList.toggle('active', i === currentSlide);
-    });
-    
-    manualBtns.forEach((btn, i) => {
-        btn.classList.toggle('active', i === currentSlide);
-    });
-}
 
 /* ============================================== */
-/* 5. INICIALIZAÇÃO DA APLICAÇÃO */
+/* 4. INICIALIZAÇÃO DA APLICAÇÃO */
 /* ============================================== */
 
 /**
@@ -354,7 +210,7 @@ function initializeApp() {
 document.addEventListener('DOMContentLoaded', initializeApp);
 
 /* ============================================== */
-/* 6. AJUSTES DE RESPONSIVIDADE DINÂMICA */
+/* 5. CARROSSEL */
 /* ============================================== */
 
 /**

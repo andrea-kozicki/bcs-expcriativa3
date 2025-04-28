@@ -1,0 +1,14 @@
+Array
+(
+    [name] => Andrea Kozicki
+    [email] => andrea.kozicki@gmail.com
+    [telefone] => (41) 9914-6202
+    [cpf] => 051.246.189-90
+    [data_nascimento] => 22/12/1985
+    [cep] => 80530-040
+    [cidade] => Curitiba
+    [rua] => Rua Duque de Caxias
+    [numero] => 807
+    [senha_hash] => e37eaa9e25ba2efa0b4cdc6441c51305520a1c1be4ca3a2e989135179a31ea2c
+    [salt] => 17fac10402431009a1dbac98729b8979
+)
