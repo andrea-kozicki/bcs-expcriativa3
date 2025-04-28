@@ -1,339 +1,178 @@
 <?php
-/**
- * Processador de Cadastro
- * 
- * Responsável por validar e processar os dados do formulário
- * de cadastro e interagir com o banco de dados
- */
+session_start();
 
-// ==============================================
-// 1. CONFIGURAÇÕES INICIAIS
-// ==============================================
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
-// Buffer de saída para evitar problemas com redirecionamentos
-ob_start();
+require 'vendor/autoload.php'; // Carrega o PHPMailer
 
-// Carrega configurações
-require_once __DIR__ . '/../config.php';
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    include_once("config.php");
 
-// Configurações de sessão
-session_set_cookie_params([
-    'lifetime' => 86400,
-    'path' => '/',
-    'secure' => false, // Ativar em produção com HTTPS
-    'httponly' => true,
-    'samesite' => 'Lax'
-]);
-
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// ==============================================
-// 2. VALIDAÇÃO DA REQUISIÇÃO
-// ==============================================
-
-// Aceita apenas requisições POST
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    $_SESSION['error_messages']['general'] = 'Método de requisição inválido.';
-    header('Location: ' . BASE_PATH . '/cadastro.php');
-    exit;
-}
-
-// Verifica se existem dados POST
-if (empty($_POST)) {
-    $_SESSION['error_messages']['general'] = 'Nenhum dado recebido.';
-    header('Location: ' . BASE_PATH . '/cadastro.php');
-    exit;
-}
-
-
-// ==============================================
-// SEÇÃO 4: FUNÇÕES AUXILIARES
-// ==============================================
-
-/**
- * 4.1 Validação de CPF
- */
-function validaCPF($cpf) {
-    $cpf = preg_replace('/[^0-9]/', '', $cpf);
+    // Capturar os dados
+    $nome = $_POST['nome'] ?? '';
+    $email = $_POST['email'] ?? '';
+    $telefone = $_POST['telefone'] ?? '';
+    $cpf = $_POST['cpf'] ?? '';
+    $senha_hash = $_POST['senha_hash'] ?? '';
+    $salt = $_POST['salt'] ?? '';
+    $data_nascimento = $_POST['data_nascimento'] ?? '';
+    $cep = $_POST['cep'] ?? '';
+    $estado = $_POST['estado'] ?? '';
+    $endereco = $_POST['endereco'] ?? '';
+    $bairro = $_POST['bairro'] ?? '';
+    $cidade = $_POST['cidade'] ?? '';
+    $rua = trim($_POST['rua']);
+    $numero = trim($_POST['numero']);
     
-    if (strlen($cpf) != 11 || preg_match('/(\d)\1{10}/', $cpf)) {
-        return false;
+
+    $erros = [];
+
+    // Validações básicas
+
+    // Nome
+    if (empty($nome) || !preg_match("/^[a-zA-ZÀ-ú\s]+$/u", $nome)) {
+        $erros[] = "Nome inválido.";
     }
 
-    for ($t = 9; $t < 11; $t++) {
-        for ($d = 0, $c = 0; $c < $t; $c++) {
-            $d += $cpf[$c] * (($t + 1) - $c);
+    // E-mail
+    if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $erros[] = "E-mail inválido.";
+    }
+
+    // Telefone
+    $telefone_limpo = preg_replace('/\D/', '', $telefone);
+    if (empty($telefone_limpo) || !preg_match("/^\d{10,11}$/", $telefone_limpo)) {
+        $erros[] = "Telefone inválido.";
+    }
+
+    // CPF
+    $cpf_limpo = preg_replace('/\D/', '', $cpf);
+    if (empty($cpf_limpo) || strlen($cpf_limpo) != 11) {
+        $erros[] = "CPF inválido.";
+    }
+
+    // CEP
+    $cep_limpo = preg_replace('/\D/', '', $cep);
+    if (empty($cep_limpo) || strlen($cep_limpo) != 8) {
+        $erros[] = "CEP inválido.";
+    }
+
+    // Endereço
+    if (empty($endereco)) {
+        $erros[] = "Endereço é obrigatório.";
+    }
+
+    // Bairro
+    if (empty($bairro)) {
+        $erros[] = "Bairro é obrigatório.";
+    }
+
+    // Cidade
+    if (empty($cidade)) {
+        $erros[] = "Cidade é obrigatória.";
+    }
+
+    // Estado
+    if (empty($estado) || !preg_match("/^[A-Z]{2}$/", strtoupper($estado))) {
+        $erros[] = "Estado (UF) inválido.";
+    }
+
+    // Data de Nascimento
+    if (empty($data_nascimento) || !validarData($data_nascimento)) {
+        $erros[] = "Data de nascimento inválida.";
+    }
+
+    // Senha Hash
+    if (empty($senha_hash)) {
+        $erros[] = "Senha inválida.";
+    }
+
+    // Salt
+    if (empty($salt)) {
+        $erros[] = "Erro interno: salt não enviado.";
+    }
+
+     // Rua
+     if (empty($rua)) {
+        $erros[] = "Rua é obrigatória.";
+    }
+
+    // Número
+    if (empty($numero)) {
+        $erros[] = "Número é obrigatório.";
+    }
+
+    // Se não houver erros, inserir no banco
+    if (empty($erros)) {
+
+         // Gerar token de ativação único
+         $token_ativacao = bin2hex(random_bytes(16)); // 32 caracteres aleatórios
+
+         // Inserir no banco
+        $stmt = mysqli_prepare($conn, "INSERT INTO usuarios (nome, email, telefone, cpf, senha_hash, salt, data_nascimento, cep, estado, cidade, rua, numero) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, "ssssssssssss", $nome, $email, $telefone_limpo, $cpf_limpo, $senha_hash, $salt,$data_nascimento, $cep_limpo, strtoupper($estado), $endereco, $bairro, $cidade, $rua , $numero);
+
+            
+            if (mysqli_stmt_execute($stmt)) {
+                // Enviar e-mail de ativação
+                enviarEmailAtivacao($email, $token_ativacao);
+                header("Location: cadastro_ok.php");
+                exit;
+            } else {
+                echo "Erro ao cadastrar: " . mysqli_stmt_error($stmt);
+            }
+            mysqli_stmt_close($stmt);
+        } else {
+            echo "Erro na preparação da consulta: " . mysqli_error($conn);
         }
-        $d = ((10 * $d) % 11) % 10;
-        if ($cpf[$c] != $d) {
-            return false;
+    } else {
+        foreach ($erros as $erro) {
+            echo "<p style='color:red'>" . htmlspecialchars($erro, ENT_QUOTES, 'UTF-8') . "</p>";
         }
     }
-    return true;
 }
 
-/**
- * 4.2 Validação de Data de Nascimento
- */
-function validaDataNascimento($data) {
-    $dataAtual = new DateTime();
-    $dataNascimento = DateTime::createFromFormat('d-m-Y', $data);
-    
-    if (!$dataNascimento) {
+// Função para validar a data no formato YYYY-MM-DD
+function validarData($data) {
+    $partes = explode('-', $data);
+    if (count($partes) !== 3) return false;
+    return checkdate((int)$partes[1], (int)$partes[2], (int)$partes[0]);
+}
+
+function enviarEmailAtivacao($emailDestino, $token) {
+    $mail = new PHPMailer(true);
+
+    try {
+        // Configurações SMTP
+        $mail->isSMTP();
+        $mail->Host = 'smtp.gmail.com'; // Exemplo: smtp.gmail.com
+        $mail->SMTPAuth = true;
+        $mail->Username = 'seuemail@seudominio.com'; // Seu email
+        $mail->Password = 'suasenha'; // Sua senha
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // Ou ENCRYPTION_SMTPS
+        $mail->Port = 587; // TLS: 587, SSL: 465
+
+        // Remetente e destinatário
+        $mail->setFrom('no-reply@seudominio.com', 'Sistema de Cadastro');
+        $mail->addAddress($emailDestino);
+
+        // Conteúdo do email
+        $mail->isHTML(true);
+        $mail->Subject = 'Confirmação de Cadastro - Ative sua Conta';
+        $mail->Body = '
+            <p>Olá, obrigado por se cadastrar!</p>
+            <p>Para ativar sua conta, clique no link abaixo:</p>
+            <p><a href="http://localhost/bcs-expcriativa3/ativar_conta.php?token=' . urlencode($token) . '">Ativar Conta</a></p>
+        ';
+
+        $mail->send();
+        return true;
+    } catch (Exception $e) {
+        // Pode registrar erro para análise
+        error_log('Erro ao enviar email: ' . $mail->ErrorInfo);
         return false;
     }
-    
-    $idade = $dataAtual->diff($dataNascimento)->y;
-    return ($idade >= 12 && $idade <= 120);
 }
-
-// ==============================================
-// SEÇÃO 5: SANITIZAÇÃO E VALIDAÇÃO DE DADOS
-// ==============================================
-
-/**
- * 5.1 Definição dos filtros para cada campo
- */
-$filtros = [
-    'name' => FILTER_SANITIZE_SPECIAL_CHARS,
-    'email' => FILTER_SANITIZE_EMAIL,
-    'telefone' => FILTER_SANITIZE_SPECIAL_CHARS,
-    'cpf' => FILTER_SANITIZE_SPECIAL_CHARS,
-    'data_nascimento' => FILTER_SANITIZE_SPECIAL_CHARS,
-    'cep' => FILTER_SANITIZE_SPECIAL_CHARS,
-    'estado' => FILTER_SANITIZE_SPECIAL_CHARS,
-    'cidade' => FILTER_SANITIZE_SPECIAL_CHARS,
-    'rua' => FILTER_SANITIZE_SPECIAL_CHARS,
-    'numero' => FILTER_SANITIZE_SPECIAL_CHARS,
-    'senha_hash' => FILTER_SANITIZE_SPECIAL_CHARS,
-    'salt' => FILTER_SANITIZE_SPECIAL_CHARS
-];
-
-/**
- * 5.2 Sanitização dos dados
- */
-$dados = filter_input_array(INPUT_POST, $filtros);
-foreach ($filtros as $campo => $filtro) {
-    $dados[$campo] = isset($_POST[$campo]) ? trim(filter_input(INPUT_POST, $campo, $filtro)) : '';
-}
-
-/**
- * 5.3 Validações específicas
- */
-$erros = [];
-
-// Validação de nome
-if (empty($dados['name'])) {
-    $erros['name'] = 'Nome é obrigatório.';
-} elseif (strlen($dados['name']) < 5) {
-    $erros['name'] = 'Nome deve ter pelo menos 5 caracteres.';
-}
-
-// Validação de email
-if (empty($dados['email'])) {
-    $erros['email'] = 'Email é obrigatório.';
-} elseif (!filter_var($dados['email'], FILTER_VALIDATE_EMAIL)) {
-    $erros['email'] = 'Email inválido.';
-}
-
-// Validação de senha (hash)
-if (empty($dados['senha_hash']) || empty($dados['salt'])) {
-    $erros['senha'] = 'Dados de segurança da senha incompletos.';
-}
-
-// Validação de CPF
-$cpfLimpo = preg_replace('/[^0-9]/', '', $dados['cpf']);
-if (empty($cpfLimpo)) {
-    $erros['cpf'] = 'CPF é obrigatório.';
-} elseif (strlen($cpfLimpo) !== 11 || !validaCPF($cpfLimpo)) {
-    $erros['cpf'] = 'CPF inválido.';
-}
-
-// Validação de data de nascimento
-if (empty($dados['data_nascimento'])) {
-    $erros['data_nascimento'] = 'Data de nascimento é obrigatória.';
-} elseif (!validaDataNascimento($dados['data_nascimento'])) {
-    $erros['data_nascimento'] = 'Data de nascimento inválida.';
-}
-
-// [Adicione outras validações conforme necessário]
-
-/**
- * 5.4 Tratamento de erros de validação
- */
-if (!empty($erros)) {
-    $_SESSION['error_messages'] = $erros;
-    $_SESSION['form_data'] = $dados;
-    header('Location: ' . BASE_PATH . '/cadastro.php');
-    exit;
-}
-
-// ==============================================
-// SEÇÃO 6: CONEXÃO COM O BANCO DE DADOS
-// ==============================================
-
-try {
-    /**
-     * 6.1 Estabelece conexão com o banco
-     */
-    $db = new PDO(
-        "mysql:host=".DB_HOST.";dbname=".DB_NAME.";charset=utf8",
-        DB_USER, 
-        DB_PASS,
-        [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => false
-        ]
-    );
-    error_log("Conexão com o banco estabelecida com sucesso");
-
-    /**
-     * 6.2 Verifica se email ou CPF já existem
-     */
-    $consulta = $db->prepare("SELECT id FROM usuarios WHERE email = :email OR cpf = :cpf");
-    $consulta->execute([
-        ':email' => $dados['email'],
-        ':cpf' => $cpfLimpo
-    ]);
-    
-    if ($consulta->rowCount() > 0) {
-        error_log("Tentativa de cadastro duplicado: " . $dados['email']);
-        $_SESSION['error_messages']['general'] = 'Email ou CPF já cadastrado.';
-        header('Location: ' . BASE_PATH . '/cadastro.php');
-        exit;
-    }
-
-    /**
-     * 6.3 Prepara e executa a inserção
-     */
-    $sql = "INSERT INTO usuarios (
-        nome, email, senha_hash, salt, telefone, cpf, data_nascimento,
-        cep, estado, cidade, rua, numero, token_ativacao, data_cadastro
-    ) VALUES (
-        :nome, :email, :senha_hash, :salt, :telefone, :cpf, :data_nascimento,
-        :cep, :estado, :cidade, :rua, :numero, :token, NOW()
-    )";
-
-    $stmt = $db->prepare($sql);
-    
-
-    if ($resultado) {
-        $_SESSION['success_message'] = 'Cadastro realizado com sucesso!';
-        header('Location: ' . BASE_PATH . '/cadastro_ok.php');
-        exit;
-    }
-
-    
-    // Formata a data para o banco
-    $dataNascimento = DateTime::createFromFormat('d-m-Y', $dados['data_nascimento']);
-    $dataNascimentoFormatada = $dataNascimento->format('Y-m-d');
-
-    // Executa a inserção
-    $resultado = $stmt->execute([
-        ':nome' => $dados['name'],
-        ':email' => $dados['email'],
-        ':senha_hash' => $dados['senha_hash'],
-        ':salt' => $dados['salt'],
-        ':telefone' => preg_replace('/[^0-9]/', '', $dados['telefone']),
-        ':cpf' => $cpfLimpo,
-        ':data_nascimento' => $dataNascimentoFormatada,
-        ':cep' => preg_replace('/[^0-9]/', '', $dados['cep']),
-        ':estado' => $dados['estado'],
-        ':cidade' => $dados['cidade'],
-        ':rua' => $dados['rua'],
-        ':numero' => $dados['numero'],
-        ':token' => bin2hex(random_bytes(32))
-    ]);
-
-    /**
-     * 6.4 Verifica o resultado da inserção
-     */
-    if (!$resultado) {
-        error_log("Falha na execução da query: " . print_r($stmt->errorInfo(), true));
-        throw new Exception("Falha ao executar query de inserção");
-    }
-
-    $ultimoId = $db->lastInsertId();
-    if (!$ultimoId) {
-        error_log("Nenhum ID retornado após inserção");
-        throw new Exception("Falha ao obter ID do registro inserido");
-    }
-
-    error_log("Usuário cadastrado com sucesso - ID: $ultimoId");
-
-    // ==============================================
-    // SEÇÃO 7: PÓS-CADASTRO
-    // ==============================================
-
-    /**
-     * 7.1 Envio de email de confirmação
-     */
-    $token = bin2hex(random_bytes(32));
-    if (!enviarEmailConfirmacao($dados['email'], $dados['name'], $token)) {
-        error_log("Falha ao enviar email para: " . $dados['email']);
-    }
-
-    /**
-     * 7.2 Finalização com sucesso
-     */
-    unset($_SESSION['form_data']);
-    $_SESSION['success_message'] = 'Cadastro realizado com sucesso!';
-    header('Location: ' . BASE_PATH . '/cadastro_ok.php');
-    exit;
-
-} catch (PDOException $e) {
-    /**
-     * 7.3 Tratamento de erros do banco
-     */
-    error_log("ERRO PDO: " . $e->getMessage());
-    $_SESSION['error_messages']['general'] = 'Erro no banco de dados. Tente novamente.';
-    header('Location: ' . BASE_PATH . '/cadastro.php');
-    exit;
-} catch (Exception $e) {
-    /**
-     * 7.4 Tratamento de outros erros
-     */
-    error_log("ERRO GERAL: " . $e->getMessage());
-    $_SESSION['error_messages']['general'] = 'Erro ao processar cadastro.';
-    header('Location: ' . BASE_PATH . '/cadastro.php');
-    exit;
-}
-
-// ==============================================
-// SEÇÃO 8: FUNÇÕES ADICIONAIS
-// ==============================================
-
-/**
- * 8.1 Função para envio de email de confirmação
- */
-function enviarEmailConfirmacao($email, $nome, $token) {
-    if (!defined('SITE_NAME') || !defined('EMAIL_FROM') || !defined('SITE_URL')) {
-        error_log("Constantes de configuração não definidas para email");
-        return false;
-    }
-
-    $assunto = "Confirme seu cadastro no " . SITE_NAME;
-    $link = SITE_URL . "/ativar_conta.php?token=" . $token;
-    
-    $mensagem = "Olá $nome,\n\n";
-    $mensagem .= "Obrigado por se cadastrar no " . SITE_NAME . "!\n\n";
-    $mensagem .= "Por favor, clique no link abaixo para confirmar seu cadastro:\n";
-    $mensagem .= "$link\n\n";
-    $mensagem .= "Atenciosamente,\nEquipe " . SITE_NAME;
-
-    $headers = "From: " . EMAIL_FROM . "\r\n";
-    $headers .= "Reply-To: " . EMAIL_FROM . "\r\n";
-    $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
-
-    return mail($email, $assunto, $mensagem, $headers);
-}
-
-// ==============================================
-// 9. Finalização
-// ==============================================
-
-// Limpa o buffer e envia os headers
-ob_end_flush();
+?>

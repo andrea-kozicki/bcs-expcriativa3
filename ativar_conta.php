@@ -1,42 +1,53 @@
 <?php
 session_start();
-require_once __DIR__ . '/config.php';
+include_once("config.php");
 
-// Verifica se o token foi fornecido
-if (!isset($_GET['token'])) {
-    $_SESSION['error_messages']['general'] = 'Token de ativação inválido.';
-    header('Location: ../login2.php');
-    exit;
-}
-
+// Checar se o token foi passado pela URL
 if (isset($_GET['token'])) {
-    $token = $_GET['token'];
+    $token = trim($_GET['token']);
 
-    try {
-        $pdo = new PDO("mysql:host=".DB_HOST.";dbname=".DB_NAME, DB_USER, DB_PASS);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    // Sanitizar o token para garantir segurança
+    $token = mysqli_real_escape_string($conn, $token);
 
-        // Verifica o token
-        $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE token = ? AND ativo = 0");
-        $stmt->execute([$token]);
-        
-        if ($stmt->rowCount() > 0) {
-            // Ativa a conta
-            $stmt = $pdo->prepare("UPDATE usuarios SET ativo = 1, token = NULL WHERE token = ?");
-            $stmt->execute([$token]);
-            
-            $_SESSION['sucesso'] = "Conta ativada com sucesso! Você já pode fazer login.";
+    // Buscar o usuário com esse token que ainda não está ativo
+    $query = "SELECT id FROM usuarios WHERE token_ativacao = ? AND ativo = 0";
+    $stmt = mysqli_prepare($conn, $query);
+    
+    if ($stmt) {
+        mysqli_stmt_bind_param($stmt, "s", $token);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_store_result($stmt);
+
+        if (mysqli_stmt_num_rows($stmt) > 0) {
+            // Token encontrado, ativar o usuário
+            mysqli_stmt_bind_result($stmt, $idUsuario);
+            mysqli_stmt_fetch($stmt);
+
+            $query_update = "UPDATE usuarios SET ativo = 1, token_ativacao = NULL WHERE id = ?";
+            $stmt_update = mysqli_prepare($conn, $query_update);
+
+            if ($stmt_update) {
+                mysqli_stmt_bind_param($stmt_update, "i", $idUsuario);
+                if (mysqli_stmt_execute($stmt_update)) {
+                    echo "<p style='color:green;'>Conta ativada com sucesso! Agora você pode fazer login.</p>";
+                } else {
+                    echo "<p style='color:red;'>Erro ao ativar a conta. Tente novamente mais tarde.</p>";
+                }
+                mysqli_stmt_close($stmt_update);
+            } else {
+                echo "<p style='color:red;'>Erro interno ao preparar a ativação.</p>";
+            }
+
         } else {
-            $_SESSION['erro'] = "Token inválido ou conta já ativada.";
+            echo "<p style='color:red;'>Token inválido ou conta já ativada.</p>";
         }
+        mysqli_stmt_close($stmt);
 
-    } catch (PDOException $e) {
-        error_log("Erro ao ativar conta: " . $e->getMessage(), 3, "php/debug_error.log");
-        $_SESSION['erro'] = "Erro ao ativar conta. Tente novamente mais tarde.";
+    } else {
+        echo "<p style='color:red;'>Erro interno na verificação do token.</p>";
     }
-} else {
-    $_SESSION['erro'] = "Token não fornecido.";
-}
 
-header('Location: cadastro.php');
-exit;
+} else {
+    echo "<p style='color:red;'>Token de ativação não fornecido.</p>";
+}
+?>

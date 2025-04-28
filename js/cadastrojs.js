@@ -591,3 +591,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+    // ===========================================
+    // REQUISIÇÃO ASSÍNCRONA PARA O PHP
+    // ===========================================
+
+    const url = "http://localhost/bcs-expcriativa3/php/processa_cadastro.php";
+
+    const response = await fetch(form.action, {
+        method: 'POST',
+        body: formData
+    });
+

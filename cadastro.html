@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="/imagens/estrela.ico" type="image/x-icon">
-    <link rel="stylesheet" href="/css/cadastrocss.css">
+    <link rel="stylesheet" href="./css/cadastrocss.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -74,7 +74,7 @@
                 </div>
                 
                 <div class="content-adm">
-                    <form class="form-adm" action="php/processa_cadastro.php" method="post" id="cadastroForm">
+                    <form class="form-adm" action="/php/processa_cadastro.php" method="post" id="cadastroForm">
                         <div class="row-input">
                             <div class="column">
                                 <label class="title-input">Nome</label>
@@ -85,7 +85,7 @@
                         <div class="row-input">
                             <div class="column">
                                 <label class="title-input">Email</label>
-                                <input type="email" name="email" id="E-mail" class="input-adm" placeholder="Melhor email" required>
+                                <input type="email" name="email" id="email" class="input-adm" placeholder="Melhor email" required>
                             </div>
                         </div>    
 
@@ -93,10 +93,10 @@
                             <div class="column">
                                 <label class="title-input" for="senha">Senha:</label>
                                 <!-- Um label para o campo de entrada de senha -->
-                                <input class="input-adm" type="password" id="senha" name="senha" required pattern="^(?=.*\d).{4,}$"
-                                    title="A senha deve conter pelo menos 4 caracteres e 1 número.">
+                                <input class="input-adm" type="password" id="senha" name="senha" required pattern="^[0-9A-Za-z\d@$!%*?&]{12,20}$"
+                                    title="A senha deve conter pelo menos 12 caracteres e 1 número.">
                                 <input type="hidden" id="senha_hash" name="senha_hash">
-                                <!-- Um campo de entrada de senha, que é obrigatório e deve conter pelo menos 4 caracteres e 1 número -->
+                                <!-- Um campo de entrada de senha, que é obrigatório e deve conter pelo menos 12 caracteres e 1 número -->
                             </div>
                         </div>
                         
@@ -104,7 +104,7 @@
                             <div class="column">
                                 <label class="title-input" for="telefone">Telefone (somente números):</label>
                                 <!-- Um label para o campo de entrada de telefone -->
-                                <input class="input-adm" type="tel" id="telefone" name="telefone" placeholder="DDDXXXXXXXXX" pattern="[0-9]{10,11}" required>
+                                <input class="input-adm" type="tel" id="telefone" name="telefone" placeholder="(DDD)XXXXXXXXX" pattern="[0-9]{10,11}|" required>
                                 <!-- Um campo de entrada de telefone, que é obrigatório e deve conter 10 ou 11 dígitos -->
                             </div>
                         </div>
@@ -184,7 +184,7 @@
     <!-- Fim Conteudo -->
 
 
-    <script src="/js/cadastrojs.js"></script>
-    <script src="/js/sitejs.js"></script>
+    <script src="./js/cadastrojs.js"></script>
+    <script src="./js/sitejs.js"></script>
 </body>
 </html>
