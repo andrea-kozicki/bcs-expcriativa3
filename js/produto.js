@@ -32,20 +32,65 @@ function getParametroUrl(nome) {
     return urlParams.get(nome);
 }
 
-// Pegando o ID do livro da URL
+// Pegar o ID do livro da URL
 const livroId = getParametroUrl("id");
 
-// Buscando o livro correspondente na lista
+// Buscar o livro correspondente
 const livroSelecionado = livros.find(livro => livro.id == livroId);
 
-// Verificando se o livro existe e preenchendo os dados na página
+// Atualizar os dados na página
 if (livroSelecionado) {
     document.getElementById("produto-imagem").src = livroSelecionado.imagem;
     document.getElementById("produto-nome").textContent = livroSelecionado.titulo;
     document.getElementById("produto-preco").textContent = livroSelecionado.preco;
     document.getElementById("produto-descricao").textContent = livroSelecionado.descricao;
-
     document.title = livroSelecionado.titulo;
 } else {
     document.body.innerHTML = "<h1>Livro não encontrado</h1>";
 }
+
+// ============================================
+// Atualiza carrinho na página do produto
+// ============================================
+
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Seletores
+    const addCarrinhoBtn = document.getElementById('addCarrinho');
+    const cartCountSpan = document.querySelector('.cart-count');
+    const nomeProdutoElemento = document.getElementById('produto-nome');
+    const precoProdutoElemento = document.getElementById('produto-preco');
+
+    // Atualizar contador ao carregar a página
+    function atualizarCarrinho() {
+        const count = parseInt(localStorage.getItem('cartCount')) || 0;
+        if (cartCountSpan) {
+            cartCountSpan.textContent = count;
+        }
+    }
+
+    atualizarCarrinho();
+
+    // Evento de adicionar ao carrinho
+    if (addCarrinhoBtn && nomeProdutoElemento && precoProdutoElemento) {
+        addCarrinhoBtn.addEventListener('click', function () {
+            const novoItem = {
+                nome: nomeProdutoElemento.textContent.trim(),
+                preco: precoProdutoElemento.textContent.trim()
+            };
+
+            const items = JSON.parse(localStorage.getItem('cartItems')) || [];
+            items.push(novoItem);
+
+            localStorage.setItem('cartItems', JSON.stringify(items));
+            localStorage.setItem('cartCount', items.length);
+
+            if (cartCountSpan) {
+                cartCountSpan.textContent = items.length;
+            }
+
+            alert(`"${novoItem.nome}" adicionado ao carrinho!`);
+        });
+    }
+
+});

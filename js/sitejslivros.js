@@ -1,200 +1,116 @@
-/**
- * SISTEMA PRINCIPAL - LIVRARIA
- * 
- * Organizado por funcionalidades principais
- * Comentários detalhados para cada seção
- */
+// ============================================================
+// sitejslivros.js - Funcionalidades globais do site
+// Carrinho, Sidebar, Dropdowns, Menu Responsivo
+// ============================================================
 
-/* ============================================== */
-/* 1. ESTADO GLOBAL DA APLICAÇÃO */
-/* ============================================== */
-const appState = {
-    // Controle dos menus dropdown
-    dropdowns: {
-        userMenu: false,
-        genresMenu: false
-    },
-    
-};
+document.addEventListener('DOMContentLoaded', function () {
+    // Seletores globais
+    const avatar = document.querySelector('.avatar');
+    const userDropdown = document.querySelector('.dropdown-menu.setting');
+    const genresBtn = document.querySelector('.dropdown-btn');
+    const genresDropdown = document.querySelector('.dropdown-container');
+    const genresArrow = document.querySelector('.dropdown-btn .dropdown-arrow');
+    const sidebar = document.querySelector('.sidebar');
+    const barsIcon = document.querySelector('.bars');
+    const cartIcon = document.querySelector('.cart-icon');
+    const cartMenu = document.getElementById('cartMenu');
+    const limparCarrinhoBtn = document.getElementById('limparCarrinho');
+    const cartCountSpan = document.querySelector('.cart-count');
+    const voltarBtn = document.getElementById('voltarBtn');
+    const cartItemsList = document.getElementById('cartItems');
 
-/* ============================================== */
-/* 2. GERENCIAMENTO DE ELEMENTOS DO DOM */
-/* ============================================== */
+    // ============================================================
+    // 🛒 Atualiza visualmente o menu suspenso do carrinho
+    // ============================================================
+    function atualizarCarrinho() {
+        const items = JSON.parse(localStorage.getItem('cartItems')) || [];
+        if (cartCountSpan) cartCountSpan.textContent = items.length;
+        if (!cartItemsList) return;
 
-/**
- * Obtém todos os elementos DOM necessários
- * @returns {Object} Objeto com referências aos elementos
- */
-function getDOMElements() {
-    return {
-        // Elementos da navbar
-        avatar: document.querySelector('.avatar'),
-        userDropdown: document.querySelector('.dropdown-menu.setting'),
-        
-        // Elementos da sidebar
-        genresBtn: document.querySelector('.dropdown-btn'),
-        genresDropdown: document.querySelector('.dropdown-container'),
-        dropdownArrow: document.querySelector('.dropdown-btn .fa-caret-down'),
-        sidebar: document.querySelector('.sidebar'),
-        barsIcon: document.querySelector('.fa-bars'),
-        
+        cartItemsList.innerHTML = '';
+        if (items.length === 0) {
+            cartItemsList.innerHTML = '<li class="empty">Carrinho vazio</li>';
+            return;
+        }
 
-    };
-}
+        items.forEach((item, index) => {
+            const li = document.createElement('li');
+            li.className = 'cart-item';
 
-/* ============================================== */
-/* 3. CONTROLE DOS MENUS DROPDOWN */
-/* ============================================== */
+            const span = document.createElement('span');
+            span.className = 'cart-item-name';
+            span.textContent = item.nome || 'Produto sem nome';
 
-/**
- * Alterna o menu dropdown do usuário
- */
-function toggleUserDropdown() {
-    const elements = getDOMElements();
-    appState.dropdowns.userMenu = !appState.dropdowns.userMenu;
-    
-    if (appState.dropdowns.userMenu) {
-        elements.userDropdown.classList.add('active');
-        closeOtherDropdowns('user');
-    } else {
-        elements.userDropdown.classList.remove('active');
-    }
-}
+            const btn = document.createElement('button');
+            btn.className = 'btn-remove-menu';
+            btn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+            btn.addEventListener('click', () => {
+                removerItem(index);
+            });
 
-/**
- * Alterna o menu dropdown de gêneros
- */
-function toggleGenresDropdown() {
-    const elements = getDOMElements();
-    appState.dropdowns.genresMenu = !appState.dropdowns.genresMenu;
-    
-    if (appState.dropdowns.genresMenu) {
-        elements.genresDropdown.classList.add('active');
-        elements.dropdownArrow.classList.add('rotate');
-        closeOtherDropdowns('genres');
-    } else {
-        elements.genresDropdown.classList.remove('active');
-        elements.dropdownArrow.classList.remove('rotate');
-    }
-}
-
-/**
- * Fecha outros dropdowns abertos
- * @param {string} current - Dropdown atual que deve permanecer aberto
- */
-function closeOtherDropdowns(current) {
-    const elements = getDOMElements();
-    
-    if (current !== 'user' && appState.dropdowns.userMenu) {
-        appState.dropdowns.userMenu = false;
-        elements.userDropdown.classList.remove('active');
-    }
-    
-    if (current !== 'genres' && appState.dropdowns.genresMenu) {
-        appState.dropdowns.genresMenu = false;
-        elements.genresDropdown.classList.remove('active');
-        elements.dropdownArrow.classList.remove('rotate');
-    }
-}
-
-/**
- * Alterna a sidebar entre estados expandido/recolhido
- */
-function toggleSidebar() {
-    const elements = getDOMElements();
-    elements.sidebar.classList.toggle('active');
-}
-
-/**
- * Configura os listeners para os dropdowns
- */
-function setupDropdownListeners() {
-    const elements = getDOMElements();
-    
-    // Avatar do usuário
-    if (elements.avatar) {
-        elements.avatar.addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleUserDropdown();
+            li.appendChild(span);
+            li.appendChild(btn);
+            cartItemsList.appendChild(li);
         });
     }
-    
-    // Menu de gêneros
-    if (elements.genresBtn) {
-        elements.genresBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleGenresDropdown();
-        });
-    }
-    
-    // Botão para alternar sidebar
-    if (elements.barsIcon) {
-        elements.barsIcon.addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleSidebar();
-        });
-    }
-    
-    // Previne o fechamento ao clicar dentro do dropdown
-    if (elements.genresDropdown) {
-        elements.genresDropdown.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
-    }
-    
-    // Fecha dropdowns ao clicar fora
-    document.addEventListener('click', (e) => {
-        // Verifica se o clique foi fora dos elementos do dropdown
-        if (!e.target.closest('.dropdown-menu') && !e.target.closest('.dropdown-btn')) {
-            if (appState.dropdowns.userMenu) {
-                appState.dropdowns.userMenu = false;
-                elements.userDropdown.classList.remove('active');
-            }
-            if (appState.dropdowns.genresMenu) {
-                appState.dropdowns.genresMenu = false;
-                elements.genresDropdown.classList.remove('active');
-                elements.dropdownArrow.classList.remove('rotate');
-            }
+
+    // Botão “Limpar Carrinho” do menu
+    limparCarrinhoBtn?.addEventListener('click', function () {
+        localStorage.removeItem('cartCount');
+        localStorage.removeItem('cartItems');
+        atualizarCarrinho();
+        if (typeof renderizarCarrinho === 'function') renderizarCarrinho();
+        cartMenu?.classList.remove('show');
+        alert('Carrinho limpo com sucesso!');
+    });
+
+    // ============================================================
+    // Funcionalidades de interface (menus, sidebar, etc.)
+    // ============================================================
+    avatar?.addEventListener('click', function (e) {
+        e.stopPropagation();
+        userDropdown?.classList.toggle('active');
+    });
+
+    genresBtn?.addEventListener('click', function (e) {
+        e.stopPropagation();
+        genresDropdown?.classList.toggle('active');
+        genresArrow?.classList.toggle('rotate');
+        if (sidebar && !sidebar.classList.contains('active')) {
+            sidebar.classList.add('active');
         }
     });
-    
-    // Fecha o dropdown de gêneros ao clicar em um item
-    const genreLinks = document.querySelectorAll('.dropdown-container .sidebar-nav');
-    genreLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            if (appState.dropdowns.genresMenu) {
-                toggleGenresDropdown();
-            }
-        });
+
+    barsIcon?.addEventListener('click', function (e) {
+        e.stopPropagation();
+        sidebar?.classList.toggle('active');
     });
-}
 
-/* ============================================== */
-/* 4. INICIALIZAÇÃO DA APLICAÇÃO */
-/* ============================================== */
+    cartIcon?.addEventListener('click', function (e) {
+        e.stopPropagation();
+        cartMenu?.classList.toggle('show');
+        atualizarCarrinho();
+    });
 
-/**
- * Inicializa todos os componentes da aplicação
- */
-function initializeApp() {
-    setupDropdownListeners();
-    
-}
+    voltarBtn?.addEventListener('click', function () {
+        window.location.href = document.referrer;
+    });
 
-// Inicia quando o DOM estiver pronto
-document.addEventListener('DOMContentLoaded', initializeApp);
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('.sidebar') && !e.target.closest('.fa-bars')) {
+            userDropdown?.classList.remove('active');
+            genresDropdown?.classList.remove('active');
+            genresArrow?.classList.remove('rotate');
+            cartMenu?.classList.remove('show');
+        }
+    });
 
+    // Estilo do ícone e contador
+    if (cartIcon) cartIcon.style.marginRight = '20px';
+    if (cartCountSpan) {
+        cartCountSpan.style.backgroundColor = '#007BFF';
+        cartCountSpan.style.color = 'white';
+    }
 
-/* ============================================== */
-/* 5. AÇÕES DOS BOTÕES */
-/* ============================================== */
-
-
-//Botão voltar quando se está ná página do produto
-
-document.getElementById('voltarBtn').addEventListener('click', function() {
-    window.history.back();
-  });
-
-
-
+    atualizarCarrinho();
+});

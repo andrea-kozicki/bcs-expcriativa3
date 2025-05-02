@@ -22,7 +22,21 @@
         </div>
 
         <div class="navbar-content">
-                
+            
+            <div class="cart-container">
+                <div class="cart-icon">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span class="cart-count">0</span>
+                </div>
+
+                <div class="cart-menu hidden" id="cartMenu">
+                    <p>Itens no carrinho:</p>
+                    <ul id="cartItems" class="cart-items-list"></ul>
+                    <button id="limparCarrinho" class="btn-danger">Limpar Carrinho</button>
+                </div>
+
+            </div>
+
             <div class="avatar">
                 <img src="./imagens/user-pic.jpg" alt="usuario" width="40" >
                 <div class="dropdown-menu setting">
@@ -45,7 +59,7 @@
         <div class="sidebar active">
             <a href="./index.html" class="sidebar-nav"> <i class="icon fa-solid fa-house"></i><span>Inicio</span></a>
 
-            <a href="./maisvendidos.html" class="sidebar-nav active"><i class="icon fa-solid fa-medal"></i><span>Mais vendidos</span></a>
+            <a href="./maisvendidos.html" class="sidebar-nav"><i class="icon fa-solid fa-medal"></i><span>Mais vendidos</span></a>
 
             <button class="dropdown-btn sidebar-nav active">
                 <i class="icon fa-solid fa-book"></i><span>Gêneros</span><i class="fa-solid fa-caret-down dropdown-arrow"></i>
@@ -63,42 +77,45 @@
         </div>
 
         <div class="wrapper">
-            <div class="row">
-                <div class="box">
-                    <img src="./imagens/Poesia1.jpeg" alt="Livro 1" class="book-image">
-                    <span>A Redoma de Vidro</span>
-                    <span>R$ 42,90</span>
-                    <a href="produto.html?id=11" class="btn-success">Comprar</a>
-                </div>
-                
-                <div class="box">
-                    <img src="./imagens/Poesia2.jpeg" alt="Livro 2" class="book-image">
-                    <span>A Morte de Ivan Ilitch</span>
-                    <span>R$ 26,50</span>
-                    <a href="produto.html?id=12" class="btn-success">Comprar</a>
-                </div>
-                
-                <div class="box">
-                    <img src="./imagens/Poesia3.jpg" alt="Livro 3" class="book-image">
-                    <span>Crime e Castigo</span>
-                    <span>R$ 62,00</span>
-                    <a href="produto.html?id=13" class="btn-success">Comprar</a>
-                </div>
-                
-                <div class="box">
-                    <img src="./imagens/Poesia4.jpeg" alt="Livro 4" class="book-image">
-                    <span>Nos Cumes do Desespero</span>
-                    <span>R$ 99,90</span>
-                    <a href="produto.html?id=14" class="btn-success">Comprar</a>
-                </div>
-                
-                <div class="box">
-                    <img src="./imagens/Poesia5.jpg" alt="Livro 5" class="book-image">
-                    <span>Lira dos Vinte Anos</span>
-                    <span>R$ 47,36</span>
-                    <a href="produto.html?id=15" class="btn-success">Comprar</a>
+            <div class="page-card">
+                <div class="row">
+                    <div class="box">
+                        <img src="./imagens/Poesia1.jpeg" alt="Livro 1" class="book-image">
+                        <span class="titulo-livro">A Redoma de Vidro</span>
+                        <span>R$ 42,90</span>
+                        <a href="produto.html?id=11" class="btn-success">Comprar</a>
+                    </div>
+                    
+                    <div class="box">
+                        <img src="./imagens/Poesia2.jpeg" alt="Livro 2" class="book-image">
+                        <span class="titulo-livro">A Morte de Ivan Ilitch</span>
+                        <span>R$ 26,50</span>
+                        <a href="produto.html?id=12" class="btn-success">Comprar</a>
+                    </div>
+                    
+                    <div class="box">
+                        <img src="./imagens/Poesia3.jpg" alt="Livro 3" class="book-image">
+                        <span class="titulo-livro">Crime e Castigo</span>
+                        <span>R$ 62,00</span>
+                        <a href="produto.html?id=13" class="btn-success">Comprar</a>
+                    </div>
+                    
+                    <div class="box">
+                        <img src="./imagens/Poesia4.jpeg" alt="Livro 4" class="book-image">
+                        <span class="titulo-livro">Nos Cumes do Desespero</span>
+                        <span>R$ 99,90</span>
+                        <a href="produto.html?id=14" class="btn-success">Comprar</a>
+                    </div>
+                    
+                    <div class="box">
+                        <img src="./imagens/Poesia5.jpg" alt="Livro 5" class="book-image">
+                        <span class="titulo-livro">Lira dos Vinte Anos</span>
+                        <span>R$ 47,36</span>
+                        <a href="produto.html?id=15" class="btn-success">Comprar</a>
+                    </div>
                 </div>
             </div>
+            
         </div>    
     </div>
 

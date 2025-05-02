@@ -22,7 +22,20 @@
         </div>
         
         <div class="navbar-content">
-                
+            
+            <div class="cart-container">
+                <div class="cart-icon">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span class="cart-count">0</span>
+                </div>
+
+                <div class="cart-menu hidden" id="cartMenu">
+                    <p>Itens no carrinho:</p>
+                    <ul id="cartItems" class="cart-items-list"></ul>
+                    <button id="limparCarrinho" class="btn-danger">Limpar Carrinho</button>
+                </div>
+            </div>
+
             <div class="avatar">
                 <img src="./imagens/user-pic.jpg" alt="usuario" width="40" >
                 <div class="dropdown-menu setting">
@@ -64,42 +77,46 @@
 
         
         <div class="wrapper">
-            <div class="row">
-                <div class="box">
-                    <img src="./imagens/Contos1.jpg" alt="Livro 1" class="book-image">
-                    <span>Tripulação de Esqueletos</span>
-                    <span>R$ 79,90</span>
-                    <a href="produto.html?id=16" class="buy-button">Comprar</a>
+            <div class="page-card">
+                <div class="row">
+                    <div class="box">
+                        <img src="./imagens/Contos1.jpg" alt="Livro 1" class="book-image">
+                        <span class="titulo-livro">Tripulação de Esqueletos</span>
+                        <span>R$ 79,90</span>
+                        <a href="produto.html?id=16" class="btn-success">Comprar</a>
+                    </div>
+                        
+                    <div class="box">
+                        <img src="./imagens/Contos2.jpg" alt="Livro 2" class="book-image">
+                        <span class="titulo-livro"> O Telefone Preto e Outras Histórias</span>
+                        <span>R$ 45,90</span>
+                        <a href="produto.html?id=17" class="btn-success">Comprar</a>
+                    </div>
+                        
+                    <div class="box">
+                        <img src="./imagens/Contos3.jpg" alt="Livro 3" class="book-image">
+                        <span class="titulo-livro">Doze Reis e a Moça do Labirinto do Vento</span>
+                        <span>R$ 47,60</span>
+                        <a href="produto.html?id=18" class="btn-success">Comprar</a>
+                    </div>
+                        
+                    <div class="box">
+                        <img src="./imagens/Contos4.jpeg" alt="Livro 4" class="book-image">
+                        <span class="titulo-livro">Olhos D'Água</span>
+                        <span>R$ 35,90</span>
+                        <a href="produto.html?id=19" class="btn-success">Comprar</a>
+                    </div>
+                        
+                    <div class="box">
+                        <img src="./imagens/Contos5.jpg" alt="Livro 5" class="book-image">
+                        <span class="titulo-livro">Alerta de Risco</span>
+                        <span>R$ 27,30</span>
+                        <a href="produto.html?id=20" class="btn-success">Comprar</a>
+                    </div>
                 </div>
-                    
-                <div class="box">
-                    <img src="./imagens/Contos2.jpg" alt="Livro 2" class="book-image">
-                    <span>O Telefone Preto e Outras Histórias</span>
-                    <span>R$ 45,90</span>
-                    <a href="produto.html?id=17" class="buy-button">Comprar</a>
-                </div>
-                    
-                <div class="box">
-                    <img src="./imagens/Contos3.jpg" alt="Livro 3" class="book-image">
-                    <span>Doze Reis e a Moça do Labirinto do Vento</span>
-                    <span>R$ 47,60</span>
-                    <a href="produto.html?id=18" class="buy-button">Comprar</a>
-                </div>
-                    
-                <div class="box">
-                    <img src="./imagens/Contos4.jpeg" alt="Livro 4" class="book-image">
-                    <span>Olhos D'Água</span>
-                    <span>R$ 35,90</span>
-                    <a href="produto.html?id=19" class="buy-button">Comprar</a>
-                </div>
-                    
-                <div class="box">
-                    <img src="./imagens/Contos5.jpg" alt="Livro 5" class="book-image">
-                    <span>Alerta de Risco</span>
-                    <span>R$ 27,30</span>
-                    <a href="produto.html?id=20" class="buy-button">Comprar</a>
-                </div>
+
             </div>
+  
         </div>            
         
 

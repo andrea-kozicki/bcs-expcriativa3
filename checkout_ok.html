@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
    
-    <title>Mais vendidos</title>
+    <title>Pedido concluído</title>
 </head>
 <body>
     <nav class="navbar">
@@ -20,18 +20,18 @@
             </div>
             <img src="./imagens/estrela.ico" class="logo"/>
         </div>
-
-        <div class="navbar-content">  
-            
+    
+        <div class="navbar-content">
+             
             <div class="cart-container">
                 <div class="cart-icon">
                     <i class="fa-solid fa-cart-shopping"></i>
                     <span class="cart-count">0</span>
                 </div>
 
-                <div class="cart-menu hidden" id="cartMenu">
+                <div class="cart-menu" id="cartMenu">
                     <p>Itens no carrinho:</p>
-                    <ul id="cartItems" class="cart-items-list"></ul>
+                    <ul id="cartItems" class="cart-items-list"></ul>    
                     <button id="limparCarrinho" class="btn-danger">Limpar Carrinho</button>
                 </div>
             </div>
@@ -40,13 +40,13 @@
                 <img src="./imagens/user-pic.jpg" alt="usuario" width="40" >
                 <div class="dropdown-menu setting">
                     <div class="item">
-                        <span class="fa-solid fa-door-open"></span> <a href="./login2.php">Login</a> 
+                        <span class="fa-solid fa-door-open"></span> <a href="./login.html">Login</a> 
                     </div>
                     <div class="item">
                         <span class="fa-solid fa-user"></span><a href="./perfil.html">Perfil</a>
                     </div>
                     <div class="item">
-                        <span class="fa-solid fa-door-open"></span><a href="./indexadm.html">Sair</a>
+                        <span class="fa-solid fa-door-open"></span><a href="./index.html">Sair</a>
                     </div>
                 </div>
             </div>    
@@ -58,9 +58,9 @@
         <div class="sidebar active">
             <a href="./index.html" class="sidebar-nav"> <i class="icon fa-solid fa-house"></i><span>Inicio</span></a>
 
-            <a href="./maisvendidos.html" class="sidebar-nav active"><i class="icon fa-solid fa-medal"></i><span>Mais vendidos</span></a>
+            <a href="./maisvendidos.html" class="sidebar-nav "><i class="icon fa-solid fa-medal"></i><span>Mais vendidos</span></a>
 
-            <button class="dropdown-btn sidebar-nav">
+            <button class="dropdown-btn sidebar-nav active">
                 <i class="icon fa-solid fa-book"></i><span>Gêneros</span><i class="fa-solid fa-caret-down dropdown-arrow"></i>
             </button>
             <div class="dropdown-container">
@@ -76,64 +76,26 @@
         </div>
 
         <div class="wrapper">
-            <div class="page-card">
-                <div class="row">
-                    <div class="box">
-                        <span class="fa-solid fa-medal" style="color: #f5c211;"></span>
-                        <span>Mais vendidos 1</span>
-                    </div>
-    
-                    <div class="box box-second">
-                        <span class="fa-solid fa-medal" style="color: #868686;"></span>
-                        <span>Mais vendidos 2</span>
-                        
-                    </div>
-    
-                    <div class="box box-third">
-                        <span class="fa-solid fa-medal" style="color: #77641f;"></span>
-                        <span>Mais vendidos 3</span>
-                        
-                    </div>
-    
-                    <div class="box box-fourth">
-                        <span class="fa-solid fa"></span>
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                        <span>Mais vendidos 4</span>
-                        
-                    </div>
-    
-                    <div class="box box-first">
-                        <span class="fa-solid fa-users"></span>
-                        <span>Mais vendidos 5</span>
-                        
-                    </div>
-    
-                    <div class="box box-second">
-                        <span class="fa-solid fa-truck-ramp-box"></span>
-                        <span>Mais vendidos 6</span>
-                    </div>
-    
-                    <div class="box box-third">
-                        <span class="fa-solid fa-circle-check"></span>
-                        <span>Mais vendidos 7</span>
-                    </div>
-    
-                    <div class="box box-fourth">
-                        <span class="fa-solid fa"></span>
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                        <span>Mais vendidos 8</span>
-                    </div>
-    
-    
-    
-                </div>
-            </div>
             
+            <div class="checkout-row">
+                   <main class="checkout-container">
+                    <h1 class="checkout-title">✅ Pedido realizado com sucesso!</h1>
+                    <p style="font-size: 1.2rem; margin-top: 1rem;">
+                        Obrigado pela sua compra! Seu número de pedido é:<br>
+                        <strong id="codigoPedido" style="font-size: 1.5rem;"></strong>
+                    </p>
+
+                    <div class="checkout-botoes" style="margin-top: 2rem;">
+                        <a href="./index.html" class="btn-success" style="text-align:center;">Voltar à página inicial</a>
+                        <a href="./pedidos.html" class="btn btn-secondary" style="margin-top: 10px; text-align:center;">Ver meus pedidos</a>
+                    </div>
+                  </main>              
+            </div>
         </div>
 
         
     </div>
-
+    <script src="./js/checkout.js"></script>
     <script src="./js/sitejslivros.js"></script>
 </body>
 </html>

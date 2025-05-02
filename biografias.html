@@ -22,7 +22,22 @@
         </div>
 
         <div class="navbar-content">   
-                
+            
+
+            <div class="cart-container">
+                <div class="cart-icon">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span class="cart-count">0</span>
+                </div>
+
+                <div class="cart-menu hidden" id="cartMenu">
+                    <p>Itens no carrinho:</p>
+                    <ul id="cartItems" class="cart-items-list"></ul>
+                    <button id="limparCarrinho" class="btn-danger">Limpar Carrinho</button>
+                </div>
+            </div>
+
+
             <div class="avatar">
                 <img src="./imagens/user-pic.jpg" alt="usuario" width="40" >
                 <div class="dropdown-menu setting">
@@ -63,42 +78,45 @@
         </div>
 
         <div class="wrapper">
-            <div class="row">
-                <div class="box">
-                    <img src="./imagens/Bio1.jpg" alt="Livro 1" class="book-image">
-                    <span>A Cabeça de Steve Jobs</span>
-                    <span>R$ 89,90</span>
-                    <a href="produto.html?id=6" class="btn-success">Comprar</a>
-                </div>
-                
-                <div class="box">
-                    <img src="./imagens/Bio2.jpg" alt="Livro 2" class="book-image">
-                    <span>A Loja de Tudo</span>
-                    <span>R$ 40,30</span>
-                    <a href="produto.html?id=7" class="btn-success">Comprar</a>
-                </div>
-                
-                <div class="box">
-                    <img src="./imagens/Bio3.jpg" alt="Livro 3" class="book-image">
-                    <span>Minha Breve História</span>
-                    <span>R$ 44,50</span>
-                    <a href="produto.html?id=8" class="btn-success">Comprar</a>
-                </div>
-                
-                <div class="box">
-                    <img src="./imagens/Bio4.jpg" alt="Livro 4" class="book-image">
-                    <span>Eu Sou Malala</span>
-                    <span>R$ 46,99</span>
-                    <a href="produto.html?id=9" class="btn-success">Comprar</a>
-                </div>
-                
-                <div class="box">
-                    <img src="./imagens/Bio5.jpg" alt="Livro 5" class="book-image">
-                    <span>Bilionários por Acaso</span>
-                    <span>R$ 25,00</span>
-                    <a href="produto.html?id=10" class="btn-success">Comprar</a>
+            <div class="page-card">
+                <div class="row">
+                    <div class="box">
+                        <img src="./imagens/Bio1.jpg" alt="Livro 1" class="book-image">
+                        <span class="titulo-livro">A Cabeça de Steve Jobs</span>
+                        <span>R$ 89,90</span>
+                        <a href="produto.html?id=6" class="btn-success">Comprar</a>
+                    </div>
+                    
+                    <div class="box">
+                        <img src="./imagens/Bio2.jpg" alt="Livro 2" class="book-image">
+                        <span class="titulo-livro">A Loja de Tudo</span>
+                        <span>R$ 40,30</span>
+                        <a href="produto.html?id=7" class="btn-success">Comprar</a>
+                    </div>
+                    
+                    <div class="box">
+                        <img src="./imagens/Bio3.jpg" alt="Livro 3" class="book-image">
+                        <span class="titulo-livro">Minha Breve História</span>
+                        <span>R$ 44,50</span>
+                        <a href="produto.html?id=8" class="btn-success">Comprar</a>
+                    </div>
+                    
+                    <div class="box">
+                        <img src="./imagens/Bio4.jpg" alt="Livro 4" class="book-image">
+                        <span class="titulo-livro">Eu Sou Malala</span>
+                        <span>R$ 46,99</span>
+                        <a href="produto.html?id=9" class="btn-success">Comprar</a>
+                    </div>
+                    
+                    <div class="box">
+                        <img src="./imagens/Bio5.jpg" alt="Livro 5" class="book-image">
+                        <span class="titulo-livro">Bilionários por Acaso</span>
+                        <span>R$ 25,00</span>
+                        <a href="produto.html?id=10" class="btn-success">Comprar</a>
+                    </div>
                 </div>
             </div>
+            
         </div>    
     </div>
 
