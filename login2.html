@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="./imagens/estrela.ico" type="image/x-icon">
     <link rel="stylesheet" href="./css/produtoscss.css">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
    
-    <title>Perfil do usuário</title>
+    <title>Login</title>
 </head>
 <body>
     <nav class="navbar">
@@ -75,48 +76,53 @@
             <a href="./sobre.html" class="sidebar-nav"> <i class="icon fa-solid fa-eye"></i><span>Sobre a livraria</span></a>
         </div>
 
-
         <div class="wrapper">
-    <div class="page-card">
-      <!-- Cabeçalho do Perfil -->
-      <div class="perfil-header" style="text-align: center; margin-bottom: 30px;">
-        <img src="./imagens/user-pic.jpg" alt="Foto do usuário" class="perfil-avatar" />
-        <p class="perfil-saudacao">Olá, <span id="emailUsuario"></span>!</p>
-      </div>
+            <div class="page-card">
+                <div class="row">
+                     <!-- Formulário de Login Principal -->
+                <div id="basiclogin" class="content-adm">
+                    <form id="formlogin" method="post" class="form-adm">
+                        <div class="row-input">
+                            <div class="column">
+                                <label class="title-input">Email</label>
+                                <input type="email" name="email" id="email" class="input-adm" placeholder="Digite o seu email" required>
+                            </div>
+                        </div>
+                        <div class="row-input">
+                            <div class="column">
+                                <label class="title-input">Senha</label>
+                                <input type="password" name="senha" id="senha" class="input-adm" placeholder="Digite sua senha" minlength="12" maxlength="64" required>
+                            </div>
+                        </div>
+                    
+                        <div id="mfa-section" style="display: none;">
+                            <label class="title-input">Código de verificação (MFA)</label>
+                            <input type="text" name="mfa_code" id="mfa_code" class="input-adm" placeholder="Insira o código do app autenticador" maxlength="6">
+                        </div>
+                    
+                        <div class="loading-spinner" style="display: none;">
+                            <i class="fa-solid fa-circle-notch fa-spin"></i> Autenticando...
+                        </div>
+                    
+                        <br>
+                        <button type="submit" class="btn-success" id="entrar">Entrar</button>
+                    </form>
+                        <!-- ✅ Corrigidos: links estilizados como botões -->
+                    
+                    <div class="link-buttons">
+                        <a href="./redefinesenha.html" class="btn-link">Esqueci minha senha</a>
+                        <a href="./cadastro.html" class="btn-link">Cadastre-se</a>
+                    </div> 
+                    
+                </div>
 
-      <!-- Seção de Pedidos -->
-      <section class="perfil-section">
-        <h3 class="title-content">📦 Seus Pedidos</h3>
-        <div class="placeholder">⚠️ Nenhum pedido disponível no momento.</div>
-      </section>
+            </div>
+            
+        </div>
 
-      <!-- Seção de Endereço -->
-      <section class="perfil-section">
-        <h3 class="title-content">📍 Dados de Entrega</h3>
-        <div class="placeholder">⚠️ Nenhum endereço cadastrado.</div>
-      </section>
-
-      <!-- Seção MFA -->
-      <section class="perfil-section mfa-section" style="display: none;">
-        <h3 class="title-content">🔐 Autenticação em Dois Fatores (MFA)</h3>
-        <p id="mfa-status">Clique abaixo para ativar a autenticação por aplicativo.</p>
-        <button id="ativarMfaBtn" class="btn-success">Ativar MFA</button>
-        <button id="desativarMfaBtn" class="btn-danger" style="display: none;">Desativar MFA</button>
-        <div id="qrCodeContainer" style="margin-top: 20px; display: none;"></div>
-      </section>
-
-      <!-- Seção de Redefinição de Senha -->
-      <section class="perfil-section">
-        <h3 class="title-content">🔒 Segurança da Conta</h3>
-        <a href="./redefinesenha.html" class="btn-primary">Mudar ou redefinir sua senha</a>
-      </section>
+        
     </div>
-  </div>
 
-  <!-- Scripts -->
-  <script src="./js/verificarsessao.js"></script>
-  <script src="./js/padraoperfil.js"></script>
-  
-    
+    <script src="./js/sitejslivros.js"></script>
 </body>
 </html>

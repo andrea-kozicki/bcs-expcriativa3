@@ -1,0 +1,959 @@
+/* ===================================================
+   BASE & ROOT VARIABLES
+=================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Ubuntu", sans-serif;
+    text-decoration: none;
+}
+
+:root {
+    --site-color: #3a7afe;
+    --main-color: #ebeef6;
+    --active-color: #d4def7;
+    --bg-color: #ecedf0;
+    --second-color: #f1f1f1;
+    --third-color: #9fa7bd;
+    --fourth-color: #fff;
+    --main-bg-color: #192039;
+    --second-bg-color: #1e2746;
+    --fourth-bg-color: #131b38;
+}
+
+body {
+    background-color: var(--main-color);
+}
+
+/* ===================================================
+   NAVBAR
+=================================================== */
+.navbar {
+    color: var(--main-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--fourth-bg-color);
+    position: sticky;
+    box-shadow: 0px 1px 4px 1px rgba(0, 0, 0, 0.12);
+    padding: 5px 15px;
+    font-size: 17px;
+    top: 0;
+    z-index: 1000;
+}
+
+.navbar .navbar-content {
+    display: flex;
+    align-items: center;
+}
+
+.navbar .bars {
+    margin-right: 20px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.navbar .bars:hover {
+    transform: scale(1.1);
+}
+
+.logo {
+    width: 50px;
+    transition: transform 0.3s ease;
+}
+.logo:hover {
+    transform: scale(1.05);
+}
+
+/* Avatar */
+.avatar {
+    cursor: pointer;
+    position: relative;
+    display: inline-block;
+}
+
+.avatar img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.avatar:hover img {
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* Dropdown avatar */
+.dropdown-menu.setting {
+    background-color: var(--second-bg-color);
+    border-radius: 5px;
+    min-width: 160px;
+}
+.dropdown-menu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    background-color: var(--main-bg-color);
+    width: 200px;
+    border-radius: 7px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, visibility 0.3s, transform 0.3s ease;
+    z-index: 1000;
+}
+.dropdown-menu.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+.dropdown-menu .item {
+    padding: 10px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.dropdown-menu .item:hover {
+    background-color: var(--second-bg-color);
+}
+.dropdown-menu .item a {
+    color: inherit;
+    text-decoration: none;
+    width: 100%;
+}
+
+/* ===================================================
+   SIDEBAR
+=================================================== */
+.content {
+    display: flex;
+    min-height: calc(100vh - 60px);
+}
+.content .sidebar {
+    color: var(--main-color);
+    height: calc(100vh - 60px);
+    width: 60px;
+    background-color: var(--main-bg-color);
+    position: sticky;
+    top: 60px;
+    box-shadow: 0 1px 4px 1px rgba(0, 0, 0, 0.12);
+    transition: width 0.3s ease-in-out;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex-shrink: 0;
+}
+.content .sidebar.active {
+    width: 250px;
+}
+
+
+.sidebar .sidebar-nav {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    padding: 15px 0;
+    position: relative;
+    cursor: pointer;
+    font-size: 16px;
+    white-space: nowrap;
+    color: var(--main-color);
+    transition: background-color 0.3s ease;
+}
+.sidebar .sidebar-nav:hover,
+.sidebar .sidebar-nav.active {
+    background-color: var(--second-bg-color);
+    color: var(--active-color);
+}
+.sidebar .sidebar-nav.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 5px;
+    background-color: var(--site-color);
+}
+.sidebar-nav .icon {
+    width: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    
+}
+
+/* Sidebar Dropdown */
+.sidebar .dropdown-btn {
+    padding: 15px 0;
+    font-size: 16px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    display: flex;
+    color: var(--main-color);
+    align-items: center;
+    width: 100%;
+}
+.sidebar .dropdown-btn:hover {
+    background-color: var(--second-bg-color);
+    color: var(--active-color);
+}
+.sidebar .dropdown-container {
+    display: none;
+    background-color: var(--fourth-bg-color);
+}
+.sidebar .dropdown-container.active {
+    display: block;
+}
+
+/* Sidebar colapsada: ocultar spans, centralizar ícones */
+.sidebar:not(.active) .sidebar-nav span {
+    display: none;
+}
+
+.sidebar:not(.active) .icon {
+    margin: 0 auto;
+}
+
+/* Dropdown fechado: ocultar texto, manter apenas o ícone */
+.sidebar:not(.active) .dropdown-btn span,
+.sidebar:not(.active) .dropdown-btn .dropdown-arrow {
+    display: none;
+}
+
+
+.dropdown-arrow {
+    transition: transform 0.3s ease;
+}
+.dropdown-arrow.rotate {
+    transform: rotate(180deg);
+}
+
+/* ==============================
+   GRID E LAYOUT
+   ============================== */
+   .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    justify-content: center;
+    padding-bottom: 40px;
+}
+
+/* ==============================
+   BOX DOS LIVROS
+   ============================== */
+.box {
+    background-color: #ffffff;
+    border: none;
+    width: 300px;
+    padding: 24px 18px;
+    border-radius: 12px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.box:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+
+/* ==============================
+   IMAGENS DOS LIVROS
+   ============================== */
+.book-image {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+/* ==============================
+   TÍTULO DO LIVRO
+   ============================== */
+.titulo-livro {
+    display: block;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #222;
+    margin: 10px 0 6px;
+    line-height: 1.4;
+    min-height: 2.8em;
+}
+
+/* ==============================
+   PREÇO
+   ============================== */
+.box span:nth-of-type(2) {
+    display: block;
+    font-size: 0.9rem;
+    color: #444;
+    margin-bottom: 10px;
+}
+
+/* ==============================
+   BOTÃO DE COMPRA
+   ============================== */
+   .btn-success {
+    background-color: var(--site-color);
+    color: #fff;
+    text-decoration: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    display: inline-block;
+    font-weight: 500;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    box-shadow: none;
+}
+
+.btn-success:hover {
+    background-color: #fff;
+    color: var(--site-color);
+    border: 2px solid var(--site-color);
+}
+
+  
+  /* ==============================
+     RESPONSIVIDADE
+     ============================== */
+  @media (max-width: 768px) {
+    .box {
+      width: 45%;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .box {
+      width: 100%;
+    }
+  }
+  
+
+
+/* ===================================================
+   CARRINHO
+=================================================== */
+.cart-container {
+    position: relative;
+    display: inline-block;
+}
+.cart-icon {
+    position: relative;
+    color: var(--main-color);
+    font-size: 24px;
+    cursor: pointer;
+}
+.cart-icon:hover {
+    transform: scale(1.1);
+    color: var(--active-color);
+}
+.cart-count {
+    position: absolute;
+    top: -6px;
+    right: -8px;
+    background-color: crimson;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+/* Carrinho Dropdown */
+.cart-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 260px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    padding: 12px;
+    z-index: 999;
+    display: none;
+}
+
+.cart-menu p {
+    color: #222;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+
+.cart-menu.show {
+    display: block;
+}
+.cart-items-list {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+    max-height: 220px;
+    overflow-y: auto;
+}
+.cart-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 6px;
+    border-bottom: 1px solid #ddd;
+}
+.cart-item-name {
+    flex: 1;
+    font-size: 0.9rem;
+    color: #111;
+    margin-right: 0.5rem;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: normal;
+}
+.btn-remove-menu {
+    background: none;
+    border: none;
+    color: #d62828;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 0;
+}
+.btn-remove-menu i {
+    pointer-events: none;
+}
+
+#cartMenu .cart-items-list li {
+    color: #000 !important;
+    font-style: normal !important;
+    opacity: 1 !important;
+  }
+
+/* Botão limpar */
+#limparCarrinho {
+    width: 100%;
+    background-color: #d62828;
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+#limparCarrinho:hover {
+    background-color: #b51e1e;
+}
+
+/* ===================================================
+   RESPONSIVO
+=================================================== */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 5px 10px;
+    }
+    .sidebar {
+        position: fixed;
+        transform: translateX(-100%);
+        z-index: 900;
+    }
+    .sidebar.active {
+        transform: translateX(0);
+    }
+}
+
+
+/* pagina geral */
+
+.page-card {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+    margin: 30px auto;
+    width: calc(100% - 80px); /* ocupa toda a largura, exceto margens laterais */
+    max-width: 1400px; /* limite máximo em telas grandes */
+    box-sizing: border-box;
+}
+
+.wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+/*checkout */
+
+.checkout-row {
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.checkout-container {
+    background-color: #ffffff;
+    padding: 40px 60px;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    width: calc(100% - 80px);
+    max-width: 1100px;
+    box-sizing: border-box;
+    font-family: 'Ubuntu', sans-serif;
+    margin: 0 auto;
+}
+
+.checkout-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1e2b50;
+    margin-bottom: 30px;
+}
+
+.checkout-lista {
+    font-size: 1rem;
+    color: #222;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+    margin-bottom: 30px;
+}
+
+.checkout-lista .item-carrinho {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid #f1f1f1;
+    gap: 12px;
+}
+
+.checkout-lista .item-carrinho span {
+    display: inline-block;
+    max-width: 80%;
+    line-height: 1.6;
+}
+
+.checkout-lista .btn-remove-menu {
+    background: none;
+    border: none;
+    color: #dc3545;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0 8px;
+    transition: transform 0.2s ease;
+}
+
+.checkout-lista .btn-remove-menu:hover {
+    transform: scale(1.2);
+}
+
+.checkout-total {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-top: 40px;
+    gap: 10px;
+}
+
+.checkout-total-texto {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #1d1d1d;
+}
+
+.checkout-botoes {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+/* Bloco esquerdo (nome do livro) */
+.item-carrinho .info {
+    flex: 1;
+    line-height: 1.6;
+    font-size: 1rem;
+    color: #222;
+}
+
+/* Bloco direito (preço + lixeira) */
+.item-carrinho .acoes {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-weight: 500;
+    color: #333;
+}
+
+
+/* Botões */
+#finalizarCompra,
+#limparCheckout {
+    padding: 10px 18px;
+    font-size: 0.95rem;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    cursor: pointer;
+    width: 100%;
+    max-width: 220px;
+    padding: 10px 16px;
+    font-size: 1rem;
+    border-radius: 6px;
+    font-weight: 500;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+/* Botão Finalizar */
+#finalizarCompra {
+    background-color: var(--site-color);
+    color: #fff;
+    padding: 10px 18px;
+    font-size: 0.95rem;
+    border-radius: 6px;
+    font-weight: 500;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#finalizarCompra:hover {
+    background-color: #fff;
+    color: var(--site-color);
+    border: 2px solid var(--site-color);
+}
+
+/* Botão Limpar */
+#limparCheckout {
+    background-color: #fff;
+    color: #dc3545;
+    padding: 10px 18px;
+    font-size: 0.95rem;
+    border-radius: 6px;
+    font-weight: 500;
+    border: 2px solid #dc3545;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#limparCheckout:hover {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+/* Ícone da lixeira no checkout */
+.checkout-lista .btn-remove-menu {
+    background: none;
+    border: none;
+    color: #dc3545;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    padding: 0;
+}
+
+.checkout-lista .btn-remove-menu:hover {
+    transform: scale(1.3);
+}
+
+
+/*página do produto */
+
+.produto-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 40px;
+    padding: 40px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Imagem */
+.produto-imagem {
+    max-width: 400px;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Texto + botões */
+.produto-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.produto-info span {
+    font-size: 1.05rem;
+    margin-bottom: 12px;
+    display: block;
+    color: #222;
+}
+
+/* Botões */
+.produto-info .btn-success {
+    margin-right: 10px;
+    margin-top: 20px;
+}
+
+
+/*padrões de lixeira checkout e carrinho */
+
+.checkout-lista .btn-remove-menu {
+    background: none !important;
+    border: none !important;
+    color: #dc3545 !important;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0 !important;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+}
+
+.checkout-lista .btn-remove-menu:hover {
+    transform: scale(1.3);
+}
+
+.checkout-lista .item-carrinho span {
+    display: inline-block;
+    max-width: 75%;
+    line-height: 1.8;
+    font-size: 1rem;
+    color: #222;
+    padding-right: 12px;
+}
+
+.checkout-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 40px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.checkout-total .btn-success,
+.checkout-total .btn-danger,
+#finalizarCompra,
+#limparCheckout {
+    margin-top: 0;
+}
+
+.cart-menu .btn-remove-menu {
+    background: none;
+    border: none;
+    color: #d62828;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 0;
+}
+
+.cart-menu .btn-remove-menu:hover {
+    transform: scale(1.2);
+}
+
+
+/* ==========================
+   MELHORIAS DO FORMULÁRIO DE LOGIN
+========================== */
+.form-adm {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.row-input {
+    display: flex;
+    flex-direction: column;
+}
+
+.title-input {
+    font-weight: 600;
+    color: #1e2b50;
+    margin-bottom: 6px;
+    font-size: 0.95rem;
+}
+
+.input-adm {
+    padding: 14px 16px;       /* maior conforto visual */
+    font-size: 1.05rem;       /* texto do input mais legível */
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #fdfdfd;
+    transition: border 0.3s ease, box-shadow 0.3s ease;
+}
+
+.input-adm:focus {
+    outline: none;
+    border-color: var(--site-color);
+    box-shadow: 0 0 5px rgba(58, 122, 254, 0.3);
+}
+
+#mfa-section {
+    margin-top: 20px;
+}
+
+.loading-spinner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #555;
+    font-size: 0.9rem;
+    margin-top: 10px;
+}
+
+@media (max-width: 480px) {
+    .page-card {
+        padding: 20px;
+    }
+    .form-adm {
+        max-width: 100%;
+    }
+}
+
+.link-buttons {
+    display: flex;
+    gap: 20px;
+    margin-top: 15px;
+    justify-content: center;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: var(--site-color);
+    font-weight: bold;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
+.btn-link:hover {
+    text-decoration: underline;
+}
+
+/* Centralização vertical do conteúdo do login */
+.page-card .row {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    gap: 6px; /* espaçamento entre label e input */
+}
+
+.title-input {
+    margin-bottom: 0; /* garante que o espaçamento seja controlado apenas pelo gap */
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #1e2b50;
+}
+
+/* === Seções do Perfil === */
+
+.perfil-container {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    padding: 30px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  
+  .perfil-header {
+    text-align: center;
+  }
+  
+  .perfil-header img {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    margin-bottom: 10px;
+  }
+  
+  .perfil-header h2 {
+    font-size: 20px;
+    margin-bottom: 5px;
+  }
+  
+  .perfil-header p {
+    font-size: 14px;
+    color: #666;
+  }
+  
+  /* Seções de conteúdo */
+  
+  .perfil-section {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 20px 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  }
+  
+  .perfil-section h3 {
+    font-size: 18px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+  }
+  
+  /* Botões */
+  
+  .perfil-section .btn-success,
+  .perfil-section .btn-danger {
+    margin-top: 15px;
+    font-size: 14px;
+    padding: 10px 20px;
+    border-radius: 6px;
+  }
+  
+  /* QR code MFA */
+  
+  #qrCodeContainer {
+    margin-top: 20px;
+    text-align: center;
+  }
+  
+  #qrCodeContainer img {
+    max-width: 160px;
+    margin-bottom: 10px;
+  }
+  
+  .qr-secret {
+    font-size: 14px;
+    font-weight: bold;
+    color: #444;
+    word-break: break-all;
+    margin-top: 5px;
+  }
+  
