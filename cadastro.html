@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" href="/imagens/estrela.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="./imagens/estrela.ico" type="image/x-icon">
     <link rel="stylesheet" href="./css/cadastrocss.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+
     <title>Cadastro</title>
 </head>
 <body>
@@ -18,13 +20,13 @@
             <div class="bars">
                 <i class="fa-solid fa-bars fa-xl"></i>
             </div>
-            <img src="/imagens/estrela.ico" class="logo"/>
+            <img src="./imagens/estrela.ico" class="logo"/>
         </div>
 
              
         <div class="navbar-content">                
             <div class="avatar">
-                <img src="/imagens/user-pic.jpg" alt="usuario" width="40" >
+                <img src="./imagens/user-pic.jpg" alt="usuario" width="40" >
                 <div class="dropdown-menu setting">
                     <div class="item">
                         <span class="fa-solid fa-door-open"></span> <a href="/login2.php">Login</a> 
@@ -74,11 +76,11 @@
                 </div>
                 
                 <div class="content-adm">
-                    <form class="form-adm" action="/php/processa_cadastro.php" method="post" id="cadastroForm">
+                    <form class="form-adm" action="/bcs-expcriativa3/php/processa_cadastro.php" method="post" id="cadastroForm">
                         <div class="row-input">
                             <div class="column">
                                 <label class="title-input">Nome</label>
-                                <input type="text" name="name" id="name" class="input-adm" placeholder="Nome completo" required>
+                                <input type="text" name="nome" id="nome" class="input-adm" placeholder="Nome completo" required>
                             </div>
                         </div>
 
@@ -91,31 +93,50 @@
 
                         <div class="row-input">
                             <div class="column">
-                                <label class="title-input" for="senha">Senha:</label>
-                                <!-- Um label para o campo de entrada de senha -->
-                                <input class="input-adm" type="password" id="senha" name="senha" required pattern="^[0-9A-Za-z\d@$!%*?&]{12,20}$"
-                                    title="A senha deve conter pelo menos 12 caracteres e 1 número.">
-                                <input type="hidden" id="senha_hash" name="senha_hash">
-                                <!-- Um campo de entrada de senha, que é obrigatório e deve conter pelo menos 12 caracteres e 1 número -->
-                            </div>
+                              <label class="title-input" for="senha">Senha:</label>
+                              <div class="password-container">
+                                <input class="input-adm" type="password" id="senha" name="senha" required minlength="12" maxlength="20" title="A senha deve conter de 12 a 20 caracteres, incluindo maiúsculas, minúsculas, números e caracteres especiais.">
+
+
+                                <button class="toggle-password" data-target="senha">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                              </div>
+                              <input type="hidden" id="senha_hash" name="senha_hash">
+                              <div class="password-strength-container">
+                                <div class="password-strength-text">
+                                  <span>Força da senha: <span class="strength-level">---</span></span>
+                                  <span class="password-length"><span class="char-count">0</span> caracteres</span>
+                                </div>
+                                <div class="password-strength-meter">
+                                  <div class="password-strength-bar"></div>
+                                </div>
+                              </div>
                         </div>
-                        
+                          
                         <div class="row-input">
                             <div class="column">
-                                <label class="title-input" for="telefone">Telefone (somente números):</label>
-                                <!-- Um label para o campo de entrada de telefone -->
-                                <input class="input-adm" type="tel" id="telefone" name="telefone" placeholder="(DDD)XXXXXXXXX" pattern="[0-9]{10,11}|" required>
-                                <!-- Um campo de entrada de telefone, que é obrigatório e deve conter 10 ou 11 dígitos -->
+                                <label class="title-input" for="confirmarSenha">Confirmar senha:</label>
+                                <!-- Um label para o campo de entrada de senha -->
+                                <input class="input-adm" type="password" id="confirmarSenha" name="confirmarSenha" required>
                             </div>
                         </div>
 
                         <div class="row-input">
                             <div class="column">
-                                <label class="title-input" for="cpf">CPF (somente números):</label>
+                                <label class="title-input" for="telefone">Telefone:</label>
+                                <!-- Um label para o campo de entrada de telefone -->
+                                <input class="input-adm" type="tel" id="telefone" name="telefone" placeholder="(99) 99999-9999" maxlength="15" required>
+                                
+                            </div>
+                        </div>
+
+                        <div class="row-input">
+                            <div class="column">
+                                <label class="title-input" for="cpf">CPF:</label>
                                 <!-- Um label para o camp de entrada de cpf -->
-                                <input class="input-adm" type="text" id="cpf" name="cpf" placeholder="12345678900" pattern="\d{11}"
-                                    title="O CPF deve conter exatamente 11 dígitos numéricos." required>
-                                <!-- Um campo de entrada de cpf, que e obrigatório e deve conter 11 dígitos -->
+                                <input class="input-adm" type="text" id="cpf" name="cpf" required placeholder="999.999.999-99" maxlength="14">
+                                
                             </div>
                         </div>
 
@@ -124,8 +145,8 @@
                             <div class="column">
                                 <label class="title-input" for="data_nascimento">Data de Nascimento:</label>
                                 <!-- Um label para o campo de entrada de data de nascimento -->
-                                <input class="input-adm" type="date" id="data_nascimento" name="data_nascimento" required min="1900-01-01">
-                                <!-- Um campo de entrada de data, que é obrigatório e deve ser posterior a 1º de janeiro de 1900 -->
+                                <input class="input-adm" type="text" id="data_nascimento" name="data_nascimento" placeholder="dd/mm/aaaa" maxlength="10" required>
+                                
                             </div>
                         </div>
 
@@ -137,24 +158,7 @@
                                 <span>Endereço</span>
                                 <br><br>
                                 <label class="title-input" for="cep">CEP (somente números):</label>
-                                <input class="input-adm" type="text" id="cep" name="cep" placeholder="12345678" pattern="\d{8}"
-                                    title="O CEP deve conter exatamente 8 dígitos numéricos." required>
-                            </div>
-                        </div>
-
-
-                        <div class="row-input">
-                            <div class="column">
-                                <label class="title-input" for="estado">Estado:</label>
-                                <input class="input-adm" type="text" id="estado" name="estado" placeholder="SP" pattern="[A-Za-z]{2}"
-                                    title="Digite a sigla do estado (ex: SP, RJ)." required>
-                            </div>
-                        </div>
-
-                        <div class="row-input">
-                            <div class="column">
-                                <label class="title-input" for="cidade">Cidade:</label>
-                                <input class="input-adm" type="text" id="cidade" name="cidade" required>
+                                <input class="input-adm" type="text" id="cep" name="cep" required>
                             </div>
                         </div>
 
@@ -168,11 +172,28 @@
                         <div class="row-input">
                             <div class="column">
                                 <label class="title-input" for="numero">Número:</label>
-                                <input class="input-adm" type="text" id="numero" name="numero" required>
+                                <input class="input-adm" type="text" id="numero" name="numero" maxlength="5" required>
                             </div>
                         </div>
 
-                        <button type="submit" class="btn-success">Enviar</button>
+                        <div class="row-input">
+                            <div class="column">
+                                <label class="title-input" for="estado">Estado:</label>
+                                <input class="input-adm" type="text" id="estado" name="estado" readonly>
+                            </div>
+                        </div>
+
+                        <div class="row-input">
+                            <div class="column">
+                                <label class="title-input" for="cidade">Cidade:</label>
+                                <input class="input-adm" type="text" id="cidade" name="cidade" readonly>
+                            </div>
+                        </div>
+                   
+
+                        <button type="submit" class="btn-success" id="submitBtn">
+                            <span id="submitText">Enviar</span>
+                        </button>
                     </form>
                 </div>
                 
@@ -183,7 +204,7 @@
     </div>
     <!-- Fim Conteudo -->
 
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="./js/cadastrojs.js"></script>
     <script src="./js/sitejs.js"></script>
 </body>

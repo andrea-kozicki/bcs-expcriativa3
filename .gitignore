@@ -1,0 +1,9 @@
+# .gitignore
+.env
+config.php
+logs/
+php_errors.log
+vendor/
+py/
+imagens/star.png
+php/testar_conn.php

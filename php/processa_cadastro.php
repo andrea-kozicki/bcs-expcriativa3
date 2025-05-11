@@ -1,178 +1,108 @@
 <?php
-session_start();
+require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../phpmailer/phpmailer/src/PHPMailer.php';
+require_once __DIR__ . '/../phpmailer/phpmailer/src/SMTP.php';
+require_once __DIR__ . '/../phpmailer/phpmailer/src/Exception.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require 'vendor/autoload.php'; // Carrega o PHPMailer
+// Carrega variáveis do .env
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
+$dotenv->load();
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    include_once("config.php");
+// Conexão com banco
+function getDatabaseConnection() {
+    $dsn = "mysql:host={$_ENV['DB_HOST']};dbname={$_ENV['DB_NAME']};charset=utf8mb4";
+    return new PDO($dsn, $_ENV['DB_USER'], $_ENV['DB_PASS'], [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+    ]);
+}
 
-    // Capturar os dados
-    $nome = $_POST['nome'] ?? '';
-    $email = $_POST['email'] ?? '';
+header('Content-Type: application/json');
+
+try {
+    // 1. Dados recebidos
+    $nome     = trim($_POST['nome'] ?? '');
+    $email    = filter_var($_POST['email'] ?? '', FILTER_VALIDATE_EMAIL);
+    $senhaHash = $_POST['senha_hash'] ?? '';
+    $salt     = $_POST['salt'] ?? '';
     $telefone = $_POST['telefone'] ?? '';
-    $cpf = $_POST['cpf'] ?? '';
-    $senha_hash = $_POST['senha_hash'] ?? '';
-    $salt = $_POST['salt'] ?? '';
-    $data_nascimento = $_POST['data_nascimento'] ?? '';
-    $cep = $_POST['cep'] ?? '';
-    $estado = $_POST['estado'] ?? '';
-    $endereco = $_POST['endereco'] ?? '';
-    $bairro = $_POST['bairro'] ?? '';
-    $cidade = $_POST['cidade'] ?? '';
-    $rua = trim($_POST['rua']);
-    $numero = trim($_POST['numero']);
-    
+    $cpf      = $_POST['cpf'] ?? '';
+    $cep      = $_POST['cep'] ?? '';
+    $rua      = $_POST['rua'] ?? '';
+    $numero   = $_POST['numero'] ?? '';
+    $estado   = $_POST['estado'] ?? '';
+    $cidade   = $_POST['cidade'] ?? '';
 
-    $erros = [];
+    // Formata data
+    $dataNascimentoBr = $_POST['data_nascimento'] ?? '';
+    $data = DateTime::createFromFormat('d/m/Y', $dataNascimentoBr);
+    $data_nascimento = $data ? $data->format('Y-m-d') : null;
 
-    // Validações básicas
-
-    // Nome
-    if (empty($nome) || !preg_match("/^[a-zA-ZÀ-ú\s]+$/u", $nome)) {
-        $erros[] = "Nome inválido.";
+    // 2. Validação mínima
+    if (!$nome || !$email || !$senhaHash || !$salt || !$data_nascimento) {
+        throw new Exception('Erro: Campos obrigatórios estão ausentes ou inválidos.');
     }
 
-    // E-mail
-    if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $erros[] = "E-mail inválido.";
+    $pdo = getDatabaseConnection();
+    $pdo->beginTransaction();
+
+    // 3. Verifica duplicidade
+    $check = $pdo->prepare("SELECT COUNT(*) FROM usuarios WHERE email = ?");
+    $check->execute([$email]);
+    if ($check->fetchColumn() > 0) {
+        throw new Exception('Erro: Este e-mail já está cadastrado.');
     }
 
-    // Telefone
-    $telefone_limpo = preg_replace('/\D/', '', $telefone);
-    if (empty($telefone_limpo) || !preg_match("/^\d{10,11}$/", $telefone_limpo)) {
-        $erros[] = "Telefone inválido.";
-    }
+    // 4. Gera token de ativação
+    $token_ativacao = bin2hex(random_bytes(32));
 
-    // CPF
-    $cpf_limpo = preg_replace('/\D/', '', $cpf);
-    if (empty($cpf_limpo) || strlen($cpf_limpo) != 11) {
-        $erros[] = "CPF inválido.";
-    }
+    // 5. Insere usuário
+    $stmtUser = $pdo->prepare("
+        INSERT INTO usuarios (email, senha_hash, salt, token_ativacao, ativado)
+        VALUES (?, ?, ?, ?, 0)
+    ");
+    $stmtUser->execute([$email, $senhaHash, $salt, $token_ativacao]);
+    $usuarioId = $pdo->lastInsertId();
 
-    // CEP
-    $cep_limpo = preg_replace('/\D/', '', $cep);
-    if (empty($cep_limpo) || strlen($cep_limpo) != 8) {
-        $erros[] = "CEP inválido.";
-    }
+    // 6. Insere dados cadastrais
+    $stmtDados = $pdo->prepare("
+        INSERT INTO dados_cadastrais (
+            usuario_id, nome, telefone, cpf, data_nascimento, cep, rua, numero, estado, cidade
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ");
+    $stmtDados->execute([
+        $usuarioId, $nome, $telefone, $cpf, $data_nascimento, $cep, $rua, $numero, $estado, $cidade
+    ]);
 
-    // Endereço
-    if (empty($endereco)) {
-        $erros[] = "Endereço é obrigatório.";
-    }
+    // 7. Commit
+    $pdo->commit();
 
-    // Bairro
-    if (empty($bairro)) {
-        $erros[] = "Bairro é obrigatório.";
-    }
+    // 8. Envia e-mail
+    $link = "http://127.0.0.1/bcs-expcriativa3/php/ativar_conta.php?token=$token_ativacao";
 
-    // Cidade
-    if (empty($cidade)) {
-        $erros[] = "Cidade é obrigatória.";
-    }
-
-    // Estado
-    if (empty($estado) || !preg_match("/^[A-Z]{2}$/", strtoupper($estado))) {
-        $erros[] = "Estado (UF) inválido.";
-    }
-
-    // Data de Nascimento
-    if (empty($data_nascimento) || !validarData($data_nascimento)) {
-        $erros[] = "Data de nascimento inválida.";
-    }
-
-    // Senha Hash
-    if (empty($senha_hash)) {
-        $erros[] = "Senha inválida.";
-    }
-
-    // Salt
-    if (empty($salt)) {
-        $erros[] = "Erro interno: salt não enviado.";
-    }
-
-     // Rua
-     if (empty($rua)) {
-        $erros[] = "Rua é obrigatória.";
-    }
-
-    // Número
-    if (empty($numero)) {
-        $erros[] = "Número é obrigatório.";
-    }
-
-    // Se não houver erros, inserir no banco
-    if (empty($erros)) {
-
-         // Gerar token de ativação único
-         $token_ativacao = bin2hex(random_bytes(16)); // 32 caracteres aleatórios
-
-         // Inserir no banco
-        $stmt = mysqli_prepare($conn, "INSERT INTO usuarios (nome, email, telefone, cpf, senha_hash, salt, data_nascimento, cep, estado, cidade, rua, numero) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        if ($stmt) {
-            mysqli_stmt_bind_param($stmt, "ssssssssssss", $nome, $email, $telefone_limpo, $cpf_limpo, $senha_hash, $salt,$data_nascimento, $cep_limpo, strtoupper($estado), $endereco, $bairro, $cidade, $rua , $numero);
-
-            
-            if (mysqli_stmt_execute($stmt)) {
-                // Enviar e-mail de ativação
-                enviarEmailAtivacao($email, $token_ativacao);
-                header("Location: cadastro_ok.php");
-                exit;
-            } else {
-                echo "Erro ao cadastrar: " . mysqli_stmt_error($stmt);
-            }
-            mysqli_stmt_close($stmt);
-        } else {
-            echo "Erro na preparação da consulta: " . mysqli_error($conn);
-        }
-    } else {
-        foreach ($erros as $erro) {
-            echo "<p style='color:red'>" . htmlspecialchars($erro, ENT_QUOTES, 'UTF-8') . "</p>";
-        }
-    }
-}
-
-// Função para validar a data no formato YYYY-MM-DD
-function validarData($data) {
-    $partes = explode('-', $data);
-    if (count($partes) !== 3) return false;
-    return checkdate((int)$partes[1], (int)$partes[2], (int)$partes[0]);
-}
-
-function enviarEmailAtivacao($emailDestino, $token) {
     $mail = new PHPMailer(true);
+    $mail->isSMTP();
+    $mail->Host = $_ENV['MAIL_HOST'];
+    $mail->SMTPAuth = true;
+    $mail->Username = $_ENV['MAIL_USER'];
+    $mail->Password = $_ENV['MAIL_PASS'];
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+    $mail->Port = $_ENV['MAIL_PORT'];
 
-    try {
-        // Configurações SMTP
-        $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com'; // Exemplo: smtp.gmail.com
-        $mail->SMTPAuth = true;
-        $mail->Username = 'seuemail@seudominio.com'; // Seu email
-        $mail->Password = 'suasenha'; // Sua senha
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // Ou ENCRYPTION_SMTPS
-        $mail->Port = 587; // TLS: 587, SSL: 465
+    $mail->setFrom($_ENV['MAIL_USER'], 'Confirmação de Cadastro');
+    $mail->addAddress($email, $nome);
+    $mail->isHTML(true);
+    $mail->Subject = 'Ative sua conta';
+    $mail->Body    = "Olá, $nome!<br>Para ativar sua conta, clique no link:<br><a href='$link'>$link</a>";
 
-        // Remetente e destinatário
-        $mail->setFrom('no-reply@seudominio.com', 'Sistema de Cadastro');
-        $mail->addAddress($emailDestino);
+    $mail->send();
 
-        // Conteúdo do email
-        $mail->isHTML(true);
-        $mail->Subject = 'Confirmação de Cadastro - Ative sua Conta';
-        $mail->Body = '
-            <p>Olá, obrigado por se cadastrar!</p>
-            <p>Para ativar sua conta, clique no link abaixo:</p>
-            <p><a href="http://localhost/bcs-expcriativa3/ativar_conta.php?token=' . urlencode($token) . '">Ativar Conta</a></p>
-        ';
-
-        $mail->send();
-        return true;
-    } catch (Exception $e) {
-        // Pode registrar erro para análise
-        error_log('Erro ao enviar email: ' . $mail->ErrorInfo);
-        return false;
+    echo json_encode(['success' => true, 'message' => 'Cadastro realizado com sucesso! Verifique seu e-mail para ativar a conta.']);
+} catch (Exception $e) {
+    if (isset($pdo) && $pdo->inTransaction()) {
+        $pdo->rollBack();
     }
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
-?>
