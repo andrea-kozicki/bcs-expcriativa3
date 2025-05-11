@@ -1,0 +1,848 @@
+/**
+ * Estilos para a página de Cadastro - Livraria Estrela
+ * 
+ * Organizado em seções lógicas e comentado para fácil manutenção
+ * 
+ * Seções:
+ * 1. Variáveis e Reset
+ * 2. Estilos Base
+ * 3. Layout Principal
+ * 4. Componentes da Interface
+ *   4.1 Barra de Navegação (Navbar)
+ *   4.2 Menu Lateral (Sidebar)
+ * 5. Formulário de Cadastro
+ *   5.1 Estrutura do Formulário
+ *   5.2 Campos de Entrada
+ *   5.3 Validação e Feedback
+ *   5.4 Campos Especiais (Senha, CEP, etc.)
+ * 6. Responsividade
+ * 7. Animações e Efeitos
+ */
+
+/* ============================================= */
+/* 1. VARIÁVEIS E RESET */
+/* ============================================= */
+
+:root {
+    /* Cores principais */
+    --primary-color: #3a7afe;
+    --primary-light: #d4def7;
+    --background-light: #ebeef6;
+    --background-gray: #ecedf0;
+    --light-gray: #f1f1f1;
+    --medium-gray: #9fa7bd;
+    --white: #fff;
+    
+    /* Cores de fundo escuras */
+    --dark-bg: #192039;
+    --dark-bg-secondary: #1e2746;
+    --dark-bg-tertiary: #131b38;
+    
+    /* Cores de feedback */
+    --error-color: #dc3545;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    
+    /* Tipografia */
+    --font-main: 'Ubuntu', sans-serif;
+    --font-size-base: 15px;
+    --line-height-base: 1.6;
+    
+    /* Espaçamentos */
+    --spacing-xs: 5px;
+    --spacing-sm: 10px;
+    --spacing-md: 15px;
+    --spacing-lg: 20px;
+    --spacing-xl: 30px;
+    
+    /* Bordas */
+    --border-radius-sm: 4px;
+    --border-radius-md: 6px;
+    --border-radius-lg: 8px;
+    --border-light: 1.2px solid var(--primary-light);
+    
+    /* Sombras */
+    --shadow-sm: 0 1px 4px 1px rgba(0, 0, 0, 0.12);
+    --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Reset básico */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  html {
+    font-size: var(--font-size-base);
+  }
+  
+  body {
+    font-family: var(--font-main);
+    line-height: var(--line-height-base);
+    color: #333;
+    background-color: var(--background-light);
+  }
+  
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+  
+  button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  
+  /* ============================================= */
+  /* 2. ESTILOS BASE */
+  /* ============================================= */
+  
+  .container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-md);
+  }
+  
+  /* ============================================= */
+  /* 3. LAYOUT PRINCIPAL */
+  /* ============================================= */
+  
+  .content {
+    display: flex;
+    min-height: calc(100vh - 60px); /* Altura total menos navbar */
+  }
+  
+  .wrapper {
+    flex: 1;
+    padding: var(--spacing-lg);
+    background-color: var(--background-gray);
+  }
+  
+  .row {
+    width: 100%;
+    background-color: var(--white);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-md);
+    padding-left: var(--spacing-md); /* Alinhamento consistente */
+  }
+
+
+  /* ============================================= */
+  /* 4. COMPONENTES DA INTERFACE */
+  /* ============================================= */
+  
+  /* 4.1 Barra de Navegação (Navbar) */
+  .navbar {
+    color: var(--white);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--dark-bg-tertiary);
+    position: sticky;
+    box-shadow: var(--shadow-sm);
+    padding: var(--spacing-xs) var(--spacing-md);
+    font-size: 17px;
+    top: 0;
+    height: 60px;
+    z-index: 1000;
+  }
+  
+  .navbar-content {
+    display: flex;
+    align-items: center;
+  }
+  
+  .navbar .bars {
+    margin-right: var(--spacing-lg);
+    cursor: pointer;
+    transition: transform 0.3s ease;
+  }
+  
+  .navbar .bars:hover {
+    transform: scale(1.1);
+  }
+  
+  .logo {
+    width: 50px;
+    transition: transform 0.3s ease;
+  }
+  
+  .logo:hover {
+    transform: scale(1.05);
+  }
+  
+  /* Dropdown do usuário */
+  .avatar {
+    cursor: pointer;
+    position: relative;
+    display: inline-block;
+  }
+  
+  .avatar img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .avatar:hover img {
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  }
+  
+  .dropdown-menu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    box-shadow: var(--shadow-lg);
+    background-color: var(--dark-bg);
+    width: 200px;
+    border-radius: var(--border-radius-sm);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    transform: translateY(-10px);
+    z-index: 1000;
+  }
+  
+  .dropdown-menu.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+  
+  .dropdown-menu .item {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--dark-bg-secondary);
+    cursor: pointer;
+    font-size: 15px;
+    transition: background-color 0.3s ease;
+    color: var(--white);
+  }
+  
+  .dropdown-menu .item:hover {
+    background-color: var(--dark-bg-secondary);
+  }
+  
+  .dropdown-menu .item span {
+    margin-right: var(--spacing-sm);
+    font-size: 16px;
+  }
+  
+  /* 4.2 Menu Lateral (Sidebar) */
+  .sidebar {
+    color: var(--white);
+    height: calc(100vh - 60px);
+    width: 60px;
+    position: sticky;
+    top: 60px;
+    background-color: var(--dark-bg);
+    box-shadow: var(--shadow-sm);
+    overflow-y: auto;
+    overflow-x: hidden;
+    transition: width 0.3s ease-in-out;
+    flex-shrink: 0;
+  }
+  
+  .sidebar.active {
+    width: 250px;
+  }
+  
+  /* Itens da sidebar */
+  .sidebar-nav {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-md) 0;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 16px;
+    white-space: nowrap;
+    color: var(--white);
+  }
+  
+  .sidebar-nav:hover {
+    background-color: var(--dark-bg-secondary);
+    color: var(--primary-light);
+  }
+  
+  .sidebar-nav.active {
+    background-color: var(--dark-bg-secondary);
+    color: var(--primary-light);
+  }
+  
+  .sidebar-nav.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 5px;
+    background-color: var(--primary-color);
+  }
+  
+  .sidebar-nav .icon {
+    width: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  
+  /* Dropdown de gêneros */
+  .dropdown-btn {
+    padding: var(--spacing-md) 0;
+    font-size: 16px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    display: flex;
+    width: 100%;
+    color: var(--white);
+    align-items: center;
+    transition: background-color 0.3s ease;
+  }
+  
+  .dropdown-btn:hover {
+    background-color: var(--dark-bg-secondary);
+    color: var(--primary-light);
+  }
+  
+  .dropdown-arrow {
+    transition: transform 0.3s ease;
+    margin-left: var(--spacing-sm);
+  }
+  
+  .dropdown-arrow.rotate {
+    transform: rotate(180deg);
+  }
+  
+  .dropdown-container {
+    display: none;
+    background-color: var(--dark-bg-tertiary);
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+  
+  .dropdown-container.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+  }
+  
+  .dropdown-container .sidebar-nav {
+    padding-left: var(--spacing-sm);
+  }
+  
+  .dropdown-container .sidebar-nav .icon {
+    width: 40px;
+    font-size: 18px;
+  }
+  
+  /* ============================================= */
+  /* 5. FORMULÁRIO DE CADASTRO */
+  /* ============================================= */
+  
+  /* 5.1 Estrutura do Formulário */
+  .form-adm {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xl);
+  }
+  
+  .field-group {
+    margin-bottom: var(--spacing-xl);
+    padding-bottom: var(--spacing-lg);
+    border-bottom: var(--border-light);
+    padding-top: var(--spacing-md);
+  }
+  
+  .field-group-title {
+    font-size: 18px;
+    color: var(--dark-bg);
+    margin-bottom: var(--spacing-lg);
+    font-weight: 500;
+  }
+  
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-md);
+    width: 100%;
+  }
+  
+  .form-col {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: var(--spacing-sm);
+    position: relative; /* Importante para os elementos absolutos internos */
+    min-height: 48px; /* Altura mínima para os campos */
+}
+
+  
+  .form-col.full-width {
+    grid-column: 1 / -1;
+  }
+  
+  .form-col.large {
+    grid-column: span 2;
+    min-width: 0; /* Permite que o campo se ajuste corretamente */
+}
+
+.form-col.small {
+    max-width: 120px;
+    min-width: 120px; /* Mantém tamanho fixo para o número */
+}
+
+  /* 5.2 Campos de Entrada */
+  .title-input {
+    color: var(--dark-bg-tertiary);
+    font-size: 14px;
+    display: block;
+    margin-bottom: var(--spacing-xs);
+    margin-top: var(--spacing-sm);
+    font-weight: 500;
+  }
+  
+  .top-list {
+    
+    width: 100%;
+    margin-bottom: var(--spacing-xl);
+    border-bottom: 2px solid var(--primary-light);
+    padding-bottom: var(--spacing-md);
+}
+
+.title-content {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--dark-bg);
+    margin: 0;
+    padding: 0 var(--spacing-md) 0 0; /* Alinhamento com field-group-title */
+    display: inline-block;
+}
+
+.field-group-title {
+    font-size: 1.2rem;
+    color: var(--dark-bg);
+    margin: var(--spacing-lg) 0 var(--spacing-md) 0;
+    padding: 0;
+    border-bottom: 2px solid var(--primary-light);
+    padding-bottom: var(--spacing-sm);
+    width: 100%;
+}
+
+.title-content, 
+.field-group-title {
+    text-align: left;
+    box-sizing: border-box;
+}
+
+  .input-adm {
+    width: 100%;
+    font-weight: 400;
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-sm);
+    border: var(--border-light);
+    font-size: 15px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .input-adm:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(58, 122, 254, 0.2);
+  }
+
+  .input-adm::placeholder {
+    color: var(--medium-gray);
+    opacity: 0.7;
+    font-size: 14px;
+}
+
+.input-adm:focus::placeholder {
+    opacity: 0.5;
+}
+  
+.input-adm[type="text"][id="data_nascimento"] {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' ... %3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 20px;
+  padding-right: 35px;
+}
+
+
+
+/* Proporções personalizadas */
+.column campo-cep {
+  flex: 0 0 160px;
+}
+
+.column .campo-rua {
+  flex: 1;
+}
+
+.column .campo-numero {
+  flex: 0 0 120px;
+}
+
+.column .campo-estado {
+  flex: 0 0 80px;
+}
+
+.column .campo-cidade {
+  flex: 1;
+}
+
+.column .campo-complemento {
+  flex: 1;
+}
+
+input[readonly] {
+  background-color: #f2f2f2;
+  color: #0058fc;
+  cursor: not-allowed;
+}
+
+
+  /* 5.3 Validação e Feedback */
+  .input-adm.error {
+    border-color: var(--error-color);
+  }
+  
+  .input-adm.success {
+    border-color: var(--success-color);
+  }
+  
+  .error-message {
+    color: var(--error-color);
+    font-size: 12px;
+    margin-top: var(--spacing-xs);
+    display: block;
+    order: 3; /* Garante que fica depois do medidor */
+  }
+  
+  /* Popup de mensagem */
+  .popup {
+    position: fixed;
+    top: var(--spacing-lg);
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: var(--white);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    z-index: 1000;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    transition: opacity 0.3s ease-in-out;
+  }
+  
+  .popup.success {
+    background-color: var(--success-color);
+  }
+  
+  .popup.error {
+    background-color: var(--error-color);
+  }
+  
+  .popup.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  
+  .popup.show {
+    opacity: 1;
+  }
+  
+  /* 5.4 Campos Especiais */
+  /* Campo de senha */
+  .password-container {
+    position: relative;
+    margin-bottom: var(--spacing-xs); /* Isso ajuda no espaçamento */;
+    height: 48px; /* Altura fixa para evitar deslocamento */
+    .password-container {
+        order: 1; /* Garante que fica primeiro */
+    }
+}
+
+.password-container .input-adm {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    padding-right: 40px;
+    box-sizing: border-box;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--medium-gray);
+    cursor: pointer;
+    padding: 0;
+    font-size: 16px;
+    z-index: 2; /* Garante que fique acima do input */
+    margin: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+  
+  .toggle-password:hover {
+    color: var(--primary-color);
+  }
+  
+  .password-strength-container {
+    order: 2; /* Coloca depois do campo */
+    width: 100%;
+    margin-top: var(--spacing-xs);
+    background-color: var(--white);
+    padding: 5px;
+    border-radius: var(--border-radius-sm);
+    border: var(--border-light);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Adicione esta regra para o container de erros */
+.password-container + .error-message {
+    order: 2; /* Garante que a mensagem fica abaixo do medidor */
+    margin-top: var(--spacing-xs);
+}
+  
+  .password-strength-text {
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    color: var(--medium-gray);
+  }
+  
+  .password-strength-meter {
+    height: 4px;
+    background: var(--light-gray);
+    border-radius: 2px;
+    margin-top: 4px;
+    overflow: hidden;
+  }
+  
+  .password-strength-bar {
+    height: 100%;
+    width: 0;
+    transition: width 0.3s ease, background-color 0.3s ease;
+  }
+  
+  /* Espaço para a mensagem de diretrizes */
+.password-instructions {
+    display: block;
+    margin-top: var(--spacing-xs);
+    font-size: 0.75rem;
+    color: var(--medium-gray);
+    line-height: 1.4;
+}
+
+  /* Níveis de força da senha */
+  .strength-level {
+    font-weight: bold;
+  }
+  
+  .strength-weak {
+    color: #ff4444;
+  }
+  
+  .strength-medium {
+    color: #ffbb33;
+  }
+  
+  .strength-strong {
+    color: #00C851;
+  }
+  
+  .password-strength-bar.weak {
+    background-color: #ff4444;
+    width: 25%;
+  }
+  
+  .password-strength-bar.medium {
+    background-color: #ffbb33;
+    width: 50%;
+  }
+  
+  .password-strength-bar.strong {
+    background-color: #00C851;
+    width: 75%;
+  }
+  
+  .password-strength-bar.very-strong {
+    background-color: #007E33;
+    width: 100%;
+  }
+  
+    
+  /* Botão de enviar */
+  .btn-success {
+    background-color: var(--primary-color);
+    color: var(--white);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border: 1px solid var(--primary-color);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    display: block;
+    width: 100%;
+    max-width: 200px;
+    margin: var(--spacing-xl) auto 0;
+    font-weight: 500;
+  }
+  
+  .btn-success:hover {
+    background-color: var(--white);
+    color: var(--primary-color);
+  }
+  
+  .btn-success:disabled {
+    background-color: var(--medium-gray);
+    border-color: var(--medium-gray);
+    cursor: not-allowed;
+  }
+  
+  /* Loader para o botão de submit */
+  .btn-loader {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--white);
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  
+  
+  /* ============================================= */
+  /* 6. RESPONSIVIDADE */
+  /* ============================================= */
+  
+  @media (max-width: 768px) {
+    .navbar {
+      padding: var(--spacing-xs) var(--spacing-sm);
+    }
+    
+    .navbar .bars {
+      margin-right: var(--spacing-sm);
+    }
+    
+    .avatar img {
+      width: 35px;
+      height: 35px;
+    }
+  
+    /* Sidebar mobile */
+    .sidebar {
+      position: fixed;
+      transform: translateX(-100%);
+      z-index: 900;
+      width: 0;
+      height: calc(100vh - 60px);
+      transition: transform 0.3s ease, width 0.3s ease;
+    }
+    
+    .sidebar.active {
+      width: 250px;
+      transform: translateX(0);
+    }
+  
+    .wrapper {
+      padding: var(--spacing-sm);
+      width: 100vw;
+    }
+  
+    .dropdown-menu {
+      width: 180px;
+    }
+    
+    .form-row {
+      grid-template-columns: 1fr;
+      margin-bottom: var(--spacing-md);  /* Adicione esta linha */
+      gap: var(--spacing-md);
+    }
+    
+    .form-col.large,
+    .form-col.small {
+      grid-column: auto;
+      max-width: 100%;
+    }
+
+    .password-container {
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .password-strength-container {
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: var(--spacing-xs);
+    }
+    
+    .password-strength-meter {
+        width: 100%;
+    }
+
+    .error-message {
+        margin-top: var(--spacing-xs);
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .dropdown-menu {
+      width: 160px;
+    }
+    
+    .row {
+      padding: var(--spacing-md);
+    }
+    
+    .btn-success {
+      max-width: 100%;
+    }
+  }
+  
+  /* ============================================= */
+  /* 7. ANIMAÇÕES E EFEITOS */
+  /* ============================================= */
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes spin {
+    to { 
+      transform: rotate(360deg); 
+    }
+  }
+  
+  /* Transições suaves para elementos interativos */
+  a, button, input, .sidebar-nav, .dropdown-btn {
+    transition: all 0.3s ease;
+  }

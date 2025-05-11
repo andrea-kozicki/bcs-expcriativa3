@@ -1,0 +1,55 @@
+/* corpo da pna */
+body {
+    font-family: sans-serif; /* Fonte */
+    display: flex; /* flexbox */
+    justify-content: center; /* Centraliza horizontalmente */
+    align-items: center; /* Centraliza verticalmente */
+    min-height: 100vh; /* 100% viewport */
+    margin: 0; /* margens padrão */
+    background-color: #f4f4f4; /* fundo */
+}
+
+/* container principal */
+.container {
+    background-color: #fff; /* Fundo branco */
+    padding: 20px; /* Espaçamento */
+    border-radius: 8px; /* Bordas */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra */
+    width: 400px; /* Largura */
+}
+
+/* labels dos campos */
+label {
+    display: block; /* cada label ocupa uma linha */
+    margin-bottom: 5px; /* Espaçamento */
+}
+
+/* campos de entrada */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="date"] {
+    width: 100%; /* Largura */
+    padding: 10px; /* Espaçamento interno */
+    margin-bottom: 10px; /* Espaçamento abaixo do campo */
+    border: 1px solid #ccc; /* Borda cinza */
+    border-radius: 4px; /* Bordas */
+    box-sizing: border-box; /* padding na largura */
+}
+
+/* botão de submit */
+button {
+    background-color: #4CAF50; /* fundo verde */
+    color: white; /* Texto branco */
+    padding: 10px 15px; /* Espaçamento interno */
+    border: none; /* borda padrão */
+    border-radius: 4px; /* Bordas arredondadas */
+    cursor: pointer; /* mãozinha */
+    width: 100%; /* Largura */
+}
+
+/* Efeito hover */
+button:hover {
+    background-color: #45a049; /* Verde */
+}
