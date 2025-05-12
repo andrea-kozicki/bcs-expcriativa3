@@ -30,7 +30,7 @@
                 <img src="./imagens/user-pic.jpg" alt="usuario" width="40">
                 <div class="dropdown-menu setting">
                     <div class="item">
-                        <span class="fa-solid fa-door-open"></span> <a href="./login.html">Login</a>
+                        <span class="fa-solid fa-door-open"></span> <a href="./login2.html">Login</a>
                     </div>
                     <div class="item">
                         <span class="fa-solid fa-user"></span><a href="./perfil.html">Perfil</a>
@@ -80,25 +80,25 @@
                 </div>
                 
                 <div class="content-adm">
-                    <form class="form-adm">
+                    <form class="form-adm" id="form-contato" method="post" action="php/enviar_contato.php">
                         <div class="row-input">
                             <div class="column">
                                 <label class="title-input">Nome</label>
-                                <input type="text" name="name" id="name" class="input-adm" placeholder="Nome completo">
+                                <input type="text" name="name" id="name" class="input-adm" placeholder="Nome completo" required>
                             </div>
                         </div>
 
                         <div class="row-input">
                             <div class="column">
                                 <label class="title-input">Email</label>
-                                <input type="email" name="email" id="E-mail" class="input-adm" placeholder="Melhor email">
+                                <input type="email" name="email" id="email" class="input-adm" placeholder="Melhor email" required>
                             </div>
                         </div>    
 
                         <div class="row-input">
                             <div class="column">
                                 <label class="title-input">Assunto</label>
-                                <select name="assunto" id="assunto" class="input-adm">
+                                <select name="assunto" id="assunto" class="input-adm" required>
                                     <option>Selecione</option>
                                     <option>Pedidos</option>
                                     <option>Login e senha</option>
@@ -110,7 +110,7 @@
                         <div class="row-input">
                             <div class="column">
                                 <label class="title-input">Sua mensagem</label>
-                                <textarea name="descricao" id="descricao" class="input-adm" placeholder="Escreva sua mensagem para nós"></textarea>
+                                <textarea name="descricao" id="descricao" class="input-adm" placeholder="Escreva sua mensagem para nós" required></textarea>
                             </div>
                         </div>
                         <button type="submit" class="btn-success">Enviar</button>

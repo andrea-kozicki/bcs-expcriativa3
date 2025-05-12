@@ -194,7 +194,7 @@ document.querySelector(".form-adm").addEventListener("submit", function (event) 
     event.preventDefault();
 
     const nome = document.getElementById("name").value.trim();
-    const email = document.getElementById("E-mail").value.trim();
+    const email = document.getElementById("email").value.trim();
     const assunto = document.getElementById("assunto").value;
     const mensagem = document.getElementById("descricao").value.trim();
 
@@ -220,8 +220,23 @@ document.querySelector(".form-adm").addEventListener("submit", function (event) 
     if (erros.length > 0) {
         showPopup(erros.join("<br>"), "error");
     } else {
-        showPopup("Formulário Enviado! Aguarde um Retorno ", "success");
-        this.reset(); 
+        fetch("php/enviar_contato.php", {
+            method: "POST",
+            body: new FormData(document.querySelector(".form-adm"))
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showPopup(data.message, "success");
+                document.querySelector(".form-adm").reset();
+            } else {
+                showPopup(data.message, "error");
+            }
+        })
+        .catch(error => {
+            console.error("Erro ao enviar:", error);
+            showPopup("Erro ao enviar a mensagem. Tente novamente.", "error");
+        });
     }
 });
 
@@ -238,4 +253,46 @@ function showPopup(message, type) {
     }, 4000);
 }
 
+
+/* ============================================== */
+/* 6. POPUP
+/* ============================================== */
+function showPopup(message, type = "success") {
+    // Remove qualquer popup existente
+    const existing = document.querySelector(".popup-message");
+    if (existing) existing.remove();
+
+    // Cria o container do popup
+    const popup = document.createElement("div");
+    popup.className = `popup-message ${type}`;
+    popup.innerHTML = `
+        <strong>${type === "success" ? "✅ Sucesso:" : "❌ Erro:"}</strong>
+        <p>${message}</p>
+    `;
+
+    // Estilo básico (se não for usar no CSS)
+    Object.assign(popup.style, {
+        position: "fixed",
+        top: "20px",
+        right: "20px",
+        backgroundColor: type === "success" ? "#d4edda" : "#f8d7da",
+        color: type === "success" ? "#155724" : "#721c24",
+        border: "1px solid",
+        borderColor: type === "success" ? "#c3e6cb" : "#f5c6cb",
+        padding: "12px 20px",
+        borderRadius: "5px",
+        boxShadow: "0 0 10px rgba(0,0,0,0.2)",
+        zIndex: 9999,
+        fontFamily: "Arial, sans-serif",
+        transition: "opacity 0.5s ease",
+    });
+
+    document.body.appendChild(popup);
+
+    // Remover após 5 segundos
+    setTimeout(() => {
+        popup.style.opacity = "0";
+        setTimeout(() => popup.remove(), 500);
+    }, 5000);
+}
 
