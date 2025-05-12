@@ -972,42 +972,5 @@ select.input-adm:focus {
     background-color: var(--fourth-color);
     color: var(--danger-color);
 }
-
 /* fim classes para pagina redefinesenha.html e novasenha.html */
-
-
-/* popup de contato */
-.popup {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #333;
-    color: #fff;
-    padding: 15px 25px;
-    border-radius: 8px;
-    font-family: 'Ubuntu', sans-serif;
-    z-index: 1000;
-    box-shadow: 0 0 10px rgba(0,0,0,0.3);
-    transition: opacity 0.3s ease-in-out;
-}
-
-.popup.success {
-    background-color: #28a745;
-}
-
-.popup.error {
-    background-color: #dc3545;
-}
-
-.popup.hidden {
-    opacity: 0;
-    pointer-events: none;
-}
-
-.popup.show {
-    opacity: 1;
-}
-/* fim classes para popup */
-
 /* Fim conteudo */
