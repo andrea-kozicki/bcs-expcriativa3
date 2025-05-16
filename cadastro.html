@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" href="./imagens/estrela.ico" type="image/x-icon">
-    <link rel="stylesheet" href="./css/cadastrocss.css">
+    <link rel="shortcut icon" href="imagens/estrela.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/cadastrocss.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,22 +20,22 @@
             <div class="bars">
                 <i class="fa-solid fa-bars fa-xl"></i>
             </div>
-            <img src="./imagens/estrela.ico" class="logo"/>
+            <img src="imagens/estrela.ico" class="logo"/>
         </div>
 
              
         <div class="navbar-content">                
             <div class="avatar">
-                <img src="./imagens/user-pic.jpg" alt="usuario" width="40" >
+                <img src="imagens/user-pic.jpg" alt="usuario" width="40" >
                 <div class="dropdown-menu setting">
                     <div class="item">
-                        <span class="fa-solid fa-door-open"></span> <a href="/login2.php">Login</a> 
+                        <span class="fa-solid fa-door-open"></span> <a href="login2.html">Login</a> 
                     </div>
                     <div class="item">
-                        <span class="fa-solid fa-user"></span><a href="/perfil.html">Perfil</a>
+                        <span class="fa-solid fa-user"></span><a href="perfil.html">Perfil</a>
                     </div>
                     <div class="item">
-                        <span class="fa-solid fa-door-open"></span><a href="/index.html">Sair</a>
+                        <span class="fa-solid fa-door-open"></span><a href="index.html">Sair</a>
                     </div>
                 </div>
             </div>    
@@ -45,23 +45,23 @@
 
     <div class="content">
         <div class="sidebar active">
-            <a href="/index.html" class="sidebar-nav"> <i class="icon fa-solid fa-house"></i><span>Inicio</span></a>
+            <a href="index.html" class="sidebar-nav"> <i class="icon fa-solid fa-house"></i><span>Inicio</span></a>
 
-            <a href="/maisvendidos.html" class="sidebar-nav"><i class="icon fa-solid fa-medal"></i><span>Mais vendidos</span></a>
+            <a href="maisvendidos.html" class="sidebar-nav"><i class="icon fa-solid fa-medal"></i><span>Mais vendidos</span></a>
 
             <button class="dropdown-btn sidebar-nav">
                 <i class="icon fa-solid fa-book"></i><span>Gêneros</span><i class="fa-solid fa-caret-down"></i>
             </button>
             <div class="dropdown-container">
-                <a href="/romance.html" class="sidebar-nav"><i class="icon fa-solid fa-heart"></i><span>Romance</span></a>
-                <a href="/biografias.html" class="sidebar-nav"><i class="icon fa-solid fa-pen-nib"></i><span>Biografias</span></a>
-                <a href="/poesias.html" class="sidebar-nav"><i class="icon fa-solid fa-feather"></i><span>Poesias</span></a>
-                <a href="/contos.html" class="sidebar-nav"><i class="icon fa-solid fa-comment"></i><span>Contos</span></a>
+                <a href="romance.html" class="sidebar-nav"><i class="icon fa-solid fa-heart"></i><span>Romance</span></a>
+                <a href="biografias.html" class="sidebar-nav"><i class="icon fa-solid fa-pen-nib"></i><span>Biografias</span></a>
+                <a href="poesias.html" class="sidebar-nav"><i class="icon fa-solid fa-feather"></i><span>Poesias</span></a>
+                <a href="contos.html" class="sidebar-nav"><i class="icon fa-solid fa-comment"></i><span>Contos</span></a>
             </div>
 
-            <a href="/contato.html" class="sidebar-nav"> <i class="icon fa-solid fa-envelope"></i><span>Contato</span></a>
+            <a href="contato.html" class="sidebar-nav"> <i class="icon fa-solid fa-envelope"></i><span>Contato</span></a>
 
-            <a href="/sobre.html" class="sidebar-nav"> <i class="icon fa-solid fa-eye"></i><span>Sobre a livraria</span></a>
+            <a href="sobre.html" class="sidebar-nav"> <i class="icon fa-solid fa-eye"></i><span>Sobre a livraria</span></a>
         </div>
 
         
@@ -81,6 +81,8 @@
                             <div class="column">
                                 <label class="title-input">Nome</label>
                                 <input type="text" name="nome" id="nome" class="input-adm" placeholder="Nome completo" required>
+                                <span class="mensagem-erro"></span>
+
                             </div>
                         </div>
 
@@ -88,6 +90,8 @@
                             <div class="column">
                                 <label class="title-input">Email</label>
                                 <input type="email" name="email" id="email" class="input-adm" placeholder="Melhor email" required>
+                                <span class="mensagem-erro"></span>
+
                             </div>
                         </div>    
 
@@ -96,6 +100,7 @@
                               <label class="title-input" for="senha">Senha:</label>
                               <div class="password-container">
                                 <input class="input-adm" type="password" id="senha" name="senha" required minlength="12" maxlength="20" title="A senha deve conter de 12 a 20 caracteres, incluindo maiúsculas, minúsculas, números e caracteres especiais.">
+                                <span class="mensagem-erro"></span>
 
 
                                 <button class="toggle-password" data-target="senha">
@@ -119,6 +124,8 @@
                                 <label class="title-input" for="confirmarSenha">Confirmar senha:</label>
                                 <!-- Um label para o campo de entrada de senha -->
                                 <input class="input-adm" type="password" id="confirmarSenha" name="confirmarSenha" required>
+                                <span class="mensagem-erro"></span>
+
                             </div>
                         </div>
 
@@ -127,7 +134,8 @@
                                 <label class="title-input" for="telefone">Telefone:</label>
                                 <!-- Um label para o campo de entrada de telefone -->
                                 <input class="input-adm" type="tel" id="telefone" name="telefone" placeholder="(99) 99999-9999" maxlength="15" required>
-                                
+                                <span class="mensagem-erro"></span>
+
                             </div>
                         </div>
 
@@ -136,7 +144,8 @@
                                 <label class="title-input" for="cpf">CPF:</label>
                                 <!-- Um label para o camp de entrada de cpf -->
                                 <input class="input-adm" type="text" id="cpf" name="cpf" required placeholder="999.999.999-99" maxlength="14">
-                                
+                                <span class="mensagem-erro"></span>
+
                             </div>
                         </div>
 
@@ -146,7 +155,8 @@
                                 <label class="title-input" for="data_nascimento">Data de Nascimento:</label>
                                 <!-- Um label para o campo de entrada de data de nascimento -->
                                 <input class="input-adm" type="text" id="data_nascimento" name="data_nascimento" placeholder="dd/mm/aaaa" maxlength="10" required>
-                                
+                                <span class="mensagem-erro"></span>
+
                             </div>
                         </div>
 
@@ -159,6 +169,8 @@
                                 <br><br>
                                 <label class="title-input" for="cep">CEP (somente números):</label>
                                 <input class="input-adm" type="text" id="cep" name="cep" required>
+                                <span class="mensagem-erro"></span>
+
                             </div>
                         </div>
 
@@ -173,6 +185,8 @@
                             <div class="column">
                                 <label class="title-input" for="numero">Número:</label>
                                 <input class="input-adm" type="text" id="numero" name="numero" maxlength="5" required>
+                                <span class="mensagem-erro"></span>
+
                             </div>
                         </div>
 
@@ -205,7 +219,7 @@
     <!-- Fim Conteudo -->
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script src="./js/cadastrojs.js"></script>
-    <script src="./js/sitejs.js"></script>
+    <script src="js/cadastrojs.js"></script>
+    <script src="js/sitejs.js"></script>
 </body>
 </html>

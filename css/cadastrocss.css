@@ -479,14 +479,13 @@
     opacity: 0.5;
 }
   
-.input-adm[type="text"][id="data_nascimento"] {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' ... %3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 20px;
-  padding-right: 35px;
-}
 
+.mensagem-erro {
+  color: red;
+  font-size: 0.85em;
+  margin-top: 4px;
+  display: block;
+}
 
 
 /* Proporções personalizadas */
