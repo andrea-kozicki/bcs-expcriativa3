@@ -1,63 +1,65 @@
 <?php
-require_once __DIR__ . '/../php/config.php';
-header('Content-Type: application/json');
+session_start();
+require_once 'config.php'; // Inclui conexão PDO com $conn
 
-try {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        throw new Exception('Requisição inválida.');
+// Verifica se os dados foram enviados corretamente
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $email = $_POST["email"] ?? '';
+    $novaSenha = $_POST["novaSenha"] ?? '';
+    $confirmarSenha = $_POST["confirmarSenha"] ?? '';
+
+    // Validação básica
+    if (empty($email) || empty($novaSenha) || empty($confirmarSenha)) {
+        $_SESSION['mensagem'] = "Todos os campos são obrigatórios.";
+        header("Location: novasenha.html");
+        exit();
     }
 
-    $token      = trim($_POST['token'] ?? '');
-    $senhaHash  = trim($_POST['senha_hash'] ?? '');
-    $salt       = trim($_POST['salt'] ?? '');
-
-    if (!$token || !$senhaHash || !$salt) {
-        throw new Exception('Token, senha ou salt ausente.');
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $_SESSION['mensagem'] = "Formato de e-mail inválido.";
+        header("Location: novasenha.html");
+        exit();
     }
 
-    $pdo = getDatabaseConnection();
-
-    $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE token_ativacao = :token");
-    $stmt->execute([':token' => $token]);
-    $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$usuario) {
-        throw new Exception('Token inválido ou expirado.');
+    if ($novaSenha !== $confirmarSenha) {
+        $_SESSION['mensagem'] = "As senhas não coincidem.";
+        header("Location: /novasenha.html");
+        exit();
     }
 
-    $usuarioId = $usuario['id'];
+    try {
+        // Verifica se o e-mail existe
+        $stmt = $conn->prepare("SELECT id FROM usuarios WHERE email = :email");
+        $stmt->bindParam(':email', $email);
+        $stmt->execute();
 
-    $pdo->beginTransaction();
+        if ($stmt->rowCount() === 0) {
+            $_SESSION['mensagem'] = "E-mail não encontrado.";
+            header("Location: /novasenha.html");
+            exit();
+        }
 
-    // Atualiza a senha na tabela usuarios
-    $update = $pdo->prepare("
-        UPDATE usuarios
-        SET senha_hash = :senha_hash, salt = :salt, token_ativacao = NULL, updated_at = CURRENT_TIMESTAMP
-        WHERE id = :id
-    ");
-    $update->execute([
-        ':senha_hash' => $senhaHash,
-        ':salt' => $salt,
-        ':id' => $usuarioId
-    ]);
+        // Atualiza a senha com hash seguro
+        $senhaHash = password_hash($novaSenha, PASSWORD_DEFAULT);
+        $update = $conn->prepare("UPDATE usuarios SET senha = :senha WHERE email = :email");
+        $update->bindParam(':senha', $senhaHash);
+        $update->bindParam(':email', $email);
 
-    // Registra o histórico da senha
-    $log = $pdo->prepare("
-        INSERT INTO historico_senhas (usuario_id, senha_hash, salt)
-        VALUES (:usuario_id, :senha_hash, :salt)
-    ");
-    $log->execute([
-        ':usuario_id' => $usuarioId,
-        ':senha_hash' => $senhaHash,
-        ':salt' => $salt
-    ]);
-
-    $pdo->commit();
-
-    echo json_encode(['success' => true, 'message' => 'Senha atualizada com sucesso!']);
-} catch (Exception $e) {
-    if ($pdo && $pdo->inTransaction()) {
-        $pdo->rollBack();
+        if ($update->execute()) {
+            $_SESSION['mensagem'] = "Senha atualizada com sucesso!";
+            header("Location: /login2.html");
+            exit();
+        } else {
+            $_SESSION['mensagem'] = "Erro ao atualizar a senha.";
+            header("Location: /novasenha.html");
+            exit();
+        }
+    } catch (PDOException $e) {
+        $_SESSION['mensagem'] = "Erro: " . $e->getMessage();
+        header("Location: /novasenha.html");
+        exit();
     }
-    echo json_encode(['success' => false, 'message' => 'Erro: ' . $e->getMessage()]);
+} else {
+    header("Location: /novasenha.html");
+    exit();
 }

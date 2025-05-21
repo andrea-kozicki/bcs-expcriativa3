@@ -1,161 +1,147 @@
-document.addEventListener("DOMContentLoaded", async () => {
-  const form = document.getElementById("formlogin");
-  const emailInput = document.getElementById("email");
-  const senhaInput = document.getElementById("senha");
-  const mfaInput = document.getElementById("mfa_code");
-  const mfaSection = document.getElementById("mfa-section");
-  const qrOutput = document.getElementById("mfa-qr-code");
-  const errorDiv = document.getElementById("error-message");
-  const spinner = document.querySelector(".loading-spinner");
+document.addEventListener("DOMContentLoaded", function () {
+  // === SIDEBAR (menu lateral) ===
+  const sidebar = document.querySelector('.sidebar');
+  const barsIcon = document.querySelector('.fa-bars');
+  const menuToggle = document.querySelector('#menu-toggle');
 
-  // NAVBAR / DROPDOWNS
-  const avatar = document.querySelector(".avatar");
-  const userDropdown = document.querySelector(".dropdown-menu.setting");
-  const genresBtn = document.querySelector(".dropdown-btn");
-  const genresContainer = document.querySelector(".dropdown-container");
-  const genresArrow = document.querySelector(".dropdown-arrow");
-  const sidebar = document.querySelector(".sidebar");
-  const barsIcon = document.querySelector(".fa-bars");
-
-  // CARRINHO
-  const cartIcon = document.querySelector(".cart");
-  const cartMenu = document.querySelector(".cart-menu");
-
-  // === Funções auxiliares ===
-
-  async function getCSRFToken() {
-    try {
-      const res = await fetch("php/login_refeito.php?action=get_csrf");
-      const json = await res.json();
-      return json.csrf_token;
-    } catch (err) {
-      console.error("Erro ao obter token CSRF:", err);
-      return "";
+  function toggleSidebar() {
+    if (sidebar) {
+      sidebar.classList.toggle('active');
     }
   }
 
-  function showMessage(msg, isSuccess = false) {
-    if (errorDiv) {
-      errorDiv.textContent = msg;
-      errorDiv.style.color = isSuccess ? "green" : "red";
-    }
-  }
-
-  function gerarQRCode(secret, email) {
-  const otpauthUrl = `otpauth://totp/LoginApp:${email}?secret=${secret}&issuer=LoginApp`;
-
-  const qrContainer = document.getElementById("mfa-qr-code");
-  qrContainer.innerHTML = ""; // Limpa QR anterior
-  qrContainer.style.display = "block";
-
-  new QRCode(qrContainer, {
-    text: otpauthUrl,
-    width: 200,
-    height: 200,
-    colorDark: "#000",
-    colorLight: "#fff",
-    correctLevel: QRCode.CorrectLevel.H
+  barsIcon?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleSidebar();
   });
 
-  console.log("✅ QR Code gerado:", otpauthUrl);
-}
+  menuToggle?.addEventListener('click', toggleSidebar);
 
-
-  // === SUBMISSÃO DO FORMULÁRIO ===
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const email = emailInput.value.trim();
-    const senha = senhaInput.value;
-    const mfa_code = mfaInput.value.trim();
-    const csrf_token = await getCSRFToken();
-
-    if (!email || !senha) {
-      showMessage("Preencha todos os campos.");
-      return;
+  // Fecha a sidebar ao clicar fora dela
+  document.addEventListener("click", (e) => {
+    const isClickInsideSidebar = sidebar?.contains(e.target);
+    const isClickOnToggle = barsIcon?.contains(e.target) || menuToggle?.contains(e.target);
+    if (!isClickInsideSidebar && !isClickOnToggle) {
+      sidebar?.classList.remove("active");
     }
+  });
 
-    spinner?.classList.add("show");
+  // === MENU DE GÊNEROS (dropdown de categorias) ===
+  const genresBtn = document.querySelector('.dropdown-btn');
+  const genresDropdown = document.querySelector('.dropdown-container');
+  const genresArrow = document.querySelector('.dropdown-btn .dropdown-arrow');
 
-    const payload = { email, senha, mfa_code, csrf_token };
+  if (genresBtn && genresDropdown && genresArrow) {
+    genresBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      genresDropdown.classList.toggle('active');
+      genresArrow.classList.toggle('rotate');
+      if (sidebar && !sidebar.classList.contains('active')) {
+        sidebar.classList.add('active');
+      }
+    });
+  }
 
-    try {
-      const res = await fetch("php/login_refeito.php?action=login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.sidebar') && !e.target.closest('.fa-bars')) {
+      genresDropdown?.classList.remove('active');
+      genresArrow?.classList.remove('rotate');
+    }
+  });
+
+  // === MENU AVATAR (dropdown) ===
+  const avatar = document.querySelector('.avatar');
+  const avatarDropdown = document.querySelector('.dropdown-menu.setting');
+
+  if (avatar && avatarDropdown) {
+    avatar.addEventListener('click', (e) => {
+      e.stopPropagation();
+      avatarDropdown.classList.toggle('active');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!avatar.contains(e.target)) {
+        avatarDropdown.classList.remove('active');
+      }
+    });
+  }
+
+  // === CARRINHO ===
+  const carrinhoIcon = document.querySelector(".cart-icon");
+  const carrinhoDropdown = document.getElementById("cartMenu");
+  const contadorCarrinho = document.querySelector(".cart-count");
+  const limparCarrinhoBtn = document.getElementById("limparCarrinho");
+  const itensCarrinhoList = document.getElementById("cartItems");
+
+  function atualizarContador() {
+    const itens = JSON.parse(localStorage.getItem("cartItems")) || [];
+    if (contadorCarrinho) contadorCarrinho.textContent = itens.length;
+  }
+
+  function renderizarItensCarrinho() {
+    const itens = JSON.parse(localStorage.getItem("cartItems")) || [];
+    if (!itensCarrinhoList) return;
+
+    itensCarrinhoList.innerHTML = "";
+
+    if (itens.length === 0) {
+      const vazio = document.createElement("li");
+      vazio.textContent = "Carrinho vazio";
+      vazio.style.padding = "0.5rem";
+      itensCarrinhoList.appendChild(vazio);
+    } else {
+      itens.forEach((item, index) => {
+        const li = document.createElement("li");
+        li.style.display = "flex";
+        li.style.justifyContent = "space-between";
+        li.style.alignItems = "center";
+        li.style.padding = "0.5rem";
+
+        const span = document.createElement("span");
+        span.textContent = `${item.nome} - ${item.preco}`;
+
+        const remover = document.createElement("button");
+        remover.textContent = "X";
+        remover.style.background = "transparent";
+        remover.style.border = "none";
+        remover.style.color = "red";
+        remover.style.cursor = "pointer";
+        remover.style.fontSize = "14px";
+        remover.addEventListener("click", () => {
+          itens.splice(index, 1);
+          localStorage.setItem("cartItems", JSON.stringify(itens));
+          atualizarContador();
+          renderizarItensCarrinho();
+        });
+
+        li.appendChild(span);
+        li.appendChild(remover);
+        itensCarrinhoList.appendChild(li);
       });
-
-      const json = await res.json();
-      spinner?.classList.remove("show");
-
-      if (json.mfa_required) {
-        mfaSection.style.display = "block";
-
-        if (json.new_mfa_secret) {
-          gerarQRCode(json.new_mfa_secret, email);
-          showMessage("Escaneie o QR Code com o app autenticador.");
-        } else {
-          showMessage("Insira o código do app autenticador.");
-        }
-
-        return;
-      }
-
-      if (json.success) {
-        showMessage("Login realizado com sucesso!", true);
-        setTimeout(() => {
-          window.location.href = "perfil.html";
-        }, 1500);
-      } else {
-        showMessage(json.message || "Erro ao fazer login.");
-      }
-    } catch (err) {
-      spinner?.classList.remove("show");
-      console.error("Erro ao enviar login:", err);
-      showMessage("Erro na comunicação com o servidor.");
     }
-  });
+  }
 
-  // === INTERAÇÃO COM NAVBAR, DROPDOWNS e SIDEBAR ===
-
-  if (avatar && userDropdown) {
-    avatar.addEventListener("click", (e) => {
+  if (carrinhoIcon && carrinhoDropdown) {
+    carrinhoIcon.addEventListener("click", (e) => {
       e.stopPropagation();
-      userDropdown.classList.toggle("active");
-      genresContainer?.classList.remove("active");
-      genresArrow?.classList.remove("rotate");
+      carrinhoDropdown.classList.toggle("show");
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!carrinhoDropdown.contains(e.target) && !carrinhoIcon.contains(e.target)) {
+        carrinhoDropdown.classList.remove("show");
+      }
     });
   }
 
-  if (genresBtn && genresContainer && genresArrow) {
-    genresBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      genresContainer.classList.toggle("active");
-      genresArrow.classList.toggle("rotate");
-      userDropdown?.classList.remove("active");
+  if (limparCarrinhoBtn) {
+    limparCarrinhoBtn.addEventListener("click", () => {
+      localStorage.removeItem("cartItems");
+      atualizarContador();
+      renderizarItensCarrinho();
     });
   }
 
-  if (barsIcon && sidebar) {
-    barsIcon.addEventListener("click", (e) => {
-      e.stopPropagation();
-      sidebar.classList.toggle("active");
-    });
-  }
-
-  if (cartIcon && cartMenu) {
-    cartIcon.addEventListener("click", (e) => {
-      e.stopPropagation();
-      cartMenu.classList.toggle("active");
-    });
-
-    document.addEventListener("click", () => {
-      cartMenu?.classList.remove("active");
-      userDropdown?.classList.remove("active");
-      genresContainer?.classList.remove("active");
-      genresArrow?.classList.remove("rotate");
-    });
-  }
+  atualizarContador();
+  renderizarItensCarrinho();
 });
