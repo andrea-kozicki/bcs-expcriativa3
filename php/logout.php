@@ -4,5 +4,5 @@ session_unset();
 session_destroy();
 
 // Redireciona para a página de login
-header('Location: /login.html');
+header('Location: ../login2.html');
 exit;

@@ -1,32 +1,56 @@
 <?php
+ini_set('session.name', 'PHPSESSID');
+ini_set('session.cookie_path', '/');
+ini_set('session.cookie_httponly', 1);
+ini_set('session.use_only_cookies', 1);
+ini_set('session.cookie_samesite', 'Lax');
+ini_set('session.cookie_secure', 0); // use 1 se HTTPS
+
 session_start();
 header('Content-Type: application/json');
+http_response_code(200);
 
-require_once 'config.php'; // ⚠️ Certifique-se de que esse caminho está correto
+require_once 'config.php';
 
-// Gera um CSRF token seguro se ainda não existir
+define('MAX_SESSION_IDLE_TIME', 300); // 5 minutos
+
+// Verifica se a sessão expirou
+if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY']) > MAX_SESSION_IDLE_TIME) {
+    session_unset();
+    session_destroy();
+    echo json_encode([
+        'logged_in' => false,
+        'message' => 'Sessão expirada por inatividade.'
+    ]);
+    exit;
+}
+
+// Atualiza o tempo da última atividade
+$_SESSION['LAST_ACTIVITY'] = time();
+
+// Gera token CSRF se não existir
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-if (isset($_SESSION['user_id'])) {
-    // 🔍 Buscar o valor de mfa_enabled do banco
+// Verifica se há sessão ativa
+if (isset($_SESSION['usuario_id'])) {
     try {
         $conn = getDatabaseConnection();
         $stmt = $conn->prepare("SELECT mfa_enabled FROM usuarios WHERE id = ?");
-        $stmt->execute([$_SESSION['user_id']]);
+        $stmt->execute([$_SESSION['usuario_id']]);
         $mfa_enabled = $stmt->fetchColumn();
     } catch (Exception $e) {
-        // Em caso de erro, assume 0 (não ativado)
         $mfa_enabled = 0;
     }
 
     echo json_encode([
-        'logged_in'   => true,
-        'user_id'     => $_SESSION['user_id'],
-        'email'       => $_SESSION['email'] ?? null,
-        'csrf_token'  => $_SESSION['csrf_token'],
-        'mfa_enabled' => $_SESSION['mfa_enabled'] ?? 0,
+        'logged_in'     => true,
+        'usuario_id'    => $_SESSION['usuario_id'],
+        'email'         => $_SESSION['usuario_email'] ?? null,
+        'nome'          => $_SESSION['usuario_nome'] ?? '',
+        'csrf_token'    => $_SESSION['csrf_token'],
+        'mfa_enabled'   => $mfa_enabled
     ]);
 } else {
     echo json_encode([
@@ -34,5 +58,3 @@ if (isset($_SESSION['user_id'])) {
         'csrf_token' => $_SESSION['csrf_token']
     ]);
 }
-
-

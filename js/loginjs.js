@@ -1,13 +1,80 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // === SIDEBAR (menu lateral) ===
+  // === ENVIO DO LOGIN VIA AJAX ===
+  const loginForm = document.getElementById("formlogin");
+  const errorMessage = document.getElementById("error-message");
+  const spinner = document.querySelector(".loading-spinner");
+  const mfaSection = document.getElementById("mfa-section");
+  const qrCodeDiv = document.getElementById("mfa-qr-code");
+
+  if (loginForm) {
+    loginForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      errorMessage.textContent = "";
+      spinner.style.display = "block";
+
+      const formData = new FormData(loginForm);
+      formData.append("acao", "login"); // envia a ação obrigatória
+
+      try {
+        const response = await fetch("php/login_refeito.php", {
+          method: "POST",
+          body: formData,
+          credentials: "include"
+        });
+
+        const result = await response.json();
+        spinner.style.display = "none";
+
+        if (result.success) {
+          if (result.mfa_required) {
+            // Mostrar campo MFA
+            mfaSection.style.display = "block";
+            if (result.qr_code_svg) {
+              qrCodeDiv.style.display = "block";
+              qrCodeDiv.innerHTML = result.qr_code_svg;
+            }
+          } else {
+            // Login bem-sucedido sem MFA
+            setTimeout(() => { 
+              console.log("🔍 Sessão antes de redirecionar:");
+              //debugger;
+              fetch('php/session_status.php', { credentials: 'include' })
+                .then(res => res.json())
+                .then(data => {
+                  console.log("🔍 Verificação final antes do redirecionamento:", data);
+                  if (data.logged_in) {
+                    window.location.replace("perfil.html");
+                  } else {
+                    console.warn("⚠️ Sessão ainda não ativa. Tentando novamente...");
+                    setTimeout(() => location.reload(), 500); // Ou tentar novamente
+                  }
+                })
+                .catch(err => {
+                  console.error("❌ Erro ao verificar sessão antes do redirect:", err);
+                });
+            }, 500);
+          }
+        } else {
+          errorMessage.textContent = result.message || "Erro ao autenticar.";
+        }
+
+      } catch (err) {
+        spinner.style.display = "none";
+        errorMessage.textContent = "Erro de rede ou resposta inválida do servidor.";
+        console.error("Erro:", err);
+      }
+    });
+  }
+
+  // === DEMAIS FUNCIONALIDADES (sidebar, dropdowns, carrinho) ===
+
   const sidebar = document.querySelector('.sidebar');
   const barsIcon = document.querySelector('.fa-bars');
   const menuToggle = document.querySelector('#menu-toggle');
 
   function toggleSidebar() {
-    if (sidebar) {
-      sidebar.classList.toggle('active');
-    }
+    if (sidebar) sidebar.classList.toggle('active');
   }
 
   barsIcon?.addEventListener('click', (e) => {
@@ -17,7 +84,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   menuToggle?.addEventListener('click', toggleSidebar);
 
-  // Fecha a sidebar ao clicar fora dela
   document.addEventListener("click", (e) => {
     const isClickInsideSidebar = sidebar?.contains(e.target);
     const isClickOnToggle = barsIcon?.contains(e.target) || menuToggle?.contains(e.target);
@@ -26,7 +92,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // === MENU DE GÊNEROS (dropdown de categorias) ===
   const genresBtn = document.querySelector('.dropdown-btn');
   const genresDropdown = document.querySelector('.dropdown-container');
   const genresArrow = document.querySelector('.dropdown-btn .dropdown-arrow');
@@ -49,7 +114,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // === MENU AVATAR (dropdown) ===
   const avatar = document.querySelector('.avatar');
   const avatarDropdown = document.querySelector('.dropdown-menu.setting');
 
@@ -66,7 +130,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // === CARRINHO ===
   const carrinhoIcon = document.querySelector(".cart-icon");
   const carrinhoDropdown = document.getElementById("cartMenu");
   const contadorCarrinho = document.querySelector(".cart-count");

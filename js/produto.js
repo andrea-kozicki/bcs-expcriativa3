@@ -9,7 +9,17 @@
     { id: 7, titulo: "A Loja de Tudo", preco: "R$ 40,30", descricao: "'A trajetória da Amazon e de Jeff Bezos, e como ela revolucionou o comércio eletrônico.'", imagem: "./imagens/Bio2.jpg" },
     { id: 8, titulo: "Minha Breve História", preco: "R$ 44,50", descricao: "'A autobiografia de Stephen Hawking, onde ele compartilha sua trajetória desde a infância.'", imagem: "./imagens/Bio3.jpg" },
     { id: 9, titulo: "Eu Sou Malala", preco: "R$ 46,99", descricao: "'A história de Malala Yousafzai, a paquistanesa que desafiou o Talibã em defesa da educação.'", imagem: "./imagens/Bio4.jpg" },
-    { id: 10, titulo: "Bilionários por Acaso", preco: "R$ 25,00", descricao: "'A criação do Facebook, as disputas e ambições por trás da maior rede social do mundo.'", imagem: "./imagens/Bio5.jpg" }
+    { id: 10, titulo: "Bilionários por Acaso", preco: "R$ 25,00", descricao: "'A criação do Facebook, as disputas e ambições por trás da maior rede social do mundo.'", imagem: "./imagens/Bio5.jpg" },
+    { id: 11, titulo: "A Redoma de Vidro", preco: "R$ 42,90", descricao: "'A luta de uma jovem brilhante contra a depressão e a sociedade opressiva dos anos 1950.'", imagem: "./imagens/Poesia1.jpeg" },
+    { id: 12, titulo: "A Morte de Ivan Ilitch", preco: "R$ 26,50", descricao: "'Explorando a morte e a reflexão sobre uma vida desperdiçada em futilidades.'", imagem: "./imagens/Poesia2.jpeg" },
+    { id: 13, titulo: "Crime e Castigo", preco: "R$ 62,00", descricao: "'A jornada psicológica de Raskólnikov após cometer um assassinato.'", imagem: "./imagens/Poesia3.jpg" },
+    { id: 14, titulo: "Nos Cumes do Desespero", preco: "R$ 99,90", descricao: "'Uma reflexão sobre o sofrimento, a existência e a angústia humana.'", imagem: "./imagens/Poesia4.jpeg" },
+    { id: 15, titulo: "Lira dos Vinte Anos", preco: "R$ 47,36", descricao: "'Poesias de Álvares de Azevedo, repleta de melancolia e paixão.'", imagem: "./imagens/Poesia5.jpg" },
+    { id: 16, titulo: "Tripulação de Esqueletos", preco: "R$ 79,90", descricao: "'Uma coletânea de contos de Stephen King, trazendo histórias macabras e perturbadoras.'", imagem: "./imagens/Contos1.jpg" },
+    { id: 17, titulo: "O Telefone Preto e Outras Histórias", preco: "R$ 45,90", descricao: "'Uma coletânea de Joe Hill, com narrativas aterrorizantes e sobrenaturais.'", imagem: "./imagens/Contos2.jpg" },
+    { id: 18, titulo: "Doze Reis e a Moça do Labirinto do Vento", preco: "R$ 47,60", descricao: "'Um livro de contos de Marina Colasanti, misturando fábulas e lirismo.'", imagem: "./imagens/Contos3.jpg" },
+    { id: 19, titulo: "Olhos D'Água", preco: "R$ 35,90", descricao: "'Aborda a vida de mulheres negras em meio a desafios sociais e emocionais.'", imagem: "./imagens/Contos4.jpeg" },
+    { id: 20, titulo: "Alerta de Risco", preco: "R$ 27,30", descricao: "'Contos de Neil Gaiman que transitam entre o terror, a fantasia e Sci-Fi'", imagem: "./imagens/Contos5.jpg" }
   ];
 
   const livroId = new URLSearchParams(window.location.search).get("id");

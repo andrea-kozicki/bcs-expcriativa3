@@ -2,7 +2,7 @@
  * SISTEMA PRINCIPAL - LIVRARIA
  * com verificação de sessão e exibição do usuário
  */
-
+console.log("🟢 padraoperfil.js carregado");
 // 1. ESTADO GLOBAL
 const appState = {
     dropdowns: {
@@ -201,7 +201,11 @@ async function initializeApp() {
   }
   
 
-document.addEventListener('DOMContentLoaded', initializeApp);
+document.addEventListener('DOMContentLoaded', () => {
+  console.debug("⏱ Aguardando 500ms para iniciar verificação de sessão...");
+  setTimeout(initializeApp, 500); // <-- esse atraso é a chave
+});
+
 
 //8. DESATIVAÇÃO MFA
 function setupDesativarMfaButton() {

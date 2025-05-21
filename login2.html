@@ -83,7 +83,7 @@
                 <div class="row">
                      <!-- Formulário de Login Principal -->
                 <div id="basiclogin" class="content-adm">
-                    <form id="formlogin" method="post" class="form-adm">
+                    <form id="formlogin" method="post" class="form-adm" action="php/login_refeito.php">
                         <div id="error-message" style="margin-bottom: 10px; color: red;"></div>
                         <div class="row-input">
                             <div class="column">
@@ -109,6 +109,7 @@
                     
                         <br>
                         <button type="submit" class="btn-success" id="entrar">Entrar</button>
+                        <input type="hidden" name="acao" value="login">
                     </form>
                     <!-- Para o QR Code MFA -->
                     <div id="mfa-qr-code" style="display: none; margin-top: 10px;"></div>

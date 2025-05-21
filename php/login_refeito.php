@@ -1,114 +1,86 @@
 <?php
-require_once __DIR__ . '/../vendor/autoload.php';
-require_once 'config.php';
+ini_set('session.name', 'PHPSESSID');
+ini_set('session.cookie_path', '/');
+ini_set('session.cookie_httponly', 1);
+ini_set('session.use_only_cookies', 1);
+ini_set('session.cookie_samesite', 'Lax');
+ini_set('session.cookie_secure', 0); // ou 1 se usar HTTPS
 session_start();
-
 header('Content-Type: application/json');
 
-// Verifica a ação da requisição
-$action = $_GET['action'] ?? '';
+require_once 'config.php';
 
-if ($action === 'get_csrf') {
-    if (empty($_SESSION['csrf_token'])) {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-    }
-    echo json_encode(['csrf_token' => $_SESSION['csrf_token']]);
-    exit;
-}
-
-if ($action !== 'login') {
+// Verifica se a requisição é POST com ação correta
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || ($_POST['acao'] ?? '') !== 'login') {
     echo json_encode(['success' => false, 'message' => 'Ação inválida.']);
     exit;
 }
 
-// Processamento do login
+$email = trim($_POST['email'] ?? '');
+$senha = trim($_POST['senha'] ?? '');
+$mfa_code = trim($_POST['mfa_code'] ?? '');
+
+if (empty($email) || empty($senha)) {
+    echo json_encode(['success' => false, 'message' => 'Preencha todos os campos.']);
+    exit;
+}
+
 try {
-    $input = json_decode(file_get_contents('php://input'), true);
-    if (!isset($input['email'], $input['senha'], $input['csrf_token'])) {
-        throw new Exception("Campos obrigatórios não enviados.");
-    }
+    $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE email = :email LIMIT 1");
+    $stmt->bindParam(':email', $email);
+    $stmt->execute();
 
-    // Verificação do CSRF token
-    if (!isset($_SESSION['csrf_token']) || $_SESSION['csrf_token'] !== $input['csrf_token']) {
-        throw new Exception("CSRF token inválido.");
-    }
-
-    $email = trim($input['email']);
-    $senha = trim($input['senha']);
-    $mfa_code = trim($input['mfa_code'] ?? '');
-
-    $pdo = conectar();
-    $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE email = ?");
-    $stmt->execute([$email]);
     $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$usuario || !password_verify($senha, $usuario['senha_hash'])) {
-        throw new Exception("Credenciais inválidas.");
+        echo json_encode(['success' => false, 'message' => 'Email ou senha incorretos.']);
+        exit;
     }
 
-    // Caso o usuário tenha MFA habilitado
-    if ($usuario['mfa_enabled']) {
+    // Verifica MFA
+    if (!empty($usuario['mfa_secret']) && $usuario['mfa_enabled']) {
         if (empty($mfa_code)) {
+            require_once __DIR__ . '/../vendor/autoload.php';
+            $qrCode = \Sonata\GoogleAuthenticator\GoogleQrUrl::generate(
+                $usuario['email'],
+                $usuario['mfa_secret'],
+                'BCS Livraria'
+            );
             echo json_encode([
-                'success' => false,
+                'success' => true,
                 'mfa_required' => true,
-                'message' => 'Insira o código do seu autenticador.'
+                'qr_code_svg' => "<img src=\"$qrCode\" alt=\"QR Code MFA\" />"
             ]);
             exit;
         }
 
-        $g = new Sonata\GoogleAuthenticator\GoogleAuthenticator();
+        // Verifica código MFA
+        require_once __DIR__ . '/../vendor/autoload.php';
+        $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
         if (!$g->checkCode($usuario['mfa_secret'], $mfa_code)) {
-            throw new Exception('Código MFA inválido.');
-        }
-    }
-
-    // Caso MFA não esteja habilitado, gerar e ativar se o código for válido
-    if (!$usuario['mfa_enabled']) {
-        if (empty($usuario['mfa_secret'])) {
-            // Gerar nova chave MFA
-            $secret = (new Sonata\GoogleAuthenticator\GoogleAuthenticator())->generateSecret();
-            $stmt = $pdo->prepare("UPDATE usuarios SET mfa_secret = ? WHERE id = ?");
-            $stmt->execute([$secret, $usuario['id']]);
-
-            echo json_encode([
-                'success' => false,
-                'mfa_required' => true,
-                'new_mfa_secret' => $secret,
-                'message' => 'Escaneie o QR Code com seu autenticador.'
-            ]);
-            exit;
-        } elseif (!empty($mfa_code)) {
-            $g = new Sonata\GoogleAuthenticator\GoogleAuthenticator();
-            if ($g->checkCode($usuario['mfa_secret'], $mfa_code)) {
-                $stmt = $pdo->prepare("UPDATE usuarios SET mfa_enabled = 1 WHERE id = ?");
-                $stmt->execute([$usuario['id']]);
-            } else {
-                throw new Exception("Código inválido. Tente novamente com o código do aplicativo.");
-            }
-        } else {
-            echo json_encode([
-                'success' => false,
-                'mfa_required' => true,
-                'new_mfa_secret' => $usuario['mfa_secret'],
-                'message' => 'Escaneie o QR Code e digite o código.'
-            ]);
+            echo json_encode(['success' => false, 'message' => 'Código MFA inválido.']);
             exit;
         }
     }
 
-    // Tudo validado: criar sessão
+    // Define variáveis de sessão
     $_SESSION['usuario_id'] = $usuario['id'];
     $_SESSION['usuario_email'] = $usuario['email'];
+    $_SESSION['usuario_nome'] = $usuario['nome'] ?? '';
+    $_SESSION['usuario_mfa'] = $usuario['mfa_enabled'] ?? 0;
+     $_SESSION['LAST_ACTIVITY']  = time();
 
-    echo json_encode([
-        'success' => true,
-        'message' => 'Login bem-sucedido.',
-        'redirect' => '/bcs-expcriativa3/perfil.html'
-    ]);
-} catch (Exception $e) {
-    echo json_encode([
-        'success' => false,
-        'message' => $e->getMessage()
-    ]);
+    session_write_close();
+
+    echo json_encode(['success' => true, 'mfa_required' => false]);
+    
+
+} catch (PDOException $e) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Erro no banco de dados: ' . $e->getMessage()]);
+    exit;
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Erro inesperado: ' . $e->getMessage()]);
+    exit;
 }
