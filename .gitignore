@@ -1,6 +1,6 @@
 # .gitignore
 .env
-config.php
+php/autoload_teste.php
 logs/
 php_errors.log
 py/
