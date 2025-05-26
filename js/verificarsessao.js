@@ -1,8 +1,10 @@
-// js/verificarSessao.js
-
 async function verificarSessaoOuRedirecionar() {
     try {
-        const resposta = await fetch('/bcs-expcriativa3/php/session_status.php');
+        const resposta = await fetch('/bcs-expcriativa3/php/session_status.php', {
+            method: 'GET',
+            credentials: 'include'  // 🔴 ESSENCIAL para enviar os cookies
+        });
+
         const dados = await resposta.json();
 
         if (!dados.logged_in) {
@@ -18,6 +20,11 @@ async function verificarSessaoOuRedirecionar() {
 
 document.addEventListener('DOMContentLoaded', async () => {
     const sessao = await verificarSessaoOuRedirecionar();
+
+    const emailInput = document.getElementById('email');
+    if (emailInput && sessao.email) {
+        emailInput.value = sessao.email;
+    }
 
     const saudacao = document.querySelector('.top-list span');
     if (saudacao && sessao.email) {

@@ -1,9 +1,14 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once 'config.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
+use Sonata\GoogleAuthenticator\GoogleAuthenticator;
 
 header('Content-Type: application/json');
 
@@ -15,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $dados = json_decode(file_get_contents("php://input"), true);
 
+// Verificação dos campos obrigatórios
 $camposObrigatorios = [
     'nome', 'email', 'senha', 'confirmarSenha',
     'telefone', 'cpf', 'data_nascimento',
@@ -29,12 +35,14 @@ foreach ($camposObrigatorios as $campo) {
     }
 }
 
+// Validação de e-mail
 if (!filter_var($dados['email'], FILTER_VALIDATE_EMAIL)) {
     http_response_code(400);
     echo json_encode(['erro' => 'E-mail inválido.']);
     exit;
 }
 
+// Verifica se senhas coincidem
 if ($dados['senha'] !== $dados['confirmarSenha']) {
     http_response_code(400);
     echo json_encode(['erro' => 'As senhas não coincidem.']);
@@ -44,8 +52,9 @@ if ($dados['senha'] !== $dados['confirmarSenha']) {
 $codigo_ativacao = bin2hex(random_bytes(16));
 
 try {
-    $pdo = conectar();
+    $pdo->beginTransaction();
 
+    // Verifica se e-mail já existe
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM usuarios WHERE email = :email");
     $stmt->execute([':email' => $dados['email']]);
     if ($stmt->fetchColumn() > 0) {
@@ -54,21 +63,20 @@ try {
         exit;
     }
 
-   $stmt = $pdo->prepare("INSERT INTO usuarios (email, senha_hash, token_ativacao, ativado) VALUES (:email, :senha_hash, :token_ativacao, :ativado)");
-
+    // Inserção na tabela `usuarios`
+    $stmt = $pdo->prepare("INSERT INTO usuarios (email, senha_hash, token_ativacao, ativado) VALUES (:email, :senha_hash, :token_ativacao, :ativado)");
     $stmt->execute([
-    ':email' => $dados['email'],
-    ':senha_hash' => password_hash($dados['senha'], PASSWORD_DEFAULT),
-    ':token_ativacao' => $codigo_ativacao,
-    ':ativado' => 0
-]);
-
+        ':email' => $dados['email'],
+        ':senha_hash' => password_hash($dados['senha'], PASSWORD_DEFAULT),
+        ':token_ativacao' => $codigo_ativacao,
+        ':ativado' => 0
+    ]);
 
     $usuario_id = $pdo->lastInsertId();
 
+    // Inserção na tabela `dados_cadastrais`
     $stmt = $pdo->prepare("INSERT INTO dados_cadastrais (usuario_id, nome, telefone, cpf, data_nascimento, cep, rua, numero, estado, cidade)
         VALUES (:usuario_id, :nome, :telefone, :cpf, :data_nascimento, :cep, :rua, :numero, :estado, :cidade)");
-
     $stmt->execute([
         ':usuario_id' => $usuario_id,
         ':nome' => $dados['nome'],
@@ -82,6 +90,19 @@ try {
         ':cidade' => $dados['cidade']
     ]);
 
+    // 🔐 Geração e ativação automática do MFA
+    $g = new GoogleAuthenticator();
+    $secret = $g->generateSecret();
+
+    $stmt = $pdo->prepare("UPDATE usuarios SET mfa_enabled = 1, mfa_secret = :secret WHERE id = :id");
+    $stmt->execute([
+        ':secret' => $secret,
+        ':id'     => $usuario_id
+    ]);
+
+    $pdo->commit();
+
+    // 📧 Envio do e-mail de ativação
     $url_base = $_ENV['URL_BASE'] ?? 'http://localhost/bcs-expcriativa3';
     $link_ativacao = "$url_base/php/ativar_conta.php?codigo=" . urlencode($codigo_ativacao);
 
@@ -93,6 +114,8 @@ try {
     $mail->Password = $_ENV['EMAIL_PASSWORD'];
     $mail->SMTPSecure = 'tls';
     $mail->Port = $_ENV['EMAIL_PORT'];
+    $mail->CharSet = 'UTF-8';
+    $mail->Encoding = 'base64';
 
     $mail->setFrom($_ENV['EMAIL_USERNAME'], 'Confirmação de Cadastro');
     $mail->addAddress($dados['email'], $dados['nome']);
@@ -107,9 +130,11 @@ try {
     echo json_encode(['success' => true, 'message' => 'Cadastro realizado com sucesso. Verifique seu e-mail.']);
 
 } catch (PDOException $e) {
+    $pdo->rollBack();
     http_response_code(500);
     echo json_encode(['erro' => 'Erro no banco de dados: ' . $e->getMessage()]);
 } catch (Exception $e) {
+    $pdo->rollBack();
     http_response_code(500);
     echo json_encode(['erro' => 'Erro ao enviar e-mail: ' . $e->getMessage()]);
 }

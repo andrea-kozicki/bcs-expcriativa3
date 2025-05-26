@@ -32,10 +32,17 @@ try {
 
     $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$usuario || !password_verify($senha, $usuario['senha_hash'])) {
-        echo json_encode(['success' => false, 'message' => 'Email ou senha incorretos.']);
-        exit;
-    }
+    if (!$usuario) {
+    echo json_encode(['success' => false, 'message' => 'Email ou senha incorretos.']);
+    exit;
+}
+
+    $senha_hash = hash('sha256', $senha . $usuario['salt']);
+
+if (!hash_equals($usuario['senha_hash'], $senha_hash)) {
+    echo json_encode(['success' => false, 'message' => 'Email ou senha incorretos.']);
+    exit;
+}
 
     // Verifica MFA
     if (!empty($usuario['mfa_secret']) && $usuario['mfa_enabled']) {

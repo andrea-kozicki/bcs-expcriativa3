@@ -67,7 +67,7 @@
         <div class="wrapper">
             <div class="row">
                 <div class="content-adm">
-                    <form action="/php/trocar_senha.php" method="post" id="novasenha" class="form-redef-senha">
+                    <form action="/bcs-expcriativa3/php/trocar_senha.php" method="post" id="novasenha" class="form-redef-senha">
                         <input type="hidden" id="token" name="token">
                         <p class="title-content"> Esqueceu ou precisou mudar sua senha? Agora é a oportunidade de criar uma nova :)</p>
                         <br>
@@ -75,13 +75,13 @@
 
                             <div class="column">
                                 <label class="title-input">Seu email</label>
-                                <input type="email" id="email" class="input-adm" placeholder="Digite sua nova senha" minlength="12" required>
+                                <input type="email" id="email" name="email" class="input-adm" placeholder="Digite sua nova senha" minlength="12" required>
                             </div>
 
 
                             <div class="column">
                                 <label class="title-input">Nova senha</label>
-                                <input type="password" id="senha1" class="input-adm" placeholder="Digite sua nova senha" minlength="12" required>
+                                <input type="password" name="novaSenha" id="novaSenha" class="input-adm" placeholder="Digite sua nova senha" minlength="12" required>
                                 <input type="hidden" name="senha_hash" id="senha_hash">
                                 <input type="hidden" name="salt" id="salt">
                             </div>
@@ -90,12 +90,12 @@
                         <div class="row-input">
                             <div class="column">
                                 <label class="title-input">Redigite a senha</label>
-                                <input type="password" id="senha2" class="input-adm" placeholder="Confirme sua senha" required>
+                                <input type="password" name="confirmarSenha" id="confirmarSenha" class="input-adm" placeholder="Confirme sua senha" required>
                             </div>
                         </div> 
                         <button type="submit" class="btn-success">Atualizar senha</button>
                     </form>
-                    <div id="message" class="hidden"></div>
+                    <div id="mensagem" class="hidden"></div>
                 </div>
                 
             </div>
@@ -104,9 +104,9 @@
     </div>
     <!-- Fim Conteudo -->
 
-    <script src="js/verificarsessao.js"></script>
-    <script src="js/senhasjs.js"></script>
-    <script src="js/indexsitepadrao.js"></script>
+    <script src="js/verificarsessao.js" defer></script>
+    <script src="js/senhasjs.js" defer></script>
+    <script src="js/indexsitepadrao.js" defer></script>
     
 
 </body>

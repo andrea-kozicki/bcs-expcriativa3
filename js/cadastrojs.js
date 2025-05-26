@@ -2,16 +2,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById("cadastroForm");
   const senhaInput = document.getElementById("senha");
   const senhaHashInput = document.getElementById("senha_hash");
+  const confirmarSenhaInput = document.getElementById("confirmarSenha");
   const dataInput = document.getElementById("data_nascimento");
   const telefoneInput = document.getElementById("telefone");
   const cpfInput = document.getElementById("cpf");
   const cepInput = document.getElementById("cep");
+
   const saltHidden = document.createElement("input");
   saltHidden.type = "hidden";
   saltHidden.name = "salt";
   form.appendChild(saltHidden);
 
-  // === VALIDAÇÃO REGEX ===
   const regex = {
     nome: /^[a-zA-ZÀ-ÿ\s]{5,}$/,
     email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
@@ -53,8 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return true;
   }
 
-
-  // === MÁSCARAS E FORMATAÇÃO ===
   cpfInput.addEventListener("input", (e) => {
     e.target.value = e.target.value
       .replace(/\D/g, "")
@@ -79,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   dataInput.addEventListener("input", () => {
-    let valor = dataInput.value.replace(/\D/g, ""); // Remove tudo que não é número
+    let valor = dataInput.value.replace(/\D/g, "");
     if (valor.length > 8) valor = valor.slice(0, 8);
     valor = valor.replace(/(\d{2})(\d)/, "$1/$2");
     valor = valor.replace(/(\d{2})(\d)/, "$1/$2");
@@ -88,12 +87,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function converterDataParaIso(dataBr) {
     const partes = dataBr.split("/");
-    if (partes.length !== 3) return "";  // evita erro se formato for inválido
+    if (partes.length !== 3) return "";
     const [dia, mes, ano] = partes;
     return `${ano}-${mes}-${dia}`;
   }
 
-  // === BUSCA CEP ===
   cepInput.addEventListener("blur", async () => {
     const cep = cepInput.value.replace(/\D/g, "");
     if (cep.length !== 8) return;
@@ -111,7 +109,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // === CHECKLIST + FORÇA SENHA ===
   const checklist = {
     maiuscula: /[A-Z]/,
     minuscula: /[a-z]/,
@@ -147,18 +144,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const classes = ["very-weak", "weak", "medium", "strong", "very-strong"];
     strengthBar.className = "password-strength-bar " + classes[Math.min(score, 4)];
     strengthLevel.textContent = levels[Math.min(score, 4)];
-    if (charCount) charCount.textContent = val.length;
+    charCount.textContent = val.length;
   });
 
-  // === VALIDAÇÃO EM TEMPO REAL ===
   document.querySelectorAll("#cadastroForm input[required]").forEach((input) => {
     input.addEventListener("blur", () => validarCampo(input));
-    input.addEventListener("input", () => validarCampo(input)); // tempo real
+    input.addEventListener("input", () => validarCampo(input));
   });
 
-
-
-  // === SUBMISSÃO ===
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -168,22 +161,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const senha = senhaInput.value;
+    const confirmarSenha = confirmarSenhaInput.value;
+
+    if (senha !== confirmarSenha) {
+      mostrarPopup(false, "As senhas não coincidem.");
+      return;
+    }
+
     const salt = CryptoJS.lib.WordArray.random(16).toString();
     const senhaHash = CryptoJS.SHA256(senha + salt).toString();
-
     senhaHashInput.value = senhaHash;
     saltHidden.value = salt;
 
-    if (dataInput) dataInput.value = converterDataParaIso(dataInput.value);
+    const dataIso = converterDataParaIso(dataInput.value);
 
     const dados = {
       nome: form.nome.value.trim(),
       email: form.email.value.trim(),
-      senha: form.senha.value.trim(),
-      confirmarSenha: form.confirmarSenha.value.trim(),
+      senha_hash: senhaHash,
+      salt: salt,
       telefone: form.telefone.value.trim(),
       cpf: form.cpf.value.trim(),
-      data_nascimento: form.data_nascimento.value.trim(),
+      data_nascimento: dataIso,
       cep: form.cep.value.trim(),
       rua: form.rua.value.trim(),
       numero: form.numero.value.trim(),
@@ -194,9 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const res = await fetch(form.action, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(dados)
       });
 
@@ -215,8 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-
-  // === POPUP ===
   function mostrarPopup(sucesso, mensagem) {
     let popup = document.querySelector(".popup");
     if (!popup) {
