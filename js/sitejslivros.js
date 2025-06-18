@@ -5,14 +5,16 @@ document.addEventListener("DOMContentLoaded", function () {
   const limparCarrinhoBtn = document.getElementById("limparCarrinho");
   const itensCarrinhoList = document.getElementById("cartItems");
   const voltarBtn = document.getElementById("voltarBtn");
+  //const botaoAdicionar = document.getElementById("addCarrinho");
 
-  function atualizarContador() {
-    const itens = JSON.parse(localStorage.getItem("cartItems")) || [];
-    if (contadorCarrinho) contadorCarrinho.textContent = itens.length;
+  function atualizarContadorCarrinho() {
+    const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+    const total = carrinho.reduce((acc, item) => acc + (item.quantidade || 1), 0);
+    document.querySelectorAll(".cart-count").forEach(el => el.textContent = total);
   }
 
   function renderizarItensCarrinho() {
-    const itens = JSON.parse(localStorage.getItem("cartItems")) || [];
+    const itens = JSON.parse(localStorage.getItem("carrinho")) || [];
     if (!itensCarrinhoList) return;
 
     itensCarrinhoList.innerHTML = "";
@@ -31,7 +33,7 @@ document.addEventListener("DOMContentLoaded", function () {
         li.style.padding = "0.5rem";
 
         const span = document.createElement("span");
-        span.textContent = `${item.nome} - ${item.preco}`;
+        span.textContent = `${item.titulo} - ${item.preco} (x${item.quantidade})`;
 
         const remover = document.createElement("button");
         remover.textContent = "X";
@@ -42,8 +44,8 @@ document.addEventListener("DOMContentLoaded", function () {
         remover.style.fontSize = "14px";
         remover.addEventListener("click", () => {
           itens.splice(index, 1);
-          localStorage.setItem("cartItems", JSON.stringify(itens));
-          atualizarContador();
+          localStorage.setItem("carrinho", JSON.stringify(itens));
+          atualizarContadorCarrinho();
           renderizarItensCarrinho();
         });
 
@@ -53,6 +55,26 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
   }
+
+  /*if (botaoAdicionar) {
+    botaoAdicionar.addEventListener("click", () => {
+      const nome = document.querySelector(".titulo-produto")?.textContent || "Produto";
+      const preco = document.querySelector(".preco-produto")?.textContent || "R$ 0,00";
+
+      let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+      const existente = carrinho.find(item => item.titulo === nome);
+      if (existente) {
+        existente.quantidade += 1;
+      } else {
+        carrinho.push({ titulo: nome, preco: preco, quantidade: 1 });
+      }
+
+      localStorage.setItem("carrinho", JSON.stringify(carrinho));
+      atualizarContadorCarrinho();
+      renderizarItensCarrinho();
+      alert("Produto adicionado ao carrinho!");
+    });
+  }*/
 
   if (carrinhoIcon && carrinhoDropdown) {
     carrinhoIcon.addEventListener("click", (e) => {
@@ -69,8 +91,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (limparCarrinhoBtn) {
     limparCarrinhoBtn.addEventListener("click", () => {
-      localStorage.removeItem("cartItems");
-      atualizarContador();
+      localStorage.removeItem("carrinho");
+      atualizarContadorCarrinho();
       renderizarItensCarrinho();
     });
   }
@@ -81,7 +103,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // === Avatar dropdown ===
+  // === AVATAR DROPDOWN ===
   const avatar = document.querySelector('.avatar');
   const avatarDropdown = document.querySelector('.dropdown-menu.setting');
 
@@ -98,11 +120,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  atualizarContador();
-  renderizarItensCarrinho();
-});
-
- // === SIDEBAR (menu lateral) ===
+  // === SIDEBAR ===
   const sidebar = document.querySelector('.sidebar');
   const barsIcon = document.querySelector('.fa-bars');
   const menuToggle = document.querySelector('#menu-toggle');
@@ -118,7 +136,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   menuToggle?.addEventListener('click', toggleSidebar);
 
-  // === MENU DE GÊNEROS (dropdown de categorias) ===
+  // === MENU DE GÊNEROS ===
   const genresBtn = document.querySelector('.dropdown-btn');
   const genresDropdown = document.querySelector('.dropdown-container');
   const genresArrow = document.querySelector('.dropdown-btn .dropdown-arrow');
@@ -140,3 +158,7 @@ document.addEventListener("DOMContentLoaded", function () {
       genresArrow?.classList.remove('rotate');
     }
   });
+
+  atualizarContadorCarrinho();
+  renderizarItensCarrinho();
+});
