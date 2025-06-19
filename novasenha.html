@@ -1,33 +1,38 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="imagens/estrela.ico" type="image/x-icon">
     <link rel="stylesheet" href="./css/produtoscss.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap"
+        rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <title>Redefina sua senha</title>
 </head>
+
 <body>
     <nav class="navbar">
         <div class="navbar-content">
             <div class="bars">
                 <i class="fa-solid fa-bars fa-xl"></i>
             </div>
-            <img src="imagens/estrela.ico" class="logo"/>
+            <img src="imagens/estrela.ico" class="logo" />
         </div>
-        
+
         <div class="navbar-content">
-                           
+
             <div class="avatar">
-                <img src="imagens/user-pic.jpg" alt="usuario" width="40" >
+                <img src="imagens/user-pic.jpg" alt="usuario" width="40">
                 <div class="dropdown-menu setting">
                     <div class="item">
-                        <span class="fa-solid fa-door-open"></span> <a href="login2.html">Login</a> 
+                        <span class="fa-solid fa-door-open"></span> <a href="login2.html">Login</a>
                     </div>
                     <div class="item">
                         <span class="fa-solid fa-user"></span><a href="perfil.html">Perfil</a>
@@ -36,30 +41,37 @@
                         <span class="fa-solid fa-door-open"></span><a href="php/logout.php">Sair</a>
                     </div>
                 </div>
-            </div>    
+            </div>
         </div>
-                
+
     </nav>
 
     <div class="content">
         <div class="sidebar">
             <a href="index.html" class="sidebar-nav"> <i class="icon fa-solid fa-house"></i><span>Inicio</span></a>
 
-            <a href="maisvendidos.html" class="sidebar-nav"><i class="icon fa-solid fa-medal"></i><span>Mais vendidos</span></a>
+            <a href="maisvendidos.html" class="sidebar-nav"><i class="icon fa-solid fa-medal"></i><span>Mais
+                    vendidos</span></a>
 
             <button class="dropdown-btn">
                 <i class="icon fa-solid fa-book"></i><span>Gêneros</span><i class="fa-solid fa-caret-down"></i>
             </button>
             <div class="dropdown-container">
-                <a href="romance.html" class="sidebar-nav"><i class="icon fa-solid fa-heart"></i><span>Romance</span></a>
-                <a href="biografias.html" class="sidebar-nav"><i class="icon fa-solid fa-pen-nib"></i><span>Biografias</span></a>
-                <a href="poesias.html" class="sidebar-nav"><i class="icon fa-solid fa-feather"></i><span>Poesias</span></a>
-                <a href="contos.html" class="sidebar-nav"><i class="icon fa-solid fa-comment"></i><span>Contos</span></a>
+                <a href="romance.html" class="sidebar-nav"><i
+                        class="icon fa-solid fa-heart"></i><span>Romance</span></a>
+                <a href="biografias.html" class="sidebar-nav"><i
+                        class="icon fa-solid fa-pen-nib"></i><span>Biografias</span></a>
+                <a href="poesias.html" class="sidebar-nav"><i
+                        class="icon fa-solid fa-feather"></i><span>Poesias</span></a>
+                <a href="contos.html" class="sidebar-nav"><i
+                        class="icon fa-solid fa-comment"></i><span>Contos</span></a>
             </div>
 
-            <a href="contato.html" class="sidebar-nav"> <i class="icon fa-solid fa-envelope"></i><span>Contato</span></a>
+            <a href="contato.html" class="sidebar-nav"> <i
+                    class="icon fa-solid fa-envelope"></i><span>Contato</span></a>
 
-            <a href="sobre.html" class="sidebar-nav"> <i class="icon fa-solid fa-eye"></i><span>Sobre a livraria</span></a>
+            <a href="sobre.html" class="sidebar-nav"> <i class="icon fa-solid fa-eye"></i><span>Sobre a
+                    livraria</span></a>
         </div>
 
         <!-- Fim da Sidebar -->
@@ -67,47 +79,54 @@
         <div class="wrapper">
             <div class="row">
                 <div class="content-adm">
-                    <form action="/bcs-expcriativa3/php/trocar_senha.php" method="post" id="novasenha" class="form-redef-senha">
+                    <form action="php/trocar_senha.php" method="post" id="novasenha" class="form-redef-senha">
                         <input type="hidden" id="token" name="token">
-                        <p class="title-content"> Esqueceu ou precisou mudar sua senha? Agora é a oportunidade de criar uma nova :)</p>
+                        <p class="title-content"> Esqueceu ou precisa mudar sua senha? Agora é a oportunidade de criar
+                            uma nova :)</p>
                         <br>
                         <div class="row-input">
 
                             <div class="column">
-                                <label class="title-input">Seu email</label>
-                                <input type="email" id="email" name="email" class="input-adm" placeholder="Digite sua nova senha" minlength="12" required>
+                                <label for="email-redefinicao">Email</label>
+                                <input type="email" id="email-redefinicao" name="email" class="input-adm"
+                                    placeholder="Digite seu e-mail" required>
                             </div>
 
 
                             <div class="column">
                                 <label class="title-input">Nova senha</label>
-                                <input type="password" name="novaSenha" id="novaSenha" class="input-adm" placeholder="Digite sua nova senha" minlength="12" required>
+                                <input type="password" name="novaSenha" id="novaSenha" class="input-adm"
+                                    placeholder="Digite sua nova senha" minlength="12" required>
                                 <input type="hidden" name="senha_hash" id="senha_hash">
                                 <input type="hidden" name="salt" id="salt">
                             </div>
                         </div>
-                    
+
                         <div class="row-input">
                             <div class="column">
                                 <label class="title-input">Redigite a senha</label>
-                                <input type="password" name="confirmarSenha" id="confirmarSenha" class="input-adm" placeholder="Confirme sua senha" required>
+                                <input type="password" name="confirmarSenha" id="confirmarSenha" class="input-adm"
+                                    placeholder="Confirme sua senha" required>
                             </div>
-                        </div> 
+                        </div>
                         <button type="submit" class="btn-success">Atualizar senha</button>
                     </form>
                     <div id="mensagem" class="hidden"></div>
+
+
+
                 </div>
-                
+
             </div>
         </div>
         <!-- Fim do conteudo do administrativo -->
     </div>
     <!-- Fim Conteudo -->
 
-    <script src="js/verificarsessao.js" defer></script>
+
     <script src="js/senhasjs.js" defer></script>
     <script src="js/indexsitepadrao.js" defer></script>
-    
+
 
 </body>
 

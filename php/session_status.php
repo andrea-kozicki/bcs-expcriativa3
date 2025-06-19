@@ -12,7 +12,7 @@ session_start();
 header('Content-Type: application/json');
 require_once 'config.php';
 
-define('MAX_SESSION_IDLE_TIME', 300); // 5 minutos
+define('MAX_SESSION_IDLE_TIME', 900); // 5 minutos
 
 // EXPIRAÇÃO DE SESSÃO
 if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY']) > MAX_SESSION_IDLE_TIME) {

@@ -73,19 +73,18 @@
         <!-- Inicio do conteudo do administrativo -->
         <div class="wrapper">
             <div class="row">
-                <div class="content-adm">
-                    <form id="redefinesenha" class="form-redef-senha">
-                        <p class="title-content"> Esqueceu ou precisa redefinir sua senha? Digite o seu email que mandaremos o link para você criar uma nova :)</p>
-                        <div class="row-input">
-                            <div class="column">
-                                <br>
-                                <label class="title-input">Email</label>
-                                <input type="email" name="email" id="email" class="input-adm" placeholder="Digite o seu email" required>
-                            </div>
+                <div class="content-adm" id="solicitar-redefinicao">
+                    <p class="title-input">🔑 Esqueceu sua senha? Digite seu e-mail para receber um link de redefinição:</p>
+                
+                    <div class="row-input">
+                        <div class="column">
+                            <label for="email-redefinicao">Email</label>
+                            <input type="email" id="email-redefinicao" class="input-adm" placeholder="Digite seu e-mail" required>
                         </div>
-                        <button type="submit" class="btn-success">Enviar link de redefinição de senha</button>
-                    </form>
-                    <div id="message" class="hidden"></div>
+                    </div>
+                
+                    <button type="button" id="btn-enviar-token" class="btn-success">Enviar link por e-mail</button>
+                    <div id="mensagem-token" class="hidden" style="margin-top: 10px;"></div>
                 </div>
                 
             </div>

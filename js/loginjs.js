@@ -233,3 +233,40 @@ document.addEventListener("DOMContentLoaded", function () {
   atualizarContador();
   renderizarItensCarrinho();
 });
+
+// ============================
+// 🔑 BLOCO 5: Envio de link de redefinição de senha
+// ============================
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('btn-enviar-link');
+  const emailInput = document.getElementById('email-redefinicao');
+  const mensagem = document.getElementById('mensagem-redefinicao');
+
+  if (btn && emailInput && mensagem) {
+    btn.addEventListener('click', async () => {
+      const email = emailInput.value.trim();
+      mensagem.classList.remove('hidden');
+      mensagem.style.color = 'red';
+
+      if (!email) {
+        mensagem.textContent = 'Digite um e-mail válido.';
+        return;
+      }
+
+      try {
+        const response = await fetch('/php/enviar_token.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ email })
+        });
+
+        const result = await response.json();
+        mensagem.textContent = result.message;
+        mensagem.style.color = result.success ? 'green' : 'red';
+
+      } catch (err) {
+        mensagem.textContent = 'Erro ao enviar solicitação. Tente novamente.';
+      }
+    });
+  }
+});

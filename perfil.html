@@ -107,18 +107,42 @@
       </section>
 
       <!-- Seção de Redefinição de Senha -->
-      <section class="perfil-section">
+    <section class="perfil-section">
         <h3 class="title-content">🔒 Segurança da Conta</h3>
-        <a href="novasenha.html" class="btn-primary">Mudar ou redefinir sua senha</a>
-      </section>
+    
+        <form id="form-alterar-senha" action="/php/trocar_senha.php" method="post">
+            <label for="senhaAtual">Senha atual</label>
+            <input type="password" id="senhaAtual" name="senhaAtual" required>
+    
+            <label for="novaSenha">Nova senha</label>
+            <input type="password" id="novaSenha" name="novaSenha" minlength="12" required>
+    
+            <label for="confirmarSenha">Confirmar nova senha</label>
+            <input type="password" id="confirmarSenha" name="confirmarSenha" required>
+    
+            
+            <input type="hidden" name="senha_hash" id="senha_hash">
+            <input type="hidden" name="salt" id="salt">
+    
+            <button type="submit">Alterar Senha</button>
+        </form>
+    
+        <div id="mensagem-senha" class="hidden"></div>
+    
+        
+    </section>
+
     </div>
   </div>
 
   <!-- Scripts -->
  
   
-      <script src="js/verificarsessao.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="js/verificarsessao.js"></script>
     <script src="js/padraoperfil.js"></script>
+    <script src="js/senhasjs.js"></script> <!-- ou senhasjs.js adaptado -->
+
   
 </body>
 </html>

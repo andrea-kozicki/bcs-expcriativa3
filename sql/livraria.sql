@@ -1,5 +1,6 @@
 -- Criação do banco
-CREATE DATABASE IF NOT EXISTS livraria CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS livraria 
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE livraria;
 
 -- Tabela de usuários
@@ -95,3 +96,23 @@ CREATE TABLE IF NOT EXISTS pagamentos (
     data_pagamento TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (compra_id) REFERENCES compras(id) ON DELETE CASCADE
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabela de pedidos
+CREATE TABLE pedidos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  usuario_id INT NOT NULL,
+  codigo_pedido VARCHAR(32) UNIQUE NOT NULL,
+  data_pedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+);
+
+-- Tabela de Redefinição dos tokens
+CREATE TABLE tokens_redefinicao (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    token VARCHAR(255) NOT NULL,
+    expiracao DATETIME NOT NULL,
+    criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX (email),
+    INDEX (token)
+);
