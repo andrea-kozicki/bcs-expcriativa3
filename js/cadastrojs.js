@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (json.success || json.sucesso) {
         form.reset();
         setTimeout(() => {
-          window.location.href = "/bcs-expcriativa3/login2.html";
+          window.location.href = "/login2.html";
         }, 3000);
       }
 

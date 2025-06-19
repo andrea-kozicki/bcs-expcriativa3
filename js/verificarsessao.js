@@ -1,6 +1,6 @@
 async function verificarSessaoOuRedirecionar() {
     try {
-        const resposta = await fetch('/bcs-expcriativa3/php/session_status.php', {
+        const resposta = await fetch('/php/session_status.php', {
             method: 'GET',
             credentials: 'include'  // 🔴 ESSENCIAL para enviar os cookies
         });
@@ -8,13 +8,13 @@ async function verificarSessaoOuRedirecionar() {
         const dados = await resposta.json();
 
         if (!dados.logged_in) {
-            window.location.href = '/bcs-expcriativa3/login2.html';
+            window.location.href = '/login2.html';
         }
 
         return dados;
     } catch (erro) {
         console.error('Erro ao verificar sessão:', erro);
-        window.location.href = '/bcs-expcriativa3/login2.html';
+        window.location.href = '/login2.html';
     }
 }
 

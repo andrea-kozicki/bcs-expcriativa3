@@ -110,7 +110,7 @@ function configurarCheckout() {
                 return;
             }
 
-            fetch('https://seudominio.com/backend/processar_compra.php', {
+            fetch('/php/processar_compra.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -153,7 +153,7 @@ function exibirCodigoPedido() {
         spanCodigo.textContent = codigo;
 
         if (verPedidos) {
-            verPedidos.href = `pedidos.html?codigo=${codigo}`;
+            verPedidos.href = `/pedidos.html?codigo=${codigo}`;
         }
     } else {
         const container = document.querySelector('.checkout-container');

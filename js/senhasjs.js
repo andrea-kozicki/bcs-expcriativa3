@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (result.success) {
                 setTimeout(() => {
                     alert("Senha alterada com sucesso!");
-                    window.location.href = "/bcs-expcriativa3/perfil.html";
+                    window.location.href = "/perfil.html";
                 }, 500); // espera um pouco para exibir o alert
             }
 

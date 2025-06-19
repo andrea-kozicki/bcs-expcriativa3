@@ -216,7 +216,7 @@ function setupDesativarMfaButton() {
       if (!confirm('Tem certeza que deseja desativar o MFA?')) return;
   
       try {
-        const res = await fetch('/bcs-expcriativa3/php/desativar_mfa.php', {
+        const res = await fetch('/php/desativar_mfa.php', {
           method: 'POST',
           credentials: 'include'
         });

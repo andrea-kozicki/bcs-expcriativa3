@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", function () {
       formData.append("acao", "login"); // envia a ação obrigatória
 
       try {
-        const response = await fetch("php/login_refeito.php", {
+        const response = await fetch("/php/login_refeito.php", {
           method: "POST",
           body: formData,
           credentials: "include"
@@ -39,12 +39,12 @@ document.addEventListener("DOMContentLoaded", function () {
             setTimeout(() => { 
               console.log("🔍 Sessão antes de redirecionar:");
               //debugger;
-              fetch('php/session_status.php', { credentials: 'include' })
+              fetch('/php/session_status.php', { credentials: 'include' })
                 .then(res => res.json())
                 .then(data => {
                   console.log("🔍 Verificação final antes do redirecionamento:", data);
                   if (data.logged_in) {
-                    window.location.replace("perfil.html");
+                    window.location.replace("/perfil.html");
                   } else {
                     console.warn("⚠️ Sessão ainda não ativa. Tentando novamente...");
                     setTimeout(() => location.reload(), 500); // Ou tentar novamente
