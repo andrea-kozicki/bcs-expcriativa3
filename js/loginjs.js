@@ -1,5 +1,32 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // === ENVIO DO LOGIN VIA AJAX ===
+
+  // ============================
+  // ✅ BLOCO 1: MENSAGEM DE ATIVAÇÃO
+  // ============================
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get("ativado") === "1") {
+    const div = document.createElement("div");
+    div.innerText = "Conta ativada com sucesso! Faça seu login.";
+    div.style.background = "#d4edda";
+    div.style.color = "#155724";
+    div.style.padding = "10px";
+    div.style.marginBottom = "15px";
+    div.style.border = "1px solid #c3e6cb";
+    div.style.borderRadius = "5px";
+    div.style.textAlign = "center";
+    div.style.fontWeight = "bold";
+
+    const form = document.querySelector("form");
+    if (form) {
+      form.parentNode.insertBefore(div, form);
+    } else {
+      document.body.prepend(div);
+    }
+  }
+
+  // ============================
+  // 🔐 BLOCO 2: LOGIN COM MFA
+  // ============================
   const loginForm = document.getElementById("formlogin");
   const errorMessage = document.getElementById("error-message");
   const spinner = document.querySelector(".loading-spinner");
@@ -9,12 +36,11 @@ document.addEventListener("DOMContentLoaded", function () {
   if (loginForm) {
     loginForm.addEventListener("submit", async function (e) {
       e.preventDefault();
-
       errorMessage.textContent = "";
       spinner.style.display = "block";
 
       const formData = new FormData(loginForm);
-      formData.append("acao", "login"); // envia a ação obrigatória
+      formData.append("acao", "login");
 
       try {
         const response = await fetch("/php/login_refeito.php", {
@@ -28,26 +54,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (result.success) {
           if (result.mfa_required) {
-            // Mostrar campo MFA
             mfaSection.style.display = "block";
-            if (result.qr_code_svg) {
+            if (result.qr_svg) {
               qrCodeDiv.style.display = "block";
-              qrCodeDiv.innerHTML = result.qr_code_svg;
+              qrCodeDiv.innerHTML = result.qr_svg;
             }
           } else {
-            // Login bem-sucedido sem MFA
-            setTimeout(() => { 
-              console.log("🔍 Sessão antes de redirecionar:");
-              //debugger;
+            setTimeout(() => {
               fetch('/php/session_status.php', { credentials: 'include' })
                 .then(res => res.json())
                 .then(data => {
-                  console.log("🔍 Verificação final antes do redirecionamento:", data);
                   if (data.logged_in) {
-                    window.location.replace("/perfil.html");
+                    const redirectUrl = result.redirect || "/perfil.html";
+                    window.location.replace(redirectUrl);
                   } else {
-                    console.warn("⚠️ Sessão ainda não ativa. Tentando novamente...");
-                    setTimeout(() => location.reload(), 500); // Ou tentar novamente
+                    setTimeout(() => location.reload(), 500);
                   }
                 })
                 .catch(err => {
@@ -67,8 +88,9 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // === DEMAIS FUNCIONALIDADES (sidebar, dropdowns, carrinho) ===
-
+  // ============================
+  // 🧭 BLOCO 3: INTERFACE (sidebar, dropdowns)
+  // ============================
   const sidebar = document.querySelector('.sidebar');
   const barsIcon = document.querySelector('.fa-bars');
   const menuToggle = document.querySelector('#menu-toggle');
@@ -130,6 +152,9 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // ============================
+  // 🛒 BLOCO 4: CARRINHO
+  // ============================
   const carrinhoIcon = document.querySelector(".cart-icon");
   const carrinhoDropdown = document.getElementById("cartMenu");
   const contadorCarrinho = document.querySelector(".cart-count");

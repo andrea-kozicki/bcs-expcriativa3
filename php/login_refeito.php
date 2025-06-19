@@ -1,93 +1,102 @@
 <?php
-ini_set('session.name', 'PHPSESSID');
-ini_set('session.cookie_path', '/');
-ini_set('session.cookie_httponly', 1);
-ini_set('session.use_only_cookies', 1);
-ini_set('session.cookie_samesite', 'Lax');
-ini_set('session.cookie_secure', 0); // ou 1 se usar HTTPS
-session_start();
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use PragmaRX\Google2FA\Google2FA;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Writer;
+
 header('Content-Type: application/json');
 
-require_once 'config.php';
-
-// Verifica se a requisição é POST com ação correta
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' || ($_POST['acao'] ?? '') !== 'login') {
-    echo json_encode(['success' => false, 'message' => 'Ação inválida.']);
+// Função auxiliar
+function json_erro($mensagem, $codigo = 400)
+{
+    http_response_code($codigo);
+    echo json_encode(["success" => false, "message" => $mensagem]);
     exit;
 }
 
-$email = trim($_POST['email'] ?? '');
-$senha = trim($_POST['senha'] ?? '');
-$mfa_code = trim($_POST['mfa_code'] ?? '');
+// Captura POST
+$email     = $_POST['email']     ?? '';
+$senha     = $_POST['senha']     ?? '';
+$mfa_code  = $_POST['mfa_code']  ?? null;
+$acao      = $_POST['acao']      ?? '';
+
+// Validações básicas
+if (strtolower($acao) !== "login") {
+    json_erro("Ação inválida.");
+}
 
 if (empty($email) || empty($senha)) {
-    echo json_encode(['success' => false, 'message' => 'Preencha todos os campos.']);
-    exit;
+    json_erro("Email e senha são obrigatórios.");
 }
 
-try {
-    $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE email = :email LIMIT 1");
-    $stmt->bindParam(':email', $email);
-    $stmt->execute();
+// Busca usuário
+$stmt = $pdo->prepare("SELECT * FROM usuarios WHERE email = ?");
+$stmt->execute([$email]);
+$usuario = $stmt->fetch();
 
-    $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$usuario) {
-    echo json_encode(['success' => false, 'message' => 'Email ou senha incorretos.']);
-    exit;
+if (!$usuario || !$usuario['ativado']) {
+    json_erro("Usuário não encontrado ou não ativado.");
 }
 
-    $senha_hash = hash('sha256', $senha . $usuario['salt']);
-
+// Verifica senha com hash + salt
+$senha_hash = hash('sha256', $senha . $usuario['salt']);
 if (!hash_equals($usuario['senha_hash'], $senha_hash)) {
-    echo json_encode(['success' => false, 'message' => 'Email ou senha incorretos.']);
-    exit;
+    json_erro("Email ou senha inválidos.");
 }
 
-    // Verifica MFA
-    if (!empty($usuario['mfa_secret']) && $usuario['mfa_enabled']) {
-        if (empty($mfa_code)) {
-            require_once __DIR__ . '/../vendor/autoload.php';
-            $qrCode = \Sonata\GoogleAuthenticator\GoogleQrUrl::generate(
-                $usuario['email'],
-                $usuario['mfa_secret'],
-                'BCS Livraria'
-            );
-            echo json_encode([
-                'success' => true,
-                'mfa_required' => true,
-                'qr_code_svg' => "<img src=\"$qrCode\" alt=\"QR Code MFA\" />"
-            ]);
-            exit;
-        }
+// MFA habilitado?
+if ($usuario['mfa_enabled']) {
+    if (empty($mfa_code)) {
+        $google2fa = new Google2FA();
+        $secret = $usuario['mfa_secret'];
 
-        // Verifica código MFA
-        require_once __DIR__ . '/../vendor/autoload.php';
-        $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
-        if (!$g->checkCode($usuario['mfa_secret'], $mfa_code)) {
-            echo json_encode(['success' => false, 'message' => 'Código MFA inválido.']);
-            exit;
-        }
+        // 1. Cria otpauth://
+        $otpauth = "otpauth://totp/Livraria:{$email}?secret={$secret}&issuer=Livraria";
+
+        // 2. Gera SVG com BaconQrCode
+        $renderer = new \BaconQrCode\Renderer\ImageRenderer(
+            new \BaconQrCode\Renderer\RendererStyle\RendererStyle(200),
+            new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
+        );
+        $writer = new \BaconQrCode\Writer($renderer);
+        $qrSvg = $writer->writeString($otpauth);
+
+        // 3. Retorna SVG diretamente para o JS
+        echo json_encode([
+            "success" => true,
+            "mfa_required" => true,
+            "qr_svg" => $qrSvg,
+            "message" => "MFA necessário. Escaneie o QR code abaixo se ainda não configurou seu autenticador."
+        ]);
+        exit;
     }
 
-    // Define variáveis de sessão
-    $_SESSION['usuario_id'] = $usuario['id'];
-    $_SESSION['usuario_email'] = $usuario['email'];
-    $_SESSION['usuario_nome'] = $usuario['nome'] ?? '';
-    $_SESSION['usuario_mfa'] = $usuario['mfa_enabled'] ?? 0;
-     $_SESSION['LAST_ACTIVITY']  = time();
-
-    session_write_close();
-
-    echo json_encode(['success' => true, 'mfa_required' => false]);
-    
-
-} catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Erro no banco de dados: ' . $e->getMessage()]);
-    exit;
-} catch (Throwable $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Erro inesperado: ' . $e->getMessage()]);
-    exit;
+    // Verifica código MFA
+    $google2fa = new Google2FA();
+    if (!$google2fa->verifyKey($usuario['mfa_secret'], $mfa_code)) {
+        http_response_code(401);
+        echo json_encode([
+            "success" => false,
+            "message" => "Código MFA inválido."
+        ]);
+        exit;
+    }
 }
+
+
+
+// Se passou tudo, cria sessão
+session_start();
+$_SESSION['usuario_id'] = $usuario['id'];
+$_SESSION['usuario_email'] = $usuario['email'];
+
+echo json_encode([
+    "success" => true,
+    "mfa_required" => false,
+    "redirect" => "/perfil.html"
+]);
+exit;

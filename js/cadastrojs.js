@@ -1,4 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
+
+  // ============================
+  // 🔹 BLOCO 1: ELEMENTOS & VARIÁVEIS
+  // ============================
   const form = document.getElementById("cadastroForm");
   const senhaInput = document.getElementById("senha");
   const senhaHashInput = document.getElementById("senha_hash");
@@ -35,12 +39,14 @@ document.addEventListener('DOMContentLoaded', () => {
     data_nascimento: "Data inválida (formato: dd/mm/aaaa)."
   };
 
+  // ============================
+  // 🔹 BLOCO 2: VALIDAÇÃO DE CAMPOS
+  // ============================
   function validarCampo(input) {
     const id = input.id;
     const padrao = regex[id];
     const container = input.closest(".column") || input.parentElement;
     const erro = container.querySelector(".mensagem-erro");
-
     if (!padrao) return true;
 
     if (!padrao.test(input.value.trim())) {
@@ -54,6 +60,14 @@ document.addEventListener('DOMContentLoaded', () => {
     return true;
   }
 
+  document.querySelectorAll("#cadastroForm input[required]").forEach((input) => {
+    input.addEventListener("blur", () => validarCampo(input));
+    input.addEventListener("input", () => validarCampo(input));
+  });
+
+  // ============================
+  // 🔹 BLOCO 3: MÁSCARAS
+  // ============================
   cpfInput.addEventListener("input", (e) => {
     e.target.value = e.target.value
       .replace(/\D/g, "")
@@ -78,8 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   dataInput.addEventListener("input", () => {
-    let valor = dataInput.value.replace(/\D/g, "");
-    if (valor.length > 8) valor = valor.slice(0, 8);
+    let valor = dataInput.value.replace(/\D/g, "").slice(0, 8);
     valor = valor.replace(/(\d{2})(\d)/, "$1/$2");
     valor = valor.replace(/(\d{2})(\d)/, "$1/$2");
     dataInput.value = valor;
@@ -92,6 +105,9 @@ document.addEventListener('DOMContentLoaded', () => {
     return `${ano}-${mes}-${dia}`;
   }
 
+  // ============================
+  // 🔹 BLOCO 4: AUTO-PREENCHIMENTO VIA CEP
+  // ============================
   cepInput.addEventListener("blur", async () => {
     const cep = cepInput.value.replace(/\D/g, "");
     if (cep.length !== 8) return;
@@ -109,6 +125,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // ============================
+  // 🔹 BLOCO 5: REQUISITOS DE SENHA
+  // ============================
   const checklist = {
     maiuscula: /[A-Z]/,
     minuscula: /[a-z]/,
@@ -147,29 +166,24 @@ document.addEventListener('DOMContentLoaded', () => {
     charCount.textContent = val.length;
   });
 
-  document.querySelectorAll("#cadastroForm input[required]").forEach((input) => {
-    input.addEventListener("blur", () => validarCampo(input));
-    input.addEventListener("input", () => validarCampo(input));
-  });
-
+  // ============================
+  // 🔹 BLOCO 6: SUBMISSÃO DO FORMULÁRIO
+  // ============================
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     if (![...form.elements].every(campo => validarCampo(campo))) {
-      alert("Por favor, corrija os campos inválidos.");
+      mostrarPopup(false, "Por favor, corrija os campos inválidos.");
       return;
     }
 
-    const senha = senhaInput.value;
-    const confirmarSenha = confirmarSenhaInput.value;
-
-    if (senha !== confirmarSenha) {
+    if (senhaInput.value !== confirmarSenhaInput.value) {
       mostrarPopup(false, "As senhas não coincidem.");
       return;
     }
 
     const salt = CryptoJS.lib.WordArray.random(16).toString();
-    const senhaHash = CryptoJS.SHA256(senha + salt).toString();
+    const senhaHash = CryptoJS.SHA256(senhaInput.value + salt).toString();
     senhaHashInput.value = senhaHash;
     saltHidden.value = salt;
 
@@ -198,20 +212,27 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       const json = await res.json();
-      mostrarPopup(json.success, json.message || json.sucesso || json.erro);
 
-      if (json.success || json.sucesso) {
-        form.reset();
-        setTimeout(() => {
-          window.location.href = "/login2.html";
-        }, 3000);
+      if (!res.ok || !json.success) {
+        mostrarPopup(false, json.message || "Erro no cadastro.");
+        return;
       }
 
+      mostrarPopup(true, json.message || "Cadastro realizado com sucesso!");
+      form.reset();
+
+      setTimeout(() => {
+        window.location.href = "/login2.html";
+      }, 3000);
+
     } catch (err) {
-      mostrarPopup(false, "Erro ao enviar o formulário.");
+      mostrarPopup(false, "Erro na comunicação com o servidor.");
     }
   });
 
+  // ============================
+  // 🔹 BLOCO 7: POPUP DE MENSAGEM
+  // ============================
   function mostrarPopup(sucesso, mensagem) {
     let popup = document.querySelector(".popup");
     if (!popup) {
@@ -223,8 +244,12 @@ document.addEventListener('DOMContentLoaded', () => {
     popup.innerHTML = mensagem;
     setTimeout(() => popup.classList.remove("show"), 5000);
   }
+
 });
 
+// ============================
+// 🔹 BLOCO 8: TOGGLE DE SENHA VISÍVEL
+// ============================
 document.querySelectorAll(".toggle-password").forEach(btn => {
   btn.addEventListener("click", (e) => {
     e.preventDefault();

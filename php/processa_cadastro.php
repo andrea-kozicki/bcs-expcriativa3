@@ -1,140 +1,123 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
-require_once __DIR__ . '/../vendor/autoload.php';
-require_once 'config.php';
+require_once "config.php";
+require_once __DIR__ . '/../vendor/phpmailer/phpmailer/src/PHPMailer.php';
+require_once __DIR__ . '/../vendor/phpmailer/phpmailer/src/SMTP.php';
+require_once __DIR__ . '/../vendor/phpmailer/phpmailer/src/Exception.php';
+require_once __DIR__ . '/../vendor/sonata-project/google-authenticator/src/GoogleAuthenticator.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
-use Sonata\GoogleAuthenticator\GoogleAuthenticator;
+use PragmaRX\Google2FA\Google2FA;
 
-header('Content-Type: application/json');
+header("Content-Type: application/json");
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
     http_response_code(405);
-    echo json_encode(['erro' => 'Método não permitido.']);
+    echo json_encode(["success" => false, "message" => "Método não permitido."]);
     exit;
 }
 
 $dados = json_decode(file_get_contents("php://input"), true);
+if (!$dados) {
+    http_response_code(400);
+    echo json_encode(["success" => false, "message" => "Dados JSON inválidos."]);
+    exit;
+}
 
-// Verificação dos campos obrigatórios
-$camposObrigatorios = [
-    'nome', 'email', 'senha', 'confirmarSenha',
-    'telefone', 'cpf', 'data_nascimento',
-    'cep', 'rua', 'numero', 'estado', 'cidade'
-];
-
+$camposObrigatorios = ["email", "senha_hash", "salt", "nome"];
 foreach ($camposObrigatorios as $campo) {
     if (empty($dados[$campo])) {
         http_response_code(400);
-        echo json_encode(['erro' => "O campo '$campo' é obrigatório."]);
+        echo json_encode(["success" => false, "message" => "O campo '$campo' é obrigatório."]);
         exit;
     }
 }
 
-// Validação de e-mail
-if (!filter_var($dados['email'], FILTER_VALIDATE_EMAIL)) {
+$pdo = getDatabaseConnection();
+
+// Verifica se email já existe
+$stmt = $pdo->prepare("SELECT id FROM usuarios WHERE email = ?");
+$stmt->execute([$dados["email"]]);
+if ($stmt->fetch()) {
     http_response_code(400);
-    echo json_encode(['erro' => 'E-mail inválido.']);
+    echo json_encode(["success" => false, "message" => "Email já cadastrado."]);
     exit;
 }
 
-// Verifica se senhas coincidem
-if ($dados['senha'] !== $dados['confirmarSenha']) {
-    http_response_code(400);
-    echo json_encode(['erro' => 'As senhas não coincidem.']);
-    exit;
-}
+// Gera token de ativação
+$token = bin2hex(random_bytes(16));
 
-$codigo_ativacao = bin2hex(random_bytes(16));
+// Gera segredo MFA
+$google2fa = new Google2FA();
+$mfa_secret = $google2fa->generateSecretKey();
+$mfaAtivo = 1;
 
+// Insere na tabela usuarios com MFA ativado
+$stmt = $pdo->prepare("
+    INSERT INTO usuarios (
+        email, senha_hash, salt, token_ativacao, mfa_enabled, mfa_secret
+    ) VALUES (?, ?, ?, ?, ?, ?)
+");
+$stmt->execute([
+    $dados["email"],
+    $dados["senha_hash"],
+    $dados["salt"],
+    $token,
+    $mfaAtivo,
+    $mfaSecret
+]);
+
+$usuarioId = $pdo->lastInsertId();
+
+// Insere dados complementares
+$stmt = $pdo->prepare("
+    INSERT INTO dados_cadastrais (
+        usuario_id, nome, telefone, cpf, data_nascimento, cep, rua, numero, estado, cidade
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+");
+$stmt->execute([
+    $usuarioId,
+    $dados["nome"] ?? '',
+    $dados["telefone"] ?? '',
+    $dados["cpf"] ?? '',
+    $dados["data_nascimento"] ?? null,
+    $dados["cep"] ?? '',
+    $dados["rua"] ?? '',
+    $dados["numero"] ?? '',
+    $dados["estado"] ?? '',
+    $dados["cidade"] ?? ''
+]);
+
+// Envia email com link de ativação
+$linkAtivacao = $_ENV["URL_BASE"] . "/php/ativar_conta.php?token=" . $token;
+
+$mail = new PHPMailer(true);
 try {
-    $pdo->beginTransaction();
-
-    // Verifica se e-mail já existe
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM usuarios WHERE email = :email");
-    $stmt->execute([':email' => $dados['email']]);
-    if ($stmt->fetchColumn() > 0) {
-        http_response_code(409);
-        echo json_encode(['erro' => 'E-mail já cadastrado.']);
-        exit;
-    }
-
-    // Inserção na tabela `usuarios`
-    $stmt = $pdo->prepare("INSERT INTO usuarios (email, senha_hash, token_ativacao, ativado) VALUES (:email, :senha_hash, :token_ativacao, :ativado)");
-    $stmt->execute([
-        ':email' => $dados['email'],
-        ':senha_hash' => password_hash($dados['senha'], PASSWORD_DEFAULT),
-        ':token_ativacao' => $codigo_ativacao,
-        ':ativado' => 0
-    ]);
-
-    $usuario_id = $pdo->lastInsertId();
-
-    // Inserção na tabela `dados_cadastrais`
-    $stmt = $pdo->prepare("INSERT INTO dados_cadastrais (usuario_id, nome, telefone, cpf, data_nascimento, cep, rua, numero, estado, cidade)
-        VALUES (:usuario_id, :nome, :telefone, :cpf, :data_nascimento, :cep, :rua, :numero, :estado, :cidade)");
-    $stmt->execute([
-        ':usuario_id' => $usuario_id,
-        ':nome' => $dados['nome'],
-        ':telefone' => $dados['telefone'],
-        ':cpf' => $dados['cpf'],
-        ':data_nascimento' => $dados['data_nascimento'],
-        ':cep' => $dados['cep'],
-        ':rua' => $dados['rua'],
-        ':numero' => $dados['numero'],
-        ':estado' => $dados['estado'],
-        ':cidade' => $dados['cidade']
-    ]);
-
-    // 🔐 Geração e ativação automática do MFA
-    $g = new GoogleAuthenticator();
-    $secret = $g->generateSecret();
-
-    $stmt = $pdo->prepare("UPDATE usuarios SET mfa_enabled = 1, mfa_secret = :secret WHERE id = :id");
-    $stmt->execute([
-        ':secret' => $secret,
-        ':id'     => $usuario_id
-    ]);
-
-    $pdo->commit();
-
-    // 📧 Envio do e-mail de ativação
-    $url_base = $_ENV['URL_BASE'] ?? 'http://localhost/bcs-expcriativa3';
-    $link_ativacao = "$url_base/php/ativar_conta.php?codigo=" . urlencode($codigo_ativacao);
-
-    $mail = new PHPMailer(true);
     $mail->isSMTP();
-    $mail->Host = $_ENV['EMAIL_HOST'];
+    $mail->Host = $_ENV["SMTP_HOST"];
     $mail->SMTPAuth = true;
-    $mail->Username = $_ENV['EMAIL_USERNAME'];
-    $mail->Password = $_ENV['EMAIL_PASSWORD'];
-    $mail->SMTPSecure = 'tls';
-    $mail->Port = $_ENV['EMAIL_PORT'];
-    $mail->CharSet = 'UTF-8';
-    $mail->Encoding = 'base64';
+    $mail->Username = $_ENV["SMTP_USER"];
+    $mail->Password = $_ENV["SMTP_PASS"];
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+    $mail->Port = $_ENV["SMTP_PORT"];
 
-    $mail->setFrom($_ENV['EMAIL_USERNAME'], 'Confirmação de Cadastro');
-    $mail->addAddress($dados['email'], $dados['nome']);
-    $mail->Subject = 'Confirmação de Cadastro';
+    $mail->setFrom($_ENV["SMTP_FROM"], "Livraria");
+    $mail->addAddress($dados["email"], $dados["nome"]);
     $mail->isHTML(true);
-    $mail->Body = "<p>Olá, <strong>{$dados['nome']}</strong>.</p>
-                   <p>Obrigado por se cadastrar! Para ativar sua conta, clique no link abaixo:</p>
-                   <p><a href=\"$link_ativacao\">Ativar Conta</a></p>";
+    $mail->Subject = "Ative sua conta";
+    $mail->Body = "Olá, {$dados["nome"]}!<br><br>
+        Ative sua conta clicando <a href='$linkAtivacao'>aqui</a>.<br><br>
+        Após o login, escaneie seu código QR para concluir o uso de autenticação MFA.";
 
     $mail->send();
-
-    echo json_encode(['success' => true, 'message' => 'Cadastro realizado com sucesso. Verifique seu e-mail.']);
-
-} catch (PDOException $e) {
-    $pdo->rollBack();
-    http_response_code(500);
-    echo json_encode(['erro' => 'Erro no banco de dados: ' . $e->getMessage()]);
 } catch (Exception $e) {
-    $pdo->rollBack();
     http_response_code(500);
-    echo json_encode(['erro' => 'Erro ao enviar e-mail: ' . $e->getMessage()]);
+    echo json_encode(["success" => false, "message" => "Erro ao enviar email de ativação."]);
+    exit;
 }
+
+echo json_encode([
+    "success" => true,
+    "message" => "Cadastro realizado com sucesso! Verifique seu e-mail para ativar sua conta."
+]);
+exit;

@@ -1,0 +1,46 @@
+/* === base.css === */
+/* Fonte e reset */
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;700&display=swap');
+
+:root {
+    --primary-color: #ff6600;
+    --primary-hover: #cc5200;
+    --text-dark: #333;
+    --text-light: #fff;
+    --bg-light: #f9f9f9;
+    --border-color: #ddd;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Ubuntu', sans-serif;
+}
+
+body {
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+    line-height: 1.6;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.success {
+    color: green;
+}
+
+.error {
+    color: red;
+}
+
+.popup {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 1000;
+}

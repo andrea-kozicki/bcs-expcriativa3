@@ -18,7 +18,6 @@ class ComposerStaticInitf64c0f42a180f64dd5c4971478d99adf
             'Symfony\\Polyfill\\Php80\\' => 23,
             'Symfony\\Polyfill\\Mbstring\\' => 26,
             'Symfony\\Polyfill\\Ctype\\' => 23,
-            'Sonata\\GoogleAuthenticator\\' => 27,
         ),
         'P' => 
         array (
@@ -30,11 +29,15 @@ class ComposerStaticInitf64c0f42a180f64dd5c4971478d99adf
         'G' => 
         array (
             'GrahamCampbell\\ResultType\\' => 26,
-            'Google\\Authenticator\\' => 21,
         ),
         'D' => 
         array (
             'Dotenv\\' => 7,
+            'DASPRiD\\Enum\\' => 13,
+        ),
+        'B' => 
+        array (
+            'BaconQrCode\\' => 12,
         ),
     );
 
@@ -50,10 +53,6 @@ class ComposerStaticInitf64c0f42a180f64dd5c4971478d99adf
         'Symfony\\Polyfill\\Ctype\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-ctype',
-        ),
-        'Sonata\\GoogleAuthenticator\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/sonata-project/google-authenticator/src',
         ),
         'PragmaRX\\Google2FA\\' => 
         array (
@@ -75,23 +74,17 @@ class ComposerStaticInitf64c0f42a180f64dd5c4971478d99adf
         array (
             0 => __DIR__ . '/..' . '/graham-campbell/result-type/src',
         ),
-        'Google\\Authenticator\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/sonata-project/google-authenticator/src',
-        ),
         'Dotenv\\' => 
         array (
             0 => __DIR__ . '/..' . '/vlucas/phpdotenv/src',
         ),
-    );
-
-    public static $prefixesPsr0 = array (
-        'B' => 
+        'DASPRiD\\Enum\\' => 
         array (
-            'BaconQrCode' => 
-            array (
-                0 => __DIR__ . '/..' . '/bacon/bacon-qr-code/src',
-            ),
+            0 => __DIR__ . '/..' . '/dasprid/enum/src',
+        ),
+        'BaconQrCode\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/bacon/bacon-qr-code/src',
         ),
     );
 
@@ -109,7 +102,6 @@ class ComposerStaticInitf64c0f42a180f64dd5c4971478d99adf
         return \Closure::bind(function () use ($loader) {
             $loader->prefixLengthsPsr4 = ComposerStaticInitf64c0f42a180f64dd5c4971478d99adf::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInitf64c0f42a180f64dd5c4971478d99adf::$prefixDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInitf64c0f42a180f64dd5c4971478d99adf::$prefixesPsr0;
             $loader->classMap = ComposerStaticInitf64c0f42a180f64dd5c4971478d99adf::$classMap;
 
         }, null, ClassLoader::class);
