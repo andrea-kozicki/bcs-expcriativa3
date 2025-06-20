@@ -104,6 +104,14 @@ body.noscroll {
   font-size: 1rem;
 }
 
+.cart-menu .btn-success {
+  width: 100%;
+  text-align: center;
+  box-sizing: border-box;
+  display: inline-block;
+  margin-top: 8px;
+}
+
 .avatar {
   position: relative;
   cursor: pointer;

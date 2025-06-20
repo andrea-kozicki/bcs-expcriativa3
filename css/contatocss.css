@@ -74,6 +74,83 @@ body {
     transform: scale(1.05);
 }
 
+.navbar-content > *:not(:last-child) {
+  margin-right: 1rem;
+}
+
+/* Icone do Carrinho */
+
+.cart-icon {
+  font-size: 1.8rem;
+  color: #fff;
+  position: relative;
+  cursor: pointer;
+}
+.cart-count {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  background-color: #2563eb; /* azul vibrante */
+  background-color: var(--highlight);
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  min-width: 18px;
+  text-align: center;
+  line-height: 1;
+}
+.cart-menu {
+  display: none;
+  position: absolute;
+  right: 10px;
+  top: 50px;
+  width: 220px;
+  background-color: white;
+  color: black;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 10px;
+  z-index: 999;
+}
+.cart-menu.show {
+  display: block;
+}
+
+.cart-items-list {
+  list-style: none;
+  padding: 0;
+  max-height: 180px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+.cart-items-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  padding: 6px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.cart-items-list li button {
+  background: none;
+  border: none;
+  color: #e11d48;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.cart-menu .btn-success {
+  width: 100%;
+  text-align: center;
+  box-sizing: border-box;
+  display: inline-block;
+  margin-top: 8px;
+}
+
 /* Dropdown do usuário */
 .avatar {
     cursor: pointer;

@@ -23,16 +23,21 @@
   </div>
   <div class="navbar-content">
     <div class="cart-container">
-      <div class="cart-icon" onclick="document.getElementById('cartMenu').classList.toggle('hidden')">
-        <i class="fa-solid fa-cart-shopping"></i>
-        <span class="cart-count">0</span>
-      </div>
-      <div class="cart-menu hidden" id="cartMenu">
-        <p>Itens no carrinho:</p>
-        <ul class="cart-items-list" id="cartItems"></ul>
-        <button class="btn-danger" id="limparCarrinho">Limpar Carrinho</button>
+      <div class="cart-container">
+        <div class="cart-icon">
+          <i class="fa-solid fa-cart-shopping"></i>
+          <span class="cart-count">0</span>
+        </div>
+      
+        <div class="cart-menu hidden" id="cartMenu">
+          <p>Itens no carrinho:</p>
+          <ul id="cartItems" class="cart-items-list"></ul>
+          <button id="limparCarrinho" class="btn-danger">Limpar Carrinho</button>
+          <a href="checkout.html" class="btn-success">Ir para o Checkout</a>
+        </div>
       </div>
     </div>
+
     <div class="avatar">
       <img src="imagens/user-pic.jpg" alt="usuario" width="40"/>
       <div class="dropdown-menu setting">
@@ -86,6 +91,7 @@
 
 <script src="js/sitejslivros.js"></script>
 <script src="js/produto.js"></script>
+<script src="js/cart.js"></script>
 
 </body>
 </html>

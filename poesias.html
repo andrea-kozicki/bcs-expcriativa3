@@ -22,16 +22,19 @@
   </div>
   <div class="navbar-content">
     <div class="cart-container">
-      <div class="cart-icon" onclick="document.getElementById('cartMenu').classList.toggle('hidden')">
+      <div class="cart-icon">
         <i class="fa-solid fa-cart-shopping"></i>
         <span class="cart-count">0</span>
       </div>
+    
       <div class="cart-menu hidden" id="cartMenu">
         <p>Itens no carrinho:</p>
-        <ul class="cart-items-list" id="cartItems"></ul>
-        <button class="btn-danger" id="limparCarrinho">Limpar Carrinho</button>
+        <ul id="cartItems" class="cart-items-list"></ul>
+        <button id="limparCarrinho" class="btn-danger">Limpar Carrinho</button>
+        <a href="checkout.html" class="btn-success">Ir para o Checkout</a>
       </div>
     </div>
+            
     <div class="avatar">
       <img src="imagens/user-pic.jpg" alt="usuario" width="40"/>
       <div class="dropdown-menu setting">
@@ -53,9 +56,9 @@
       <i class="fa-solid fa-caret-down dropdown-arrow"></i>
     </button>
     <div class="dropdown-container active">
-      <a class="sidebar-nav active" href="romance.html"><i class="icon fa-solid fa-heart"></i><span>Romance</span></a>
+      <a class="sidebar-nav " href="romance.html"><i class="icon fa-solid fa-heart"></i><span>Romance</span></a>
       <a class="sidebar-nav" href="biografias.html"><i class="icon fa-solid fa-pen-nib"></i><span>Biografias</span></a>
-      <a class="sidebar-nav" href="poesias.html"><i class="icon fa-solid fa-feather"></i><span>Poesias</span></a>
+      <a class="sidebar-nav active" href="poesias.html"><i class="icon fa-solid fa-feather"></i><span>Poesias</span></a>
       <a class="sidebar-nav" href="contos.html"><i class="icon fa-solid fa-comment"></i><span>Contos</span></a>
     </div>
 
@@ -111,5 +114,6 @@
 </div>
 
 <script src="js/sitejslivros.js"></script>
+<script src="js/cart.js"></script>
 </body>
 </html>

@@ -33,6 +33,7 @@
                     <p>Itens no carrinho:</p>
                     <ul id="cartItems" class="cart-items-list"></ul>
                     <button id="limparCarrinho" class="btn-danger">Limpar Carrinho</button>
+                    <a href="checkout.html" class="btn-success">Ir para o Checkout</a>
                 </div>
             </div>
 
@@ -86,10 +87,13 @@
       </div>
 
       <!-- Seção de Pedidos -->
-      <section class="perfil-section">
+    <section class="perfil-section" id="meus-pedidos">
         <h3 class="title-content">📦 Seus Pedidos</h3>
-        <div class="placeholder">⚠️ Nenhum pedido disponível no momento.</div>
-      </section>
+        <div id="lista-pedidos" class="placeholder">
+            <!-- Os pedidos serão injetados aqui pelo JS -->
+        </div>
+    </section>
+
 
       <!-- Seção de Endereço -->
       <section class="perfil-section">
@@ -142,6 +146,7 @@
     <script src="js/verificarsessao.js"></script>
     <script src="js/padraoperfil.js"></script>
     <script src="js/senhasjs.js"></script> <!-- ou senhasjs.js adaptado -->
+    <script src="js/cart.js"></script>
 
   
 </body>

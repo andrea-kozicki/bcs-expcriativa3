@@ -5,11 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Livraria</title>
     <link rel="shortcut icon" href="imagens/estrela.ico" type="image/x-icon">
-    <!-- <link rel="stylesheet" href="css/indexsitecss.css"> -->
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/layout.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/pages/index.css">
+    <link rel="stylesheet" href="css/indexsitecss.css">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
@@ -24,16 +21,19 @@
     </div>
     <div class="navbar-content">
         <div class="cart-container">
-            <div class="cart-icon" onclick="document.getElementById('cartMenu').classList.toggle('hidden')">
+            <div class="cart-icon">
                 <i class="fa-solid fa-cart-shopping"></i>
                 <span class="cart-count">0</span>
             </div>
+        
             <div class="cart-menu hidden" id="cartMenu">
                 <p>Itens no carrinho:</p>
-                <ul class="cart-items-list" id="cartItems"></ul>
-                <button class="btn-danger" id="limparCarrinho">Limpar Carrinho</button>
+                <ul id="cartItems" class="cart-items-list"></ul>
+                <button id="limparCarrinho" class="btn-danger">Limpar Carrinho</button>
+                <a href="checkout.html" class="btn-success">Ir para o Checkout</a>
             </div>
         </div>
+
         <div class="avatar">
             <img src="imagens/user-pic.jpg" alt="usuario" width="40" />
             <div class="dropdown-menu setting">
@@ -126,6 +126,7 @@
 
    
     <script src="js/indexsite.js"></script>
+    <script src="js/cart.js"></script>
     
 
 </body>

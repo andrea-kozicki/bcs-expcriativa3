@@ -26,6 +26,21 @@
 
         <!--Menu da barra de navegação superior-->
         <div class="navbar-content">
+
+            <div class="cart-container">
+                <div class="cart-icon">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span class="cart-count">0</span>
+                </div>
+
+                <div class="cart-menu hidden" id="cartMenu">
+                    <p>Itens no carrinho:</p>
+                    <ul id="cartItems" class="cart-items-list"></ul>
+                    <button id="limparCarrinho" class="btn-danger">Limpar Carrinho</button>
+                    <a href="checkout.html" class="btn-success">Ir para o Checkout</a>
+                </div>
+            </div>
+
             <div class="avatar">
                 <img src="imagens/user-pic.jpg" alt="usuario" width="40">
                 <div class="dropdown-menu setting">
@@ -64,7 +79,7 @@
                 <a href="contos.html" class="sidebar-nav"><i class="icon fa-solid fa-comment"></i><span>Contos</span></a>
             </div>
 
-            <a href="contato.html" class="sidebar-nav"> <i class="icon fa-solid fa-envelope"></i><span>Contato</span></a>
+            <a href="contato.html" class="sidebar-nav active"> <i class="icon fa-solid fa-envelope"></i><span>Contato</span></a>
 
             <a href="sobre.html" class="sidebar-nav"> <i class="icon fa-solid fa-eye"></i><span>Sobre a livraria</span></a>
         </div>
@@ -125,6 +140,7 @@
     <!-- Fim Conteudo -->
 
     <script src="js/contatojs.js"></script>
+    <script src="js/cart.js"></script>
 
     
 

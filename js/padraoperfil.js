@@ -1,16 +1,16 @@
 /**
  * PADRÃO PERFIL.JS
- * Controle de sessão, MFA e interface do perfil
+ * Controle de sessão, MFA, interface do perfil e pedidos
  */
 console.log("🟢 padraoperfil.js carregado");
 
-// 1. ESTADO GLOBAL
+// === 1. ESTADO GLOBAL ===
 const appState = {
   dropdowns: { userMenu: false, genresMenu: false },
   session: { userId: null, email: null }
 };
 
-// 2. ELEMENTOS DOM
+// === 2. ELEMENTOS DOM ===
 function getDOMElements() {
   return {
     avatar: document.querySelector('.avatar'),
@@ -21,11 +21,13 @@ function getDOMElements() {
     sidebar: document.querySelector('.sidebar'),
     barsIcon: document.querySelector('.fa-bars'),
     userGreeting: document.querySelector('.top-list span'),
-    cartCount: document.querySelector('.cart-count')
+    cartCount: document.querySelector('.cart-count'),
+    emailSpan: document.getElementById('emailUsuario'),
+    nomeSpan: document.getElementById('nomeUsuario')
   };
 }
 
-// 3. DROPDOWNS & SIDEBAR
+// === 3. DROPDOWNS & SIDEBAR ===
 function toggleUserDropdown() {
   const el = getDOMElements();
   appState.dropdowns.userMenu = !appState.dropdowns.userMenu;
@@ -62,10 +64,10 @@ function setupDropdownListeners() {
   });
 }
 
-// 4. VERIFICAÇÃO DE SESSÃO
+// === 4. VERIFICAÇÃO DE SESSÃO ===
 async function checkSession() {
   try {
-    const sessionUrl = "/php/session_status.php"; // Caminho fixo seguro
+    const sessionUrl = "/php/session_status.php";
     const response = await fetch(sessionUrl, { credentials: 'include' });
     const text = await response.text();
 
@@ -73,35 +75,27 @@ async function checkSession() {
     try {
       dados = JSON.parse(text);
     } catch (e) {
-      console.error("❌ Erro ao fazer JSON.parse():", e, "\nResposta recebida:", text);
+      console.error("Erro ao fazer JSON.parse():", e, "\nResposta recebida:", text);
       window.location.href = "/login2.html";
       return null;
     }
 
     if (!dados.logged_in) {
-      console.warn('🔴 Sessão inválida detectada');
+      console.warn('Sessão inválida detectada');
       window.location.href = "/login2.html";
       return null;
     }
 
     return dados;
   } catch (error) {
-    console.error("❌ Erro ao verificar sessão:", error);
+    console.error("Erro ao verificar sessão:", error);
     window.location.href = "/login2.html";
     return null;
   }
 }
 
-// 5. CONTADOR DE CARRINHO
-function updateCartCount(count) {
-  const el = getDOMElements();
-  if (el.cartCount) {
-    el.cartCount.textContent = count;
-    el.cartCount.style.display = count > 0 ? 'flex' : 'none';
-  }
-}
 
-// 6. CONFIGURAR MFA
+// === 6. MFA ===
 async function setupMfaButton() {
   const btn = document.getElementById('ativarMfaBtn');
   const desativarSection = document.querySelector('.mfa-desativar-section');
@@ -150,7 +144,6 @@ async function setupMfaButton() {
   }
 }
 
-// 7. DESATIVAR MFA
 function setupDesativarMfaButton() {
   const btn = document.getElementById('desativarMfaBtn');
   if (!btn) return;
@@ -178,37 +171,96 @@ function setupDesativarMfaButton() {
   });
 }
 
-// 8. INICIALIZAÇÃO
-async function initializeApp() {
-  console.debug("🧩 initializeApp() chamado");
-  setupDropdownListeners();
-  updateCartCount(0);
+// === 7. PEDIDOS ===
+function carregarPedidos() {
+  const container = document.getElementById("lista-pedidos");
+  if (!container) return;
+  container.textContent = "Carregando...";
 
-  const dados = await checkSession();
-  console.debug("📦 Dados da sessão:", dados);
-  if (!dados) return;
+  fetch("php/listar_pedidos.php", {
+    credentials: "include"
+  })
+    .then(response => response.json())
+    .then(pedidos => {
+      container.innerHTML = "";
 
-  const emailSpan = document.getElementById('emailUsuario');
-  const nomeSpan = document.getElementById('nomeUsuario');
-  const saudacao = document.querySelector('.top-list span');
+      if (!pedidos || pedidos.length === 0) {
+        container.textContent = "⚠️ Nenhum pedido encontrado.";
+        return;
+      }
 
-  if (emailSpan) emailSpan.textContent = dados.email;
-  if (saudacao) saudacao.textContent = `Olá, ${dados.email}!`;
-  if (nomeSpan && dados.nome) nomeSpan.textContent = dados.nome;
+      pedidos.forEach(p => {
+        const pedidoCard = document.createElement("div");
+        pedidoCard.className = "pedido-card";
+        pedidoCard.style.marginBottom = "1.5rem";
+        pedidoCard.style.border = "1px solid #ccc";
+        pedidoCard.style.padding = "1rem";
+        pedidoCard.style.borderRadius = "8px";
 
-  await setupMfaButton();
-  setupDesativarMfaButton();
-  setupLogoutHandler();
+        const header = document.createElement("div");
+        const codigo = p.codigo_pedido || "???";
+        const data = p.data || "Data não informada";
+        const total = p.total || "R$ 0,00";
 
+        header.innerHTML = `
+          <strong>Pedido ${codigo}</strong><br>
+          Data: ${data} | Total: ${total}<br>
+          <button class="btn btn-secondary ver-detalhes-btn" data-codigo="${codigo}" style="margin-top: 0.5rem;">Ver Detalhes</button>
+        `;
+
+        const detalhesDiv = document.createElement("div");
+        detalhesDiv.className = "detalhes-pedido";
+        detalhesDiv.style.display = "none";
+        detalhesDiv.style.marginTop = "1rem";
+        detalhesDiv.textContent = "Carregando detalhes...";
+
+        header.querySelector(".ver-detalhes-btn").addEventListener("click", function () {
+          const isVisible = detalhesDiv.style.display === "block";
+          if (isVisible) {
+            detalhesDiv.style.display = "none";
+            return;
+          }
+
+          detalhesDiv.style.display = "block";
+
+          fetch(`php/listar_detalhes_pedido.php?codigo=${codigo}`, {
+            credentials: "include"
+          })
+            .then(res => res.json())
+            .then(dados => {
+              if (!dados.itens || dados.itens.length === 0) {
+                detalhesDiv.textContent = "Este pedido não possui itens.";
+                return;
+              }
+
+              const ul = document.createElement("ul");
+              dados.itens.forEach(item => {
+                const li = document.createElement("li");
+                li.textContent = `${item.titulo} - ${item.quantidade}x ${item.preco}`;
+                ul.appendChild(li);
+              });
+
+              detalhesDiv.innerHTML = "";
+              detalhesDiv.appendChild(ul);
+            })
+            .catch(() => {
+              detalhesDiv.textContent = "Erro ao carregar detalhes.";
+            });
+        });
+
+        pedidoCard.appendChild(header);
+        pedidoCard.appendChild(detalhesDiv);
+        container.appendChild(pedidoCard);
+      });
+    })
+    .catch(error => {
+      console.error("Erro ao carregar pedidos:", error);
+      container.textContent = "Erro ao carregar pedidos.";
+    });
 }
 
-// 9. EVENTO DOM READY
-document.addEventListener('DOMContentLoaded', () => {
-  console.debug("⏱ Aguardando 500ms para iniciar verificação de sessão...");
-  setTimeout(initializeApp, 500);
-});
 
-// 10. LOGOUT
+// === 8. LOGOUT ===
 function setupLogoutHandler() {
   const logoutBtn = document.getElementById('logoutBtn');
   if (!logoutBtn) return;
@@ -222,7 +274,7 @@ function setupLogoutHandler() {
       });
 
       if (res.ok) {
-        console.info("🔐 Logout efetuado com sucesso.");
+        console.info("Logout efetuado com sucesso.");
         window.location.href = '/login2.html';
       } else {
         alert('Erro ao tentar sair. Tente novamente.');
@@ -233,3 +285,33 @@ function setupLogoutHandler() {
     }
   });
 }
+
+// === 9. INICIALIZAÇÃO ===
+async function initializeApp() {
+  setupDropdownListeners();
+  
+
+  const dados = await checkSession();
+  if (!dados) return;
+
+  const el = getDOMElements();
+  if (el.emailSpan) el.emailSpan.textContent = dados.email;
+  if (el.userGreeting) el.userGreeting.textContent = `Olá, ${dados.email}!`;
+  if (el.nomeSpan && dados.nome) el.nomeSpan.textContent = dados.nome;
+
+  await setupMfaButton();
+  setupDesativarMfaButton();
+  setupLogoutHandler();
+}
+
+// === 10. DOM READY ===
+document.addEventListener("DOMContentLoaded", () => {
+  setTimeout(initializeApp, 500);
+
+  if (window.location.hash === "#meus-pedidos") {
+    const secao = document.getElementById("meus-pedidos");
+    secao?.scrollIntoView({ behavior: "smooth" });
+  }
+
+  carregarPedidos();
+});

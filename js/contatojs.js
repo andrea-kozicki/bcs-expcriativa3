@@ -241,3 +241,4 @@ function showPopup(message, type = "success") {
         setTimeout(() => popup.remove(), 500);
     }, 5000);
 }
+

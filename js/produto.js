@@ -26,6 +26,8 @@ const livros = [
 ];
 
 const produto = livros.find(p => p.id === id);
+const botaoAdicionar = document.getElementById("addCarrinho");
+
 
   if (produto) {
     document.getElementById("produto-nome").textContent = produto.titulo;
@@ -35,31 +37,33 @@ const produto = livros.find(p => p.id === id);
     document.getElementById("produto-imagem").alt = produto.titulo;
   }
 
-  const botaoAdicionar = document.getElementById("addCarrinho");
-  if (botaoAdicionar && produto) {
-    botaoAdicionar.addEventListener("click", () => {
-      let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
-      const existente = carrinho.find(item => item.titulo === produto.titulo);
-      if (existente) {
-        existente.quantidade += 1;
-      } else {
-        carrinho.push({
-          titulo: produto.titulo,
-          preco: produto.preco,
-          quantidade: 1
-        });
-      }
-      localStorage.setItem("carrinho", JSON.stringify(carrinho));
+  botaoAdicionar.addEventListener("click", () => {
+    let carrinho = JSON.parse(localStorage.getItem("cartItems")) || [];
+    const existente = carrinho.find(item => item.titulo === produto.titulo);
+    if (existente) {
+      existente.quantidade += 1;
+    } else {
+      carrinho.push({
+        titulo: produto.titulo,
+        preco: produto.preco,
+        quantidade: 1
+      });
+    }
+    localStorage.setItem("cartItems", JSON.stringify(carrinho));
+
+    if (typeof atualizarContadorCarrinho === "function") {
       atualizarContadorCarrinho();
-      alert("Produto adicionado ao carrinho!");
-    });
-  }
+    }
+
+    alert("Produto adicionado ao carrinho!");
+  });
+
 
   const botaoVoltar = document.getElementById("voltarBtn");
   botaoVoltar?.addEventListener("click", () => history.back());
 
   function atualizarContadorCarrinho() {
-    const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+    const carrinho = JSON.parse(localStorage.getItem("cartItens")) || [];
     const total = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
     const contador = document.querySelector(".cart-count");
     if (contador) {
