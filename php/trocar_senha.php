@@ -12,19 +12,22 @@ $_SESSION['LAST_ACTIVITY'] = time();
 
 header('Content-Type: application/json');
 require_once 'config.php';
+require_once 'cripto_hibrida.php';
 
 function responder($success, $message) {
     echo json_encode(['success' => $success, 'message' => $message]);
     exit;
 }
 
+$dados = descriptografarEntrada();
+
 // ===============================
-// 🔐 1. Captura e sanitização dos dados
+// 🔐 1. Captura dos dados descriptografados
 // ===============================
-$email        = $_POST['email'] ?? null;
-$senhaAtual   = $_POST['senhaAtual'] ?? null;
-$novaSenha    = $_POST['novaSenha'] ?? null;
-$token        = $_POST['token'] ?? null;
+$email        = $dados['email'] ?? null;
+$senhaAtual   = $dados['senhaAtual'] ?? null;
+$novaSenha    = $dados['novaSenha'] ?? null;
+$token        = $dados['token'] ?? null;
 
 // ===============================
 // 🚫 2. Validação inicial

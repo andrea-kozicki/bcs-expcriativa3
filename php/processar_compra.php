@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once 'cripto_hibrida.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -11,7 +12,7 @@ header('Content-Type: application/json');
 $usuario_id = $_SESSION['usuario_id'] ?? null;
 $usuario_email = $_SESSION['usuario_email'] ?? null;
 
-$dados = json_decode(file_get_contents("php://input"), true);
+$dados = descriptografarEntrada();
 
 if (!$usuario_id || !isset($dados['carrinho']) || empty($dados['carrinho'])) {
     echo json_encode(["sucesso" => false, "erro" => "Dados inválidos."]);

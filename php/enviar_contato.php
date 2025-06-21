@@ -9,6 +9,8 @@ use PHPMailer\PHPMailer\Exception;
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $dados = descriptografarEntrada();
+
     $nome     = htmlspecialchars(trim($_POST['nome'] ?? ''), ENT_QUOTES, 'UTF-8');
     $email    = filter_var(trim($_POST['email'] ?? ''), FILTER_SANITIZE_EMAIL);
     $assunto  = htmlspecialchars(trim($_POST['assunto'] ?? ''), ENT_QUOTES, 'UTF-8');

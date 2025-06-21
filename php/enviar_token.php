@@ -6,8 +6,11 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once 'cripto_hibrida.php';
 
-$email = $_POST['email'] ?? '';
+$dados = descriptografarEntrada();
+$email = trim($dados['email'] ?? '');
+
 
 if (empty($email)) {
     echo json_encode(['success' => false, 'message' => 'Email é obrigatório.']);

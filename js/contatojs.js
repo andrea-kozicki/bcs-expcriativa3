@@ -1,15 +1,6 @@
-/**
- * SISTEMA PRINCIPAL - LIVRARIA
- */
-
-
-
-/* ============================================== */
-/* 5. FORMULÁRIO DE CONTATO */
-/* ============================================== */
 const formContato = document.querySelector(".form-adm");
 if (formContato) {
-    formContato.addEventListener("submit", function (event) {
+    formContato.addEventListener("submit", async function (event) {
         event.preventDefault();
 
         const nomeEl = document.getElementById("nome");
@@ -49,30 +40,31 @@ if (formContato) {
         if (erros.length > 0) {
             showPopup(erros.join("<br>"), "error");
         } else {
-            fetch("php/enviar_contato.php", {
-                method: "POST",
-                body: new FormData(formContato)
-            })
-            .then(response => response.json())
-            .then(data => {
+            const dados = { nome, email, assunto, mensagem };
+            try {
+                const payload = await encryptHybrid(JSON.stringify(dados));
+
+                const response = await fetch("php/enviar_contato.php", {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
                 if (data.success) {
                     showPopup(data.message, "success");
                     formContato.reset();
                 } else {
                     showPopup(data.message, "error");
                 }
-            })
-            .catch(error => {
+            } catch (error) {
                 console.error("Erro ao enviar:", error);
                 showPopup("Erro ao enviar a mensagem. Tente novamente.", "error");
-            });
+            }
         }
     });
 }
 
-/* ============================================== */
-/* 6. POPUP */
-/* ============================================== */
 function showPopup(message, type = "success") {
     const existing = document.querySelector(".popup-message");
     if (existing) existing.remove();
@@ -107,4 +99,3 @@ function showPopup(message, type = "success") {
         setTimeout(() => popup.remove(), 500);
     }, 5000);
 }
-

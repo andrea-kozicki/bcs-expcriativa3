@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get("ativado") === "1") {
     const div = document.createElement("div");
@@ -33,13 +32,22 @@ document.addEventListener("DOMContentLoaded", function () {
       errorMessage.textContent = "";
       spinner.style.display = "block";
 
-      const formData = new FormData(loginForm);
-      formData.append("acao", "login");
+      const email = document.getElementById("email")?.value;
+      const senha = document.getElementById("senha")?.value;
+
+      if (!email || !senha) {
+        errorMessage.textContent = "Preencha e-mail e senha.";
+        spinner.style.display = "none";
+        return;
+      }
 
       try {
+        const payload = await encryptHybrid(JSON.stringify({ email, senha, acao: "login" }));
+
         const response = await fetch("/php/login_refeito.php", {
           method: "POST",
-          body: formData,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
           credentials: "include"
         });
 
@@ -105,10 +113,12 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       try {
+        const payload = await encryptHybrid(JSON.stringify({ email }));
+
         const response = await fetch('/php/enviar_token.php', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({ email })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
         });
 
         const result = await response.json();

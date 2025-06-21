@@ -100,47 +100,49 @@ function configurarCheckout(usuario_id) {
   }
 
   if (finalizarCompra) {
-    finalizarCompra.addEventListener("click", () => {
-      const itens = JSON.parse(localStorage.getItem(`cartItems_${usuario_id}`)) || [];
+  finalizarCompra.addEventListener("click", async () => {
+    const itens = JSON.parse(localStorage.getItem(`cartItems_${usuario_id}`)) || [];
 
-      if (!usuario_id) {
-        alert("Erro: usuário não identificado.");
-        return;
-      }
+    if (!usuario_id) {
+      alert("Erro: usuário não identificado.");
+      return;
+    }
 
-      if (itens.length === 0) {
-        alert("Seu carrinho está vazio.");
-        return;
-      }
+    if (itens.length === 0) {
+      alert("Seu carrinho está vazio.");
+      return;
+    }
 
-      fetch("/php/processar_compra.php", {
+    try {
+      const payload = await encryptHybrid(JSON.stringify({ usuario_id, carrinho: itens }));
+
+      const response = await fetch("/php/processar_compra.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ usuario_id, carrinho: itens })
-      })
-        .then(response => {
-          if (!response.ok) throw new Error("Erro na requisição: " + response.status);
-          return response.json();
-        })
-        .then(data => {
-          if (data.sucesso) {
-            localStorage.removeItem(`cartItems_${usuario_id}`);
-            localStorage.removeItem("cartCount");
+        body: JSON.stringify(payload)
+      });
 
-            if (typeof renderizarCarrinho === "function") renderizarCarrinho(usuario_id);
-            if (typeof atualizarCarrinho === "function") atualizarCarrinho();
+      if (!response.ok) throw new Error("Erro na requisição: " + response.status);
+      const data = await response.json();
 
-            window.location.href = `pedido-concluido.html?codigo=${data.codigo_pedido}`;
-          } else {
-            alert("Erro: " + data.erro);
-          }
-        })
-        .catch(error => {
-          console.error("Erro na requisição:", error);
-          alert("Falha ao enviar dados da compra.");
-        });
-    });
+      if (data.sucesso) {
+        localStorage.removeItem(`cartItems_${usuario_id}`);
+        localStorage.removeItem("cartCount");
+
+        if (typeof renderizarCarrinho === "function") renderizarCarrinho(usuario_id);
+        if (typeof atualizarCarrinho === "function") atualizarCarrinho();
+
+        window.location.href = `pedido-concluido.html?codigo=${data.codigo_pedido}`;
+      } else {
+        alert("Erro: " + data.erro);
+      }
+
+    } catch (error) {
+      console.error("Erro na requisição:", error);
+      alert("Falha ao enviar dados da compra.");
+    }
+  });
   }
 }
 

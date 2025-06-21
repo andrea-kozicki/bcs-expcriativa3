@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const path = window.location.pathname;
 
-  // Preencher campos com email/token da URL, se estiver em novasenha.html
   if (path.includes('novasenha.html')) {
     const params = new URLSearchParams(window.location.search);
     const email = params.get('email');
@@ -40,23 +39,27 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      const formData = new FormData();
-      formData.append('novaSenha', novaSenha.value);
+      const dados = {
+        novaSenha: novaSenha.value
+      };
 
       const senhaAtualEl = document.getElementById('senhaAtual');
       const tokenEl = document.getElementById('token');
       const emailEl = document.getElementById('email');
 
-      if (senhaAtualEl) formData.append('senhaAtual', senhaAtualEl.value);
+      if (senhaAtualEl) dados.senhaAtual = senhaAtualEl.value;
       if (tokenEl && emailEl) {
-        formData.append('token', tokenEl.value);
-        formData.append('email', emailEl.value);
+        dados.token = tokenEl.value;
+        dados.email = emailEl.value;
       }
 
       try {
+        const payload = await encryptHybrid(JSON.stringify(dados));
+
         const response = await fetch(form.action, {
           method: 'POST',
-          body: formData
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
         });
 
         const result = await response.json();
@@ -85,7 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Envio de link de redefinição de senha
   const botaoToken = document.getElementById('btn-enviar-token');
   const mensagemToken = document.getElementById('mensagem-token');
   const emailInput = document.getElementById('email-redefinicao');

@@ -1,8 +1,10 @@
 <?php
 require_once "config.php";
+require_once 'cripto_hibrida.php';
 require_once __DIR__ . '/../vendor/phpmailer/phpmailer/src/PHPMailer.php';
 require_once __DIR__ . '/../vendor/phpmailer/phpmailer/src/SMTP.php';
 require_once __DIR__ . '/../vendor/phpmailer/phpmailer/src/Exception.php';
+
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -16,12 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST") {
     exit;
 }
 
-$dados = json_decode(file_get_contents("php://input"), true);
-if (!$dados) {
-    http_response_code(400);
-    echo json_encode(["success" => false, "message" => "Dados JSON inválidos."]);
-    exit;
-}
+$dados = descriptografarEntrada();
 
 $camposObrigatorios = ["email", "senha", "nome"];
 foreach ($camposObrigatorios as $campo) {

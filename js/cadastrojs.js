@@ -5,17 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // ============================
   const form = document.getElementById("cadastroForm");
   const senhaInput = document.getElementById("senha");
-  const senhaHashInput = document.getElementById("senha_hash");
   const confirmarSenhaInput = document.getElementById("confirmarSenha");
   const dataInput = document.getElementById("data_nascimento");
   const telefoneInput = document.getElementById("telefone");
   const cpfInput = document.getElementById("cpf");
   const cepInput = document.getElementById("cep");
 
-  const saltHidden = document.createElement("input");
-  saltHidden.type = "hidden";
-  saltHidden.name = "salt";
-  form.appendChild(saltHidden);
 
   const regex = {
     nome: /^[a-zA-ZÀ-ÿ\s]{5,}$/,
@@ -39,9 +34,6 @@ document.addEventListener('DOMContentLoaded', () => {
     data_nascimento: "Data inválida (formato: dd/mm/aaaa)."
   };
 
-  // ============================
-  // 🔹 BLOCO 2: VALIDAÇÃO DE CAMPOS
-  // ============================
   function validarCampo(input) {
     const id = input.id;
     const padrao = regex[id];
@@ -65,9 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
     input.addEventListener("input", () => validarCampo(input));
   });
 
-  // ============================
-  // 🔹 BLOCO 3: MÁSCARAS
-  // ============================
   cpfInput.addEventListener("input", (e) => {
     e.target.value = e.target.value
       .replace(/\D/g, "")
@@ -105,9 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return `${ano}-${mes}-${dia}`;
   }
 
-  // ============================
-  // 🔹 BLOCO 4: AUTO-PREENCHIMENTO VIA CEP
-  // ============================
   cepInput.addEventListener("blur", async () => {
     const cep = cepInput.value.replace(/\D/g, "");
     if (cep.length !== 8) return;
@@ -125,9 +111,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ============================
-  // 🔹 BLOCO 5: REQUISITOS DE SENHA
-  // ============================
   const checklist = {
     maiuscula: /[A-Z]/,
     minuscula: /[a-z]/,
@@ -166,9 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
     charCount.textContent = val.length;
   });
 
-    // ============================
-  // 🔹 BLOCO 6: SUBMISSÃO DO FORMULÁRIO (ATUALIZADO)
-  // ============================
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -187,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const dados = {
       nome: form.nome.value.trim(),
       email: form.email.value.trim(),
-      senha: senhaInput.value, // <-- agora envia como senha pura
+      senha: senhaInput.value,
       telefone: form.telefone.value.trim(),
       cpf: form.cpf.value.trim(),
       data_nascimento: dataIso,
@@ -199,10 +179,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     try {
+      const payload = await encryptHybrid(JSON.stringify(dados));
+
       const res = await fetch(form.action, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dados)
+        body: JSON.stringify(payload)
       });
 
       const json = await res.json();
@@ -224,10 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-
-  // ============================
-  // 🔹 BLOCO 7: POPUP DE MENSAGEM
-  // ============================
   function mostrarPopup(sucesso, mensagem) {
     let popup = document.querySelector(".popup");
     if (!popup) {
@@ -239,12 +217,8 @@ document.addEventListener('DOMContentLoaded', () => {
     popup.innerHTML = mensagem;
     setTimeout(() => popup.classList.remove("show"), 5000);
   }
-
 });
 
-// ============================
-// 🔹 BLOCO 8: TOGGLE DE SENHA VISÍVEL
-// ============================
 document.querySelectorAll(".toggle-password").forEach(btn => {
   btn.addEventListener("click", (e) => {
     e.preventDefault();

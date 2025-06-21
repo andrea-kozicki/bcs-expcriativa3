@@ -11,16 +11,26 @@ use BaconQrCode\Writer;
 
 header('Content-Type: application/json');
 
-$acao = $_POST['acao'] ?? '';
-
+// Função de resposta padrão
 function resposta($dados) {
   echo json_encode($dados);
   exit;
 }
 
+// Se o Content-Type for JSON, tenta descriptografar
+$contentType = $_SERVER["CONTENT_TYPE"] ?? '';
+if (str_contains($contentType, 'application/json')) {
+  require_once __DIR__ . '/cripto_hibrida.php';
+  $entrada = descriptografarEntrada();
+  $acao = $entrada['acao'] ?? '';
+} else {
+  $acao = $_POST['acao'] ?? '';
+}
+
+// LOGIN PADRÃO (criptografado via front-end)
 if ($acao === 'login') {
-  $email = $_POST['email'] ?? '';
-  $senha = $_POST['senha'] ?? '';
+  $email = $entrada['email'] ?? '';
+  $senha = $entrada['senha'] ?? '';
 
   if (!$email || !$senha) {
     resposta(['success' => false, 'message' => 'Email e senha são obrigatórios.']);
@@ -75,6 +85,7 @@ if ($acao === 'login') {
   ]);
 }
 
+// MFA CONTINUA USANDO $_POST
 if ($acao === 'verificar_mfa') {
   $email = $_POST['email'] ?? '';
   $senha = $_POST['senha'] ?? '';
@@ -102,7 +113,6 @@ if ($acao === 'verificar_mfa') {
     resposta(['success' => false, 'message' => 'Código MFA inválido.']);
   }
 
-  // Atualiza o campo para não exibir o QR novamente
   if ((int)$usuario['mfa_qr_exibido'] === 0) {
     $stmt = $pdo->prepare("UPDATE usuarios SET mfa_qr_exibido = 1 WHERE id = ?");
     $stmt->execute([$usuario['id']]);

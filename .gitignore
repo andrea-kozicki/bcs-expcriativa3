@@ -7,4 +7,8 @@ py/
 imagens/star.png
 php/testar_conn.php
 php/teste_smtp.php
+php/autoload_teste.php
+php/testar_criptografia_local.php
 Html-Js-CSS.zip
+/keys/private.pem
+/keys/public.pem
