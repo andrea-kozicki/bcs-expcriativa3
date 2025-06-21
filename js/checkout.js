@@ -1,21 +1,28 @@
+function esperarUsuarioId(callback) {
+  const tentar = () => {
+    const id = localStorage.getItem("usuario_id");
+    if (id) {
+      callback(id);
+    } else {
+      setTimeout(tentar, 100);
+    }
+  };
+  tentar();
+}
+
 document.addEventListener("DOMContentLoaded", () => {
-  const usuario_id = localStorage.getItem("usuario_id");
-  if (!usuario_id) {
-    alert("Você precisa estar logado para acessar o checkout.");
-    window.location.href = "/login2.html";
-    return;
-  }
+  esperarUsuarioId((usuario_id) => {
+    const path = window.location.pathname;
 
-  const path = window.location.pathname;
+    if (path.includes("checkout")) {
+      renderizarCarrinho(usuario_id);
+      configurarCheckout(usuario_id);
+    }
 
-  if (path.includes("checkout")) {
-    renderizarCarrinho(usuario_id);
-    configurarCheckout(usuario_id);
-  }
-
-  if (path.includes("pedido-concluido")) {
-    exibirCodigoPedido();
-  }
+    if (path.includes("pedido-concluido")) {
+      exibirCodigoPedido();
+    }
+  });
 });
 
 function removerItem(index, usuario_id) {
