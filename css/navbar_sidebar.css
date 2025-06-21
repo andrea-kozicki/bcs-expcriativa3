@@ -1,0 +1,186 @@
+*   4.1 Barra de Navegação (Navbar)
+    min-height: calc(100vh - 60px); /* Altura total menos navbar */
+  /* 4.1 Barra de Navegação (Navbar) */
+  .navbar {
+  .navbar-content {
+  .navbar .bars {
+  .navbar .bars:hover {
+  .sidebar-nav {
+  .sidebar-nav:hover {
+  .sidebar-nav.active {
+  .sidebar-nav.active::before {
+  .sidebar-nav .icon {
+  .dropdown-container .sidebar-nav {
+  .dropdown-container .sidebar-nav .icon {
+    .navbar {
+    .navbar .bars {
+  a, button, input, .sidebar-nav, .dropdown-btn {
+/* NAVBAR - Barra superior */
+.navbar {
+.navbar .navbar-content {
+.navbar .bars {
+.navbar .bars:hover {
+.navbar-content > *:not(:last-child) {
+.sidebar .sidebar-nav {
+.sidebar .sidebar-nav:hover {
+.sidebar .sidebar-nav.active {
+.sidebar .sidebar-nav.active::before {
+.sidebar-nav .icon {
+.sidebar .dropdown-container .sidebar-nav {
+.sidebar .dropdown-container .sidebar-nav .icon {
+    /* Navbar */
+    .navbar {
+    .navbar .bars {
+/* Navbar */
+.navbar {
+.navbar .logo {
+.navbar {
+.navbar-content {
+.navbar {
+.navbar .navbar-content {
+.navbar .bars {
+/* Inicio dropdown navbar */
+/* Fim dropdown navbar */
+/* Fim Navbar */
+.sidebar .sidebar-nav {
+.sidebar .sidebar-nav.active {
+.sidebar .sidebar-nav.active::before {
+.sidebar-nav .icon {
+.manual-nav{
+.nav-auto { 
+.nav-auto div { 
+.nav-auto div:not(:last-child) {
+#radio1:checked ~ .nav-auto .auto-btn1{
+#radio2:checked ~ .nav-auto .auto-btn2{
+#radio3:checked ~ .nav-auto .auto-btn3{
+#radio4:checked ~ .nav-auto .auto-btn4{
+#radio5:checked ~ .nav-auto .auto-btn5{ *   4.2 Menu Lateral (Sidebar)
+  .navbar .bars {
+  .navbar .bars:hover {
+  /* 4.2 Menu Lateral (Sidebar) */
+  .sidebar {
+  .sidebar.active {
+  /* Itens da sidebar */
+  .sidebar-nav {
+  .sidebar-nav:hover {
+  .sidebar-nav.active {
+  .sidebar-nav.active::before {
+  .sidebar-nav .icon {
+  .dropdown-btn {
+  .dropdown-btn:hover {
+  .dropdown-container {
+  .dropdown-container.active {
+  .dropdown-container .sidebar-nav {
+  .dropdown-container .sidebar-nav .icon {
+    .navbar .bars {
+    /* Sidebar mobile */
+    .sidebar {
+    .sidebar.active {
+  a, button, input, .sidebar-nav, .dropdown-btn {
+.sidebar {
+.sidebar:not(.active) {
+.content-wrapper.com-sidebar {
+.navbar .bars {
+.navbar .bars:hover {
+/* SIDEBAR - Menu lateral */
+.content .sidebar {
+.content .sidebar.active {
+/* Itens da sidebar */
+.sidebar .sidebar-nav {
+.sidebar .sidebar-nav:hover {
+.sidebar .sidebar-nav.active {
+.sidebar .sidebar-nav.active::before {
+.sidebar-nav .icon {
+.sidebar .dropdown-btn {
+.sidebar .dropdown-btn span {
+.sidebar .dropdown-btn:hover {
+.dropdown-btn .icon {
+.sidebar .dropdown-container {
+.sidebar .dropdown-container.active {
+.sidebar .dropdown-container .sidebar-nav {
+.sidebar .dropdown-container .sidebar-nav .icon {
+    .navbar .bars {
+    /* Sidebar mobile */
+    .content .sidebar {
+    .content .sidebar.active {
+.sidebar {
+.sidebar:not(.active) {
+.content-wrapper.com-sidebar {
+/* Sidebar */
+.sidebar {
+.sidebar.active {
+.sidebar .dropdown-btn {
+.dropdown-container {
+.dropdown-container.active {
+    .sidebar {
+    .sidebar.active {
+.sidebar {
+.sidebar:not(.active) {
+.content-wrapper.com-sidebar {
+.bars {
+.bars:hover {
+.sidebar {
+.sidebar:not(.active) {
+.sidebar:not(.active) a span,
+.sidebar:not(.active) button span {
+.sidebar.active {
+.sidebar a,
+.sidebar button {
+.sidebar a .icon,
+.sidebar button .icon {
+.sidebar a:hover,
+.sidebar button:hover {
+.sidebar a.active,
+.sidebar button.active {
+.sidebar a.active::before,
+.sidebar button.active::before {
+.dropdown-container {
+.dropdown-container.active {
+.dropdown-container a {
+.dropdown-container a:hover {
+.main-container.sidebar-open {
+.main-container:not(.sidebar-open) {
+  .main-container.sidebar-open {
+  .sidebar {
+  .sidebar.active {
+  .main-container.sidebar-open {
+  .main-container.sidebar-open {
+  .sidebar-open .main-container {
+  .main-container.sidebar-open {
+  .main-container.sidebar-open {
+  .sidebar-open .main-container {
+  .main-container.sidebar-open {
+  .main-container.sidebar-open {
+.sidebar {
+.sidebar:not(.active) {
+.content-wrapper.com-sidebar {
+.navbar .bars {
+/* Inicio sidebar */
+.content .sidebar {
+    .content .sidebar {
+.content .sidebar:hover,
+.content .sidebar.active {
+.sidebar .sidebar-nav {
+.sidebar a {
+.sidebar a:hover {
+.sidebar .sidebar-nav.active {
+.sidebar .sidebar-nav.active::before {
+.sidebar-nav .icon {
+/* Inicio dropdown sidebar */
+.sidebar .dropdown-btn {
+.sidebar .dropdown-btn span {
+.sidebar .dropdown-btn:hover {
+.dropdown-btn .icon {
+.sidebar .dropdown-btn.active {
+.sidebar .dropdown-container {
+.sidebar .dropdown-content.active{
+/* Fim dropdown sidebar*/
+/* Fim sidebar */
+.dropdown-btn-action {
+.dropdown-btn-action:hover,
+.dropdown-btn-action:focus {
+.sidebar {
+.sidebar:not(.active) {
+.content-wrapper.com-sidebar {
+.navbar .bars {
+.navbar .bars:hover {

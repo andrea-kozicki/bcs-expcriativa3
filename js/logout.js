@@ -1,26 +1,24 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
   const logoutBtn = document.getElementById("logoutBtn");
+  if (!logoutBtn) return;
 
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", function (e) {
-      e.preventDefault();
+  logoutBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
 
-      fetch("/php/logout.php", {
-        method: "POST",
-        credentials: "include",
-      })
-        .then(() => {
-          const id = localStorage.getItem("usuario_id");
-          if (id) {
-            localStorage.removeItem("usuario_id");
-            localStorage.removeItem(`cartItems_${id}`);
-          }
-          alert("Logout realizado com sucesso.");
-          window.location.href = "/login2.html";
-        })
-        .catch((error) => {
-          console.error("Erro ao sair:", error);
-        });
-    });
-  }
+    try {
+      const resposta = await fetch("/php/logout.php", { method: "POST" });
+      const dados = await resposta.json();
+
+      if (dados.success) {
+        localStorage.clear();
+        alert("Logout realizado com sucesso.");
+        window.location.href = "index.html";
+      } else {
+        alert("Erro ao fazer logout.");
+      }
+    } catch (erro) {
+      console.error("Erro na requisição de logout:", erro);
+      alert("Falha na comunicação com o servidor.");
+    }
+  });
 });

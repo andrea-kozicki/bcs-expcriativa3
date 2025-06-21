@@ -166,8 +166,8 @@ document.addEventListener('DOMContentLoaded', () => {
     charCount.textContent = val.length;
   });
 
-  // ============================
-  // 🔹 BLOCO 6: SUBMISSÃO DO FORMULÁRIO
+    // ============================
+  // 🔹 BLOCO 6: SUBMISSÃO DO FORMULÁRIO (ATUALIZADO)
   // ============================
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -182,18 +182,12 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const salt = CryptoJS.lib.WordArray.random(16).toString();
-    const senhaHash = CryptoJS.SHA256(senhaInput.value + salt).toString();
-    senhaHashInput.value = senhaHash;
-    saltHidden.value = salt;
-
     const dataIso = converterDataParaIso(dataInput.value);
 
     const dados = {
       nome: form.nome.value.trim(),
       email: form.email.value.trim(),
-      senha_hash: senhaHash,
-      salt: salt,
+      senha: senhaInput.value, // <-- agora envia como senha pura
       telefone: form.telefone.value.trim(),
       cpf: form.cpf.value.trim(),
       data_nascimento: dataIso,
@@ -229,6 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
       mostrarPopup(false, "Erro na comunicação com o servidor.");
     }
   });
+
 
   // ============================
   // 🔹 BLOCO 7: POPUP DE MENSAGEM

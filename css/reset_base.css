@@ -1,0 +1,21 @@
+/* === cadastrocss.css === */
+/**
+ * Estilos para a página de Cadastro - Livraria Estrela
+ * 
+ * Organizado em seções lógicas e comentado para fácil manutenção
+ * 
+ * Seções:
+ * 1. Variáveis e Reset
+ * 2. Estilos Base
+ * 3. Layout Principal
+ * 4. Componentes da Interface
+ *   4.1 Barra de Navegação (Navbar)
+ *   4.2 Menu Lateral (Sidebar)
+ * 5. Formulário de Cadastro
+ *   5.1 Estrutura do Formulário
+ *   5.2 Campos de Entrada
+ *   5.3 Validação e Feedback
+ *   5.4 Campos Especiais (Senha, CEP, etc.)
+ * 6. Responsividade
+ * 7. Animações e Efeitos
+ */

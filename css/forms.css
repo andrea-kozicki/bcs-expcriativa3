@@ -1,0 +1,109 @@
+* 5. Formulário de Cadastro
+ *   5.1 Estrutura do Formulário
+    transition: transform 0.3s ease;
+    transform: scale(1.1);
+    transition: transform 0.3s ease;
+    transform: scale(1.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transform: scale(1.05);
+    transform: translateY(-10px);
+    transform: translateY(0);
+    transition: transform 0.3s ease;
+    transform: rotate(180deg);
+  /* 5. FORMULÁRIO DE CADASTRO */
+  /* 5.1 Estrutura do Formulário */
+  .form-adm {
+  .form-grid {
+  .form-row {
+  .form-col {
+  .form-col.full-width {
+  .form-col.large {
+.form-col.small {
+  .title-input {
+  .input-adm {
+  .input-adm:focus {
+  .input-adm::placeholder {
+.input-adm:focus::placeholder {
+input[readonly] {
+  .input-adm.error {
+  .input-adm.success {
+    transform: translateX(-50%);
+.password-container .input-adm {
+    transform: translateY(-50%);
+    z-index: 2; /* Garante que fique acima do input */
+      transform: translateX(-100%);
+      transition: transform 0.3s ease, width 0.3s ease;
+      transform: translateX(0);
+    .form-row {
+    .form-col.large,
+    .form-col.small {
+      transform: rotate(360deg); 
+  a, button, input, .sidebar-nav, .dropdown-btn {
+    transition: transform 0.3s ease;
+    transform: scale(1.1);
+    transition: transform 0.3s ease;
+    transform: scale(1.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transform: scale(1.05);
+    transition: opacity 0.3s ease, visibility 0.3s, transform 0.3s ease;
+    transform: translateY(-10px);
+    transform: translateY(0);
+    transition: transform 0.3s ease;
+    transform: rotate(180deg);
+/* CONTEÚDO PRINCIPAL - Formulário de contato */
+/* Formulário de contato */
+.form-adm {
+.row-input {
+.title-input {
+.input-adm {
+textarea.input-adm {
+.input-adm:focus {
+    transform: translateX(-50%);
+        transform: translateX(-100%);
+        transition: transform 0.3s ease, width 0.3s ease;
+        transform: translateX(0);
+    transition: transform 0.3s ease-in-out;
+    transform: translateX(0);
+        transform: translateX(-100%);
+        transform: translateX(0);
+  transform: translateY(-1px);
+  transform: scale(1.02);
+  transition: transform 0.2s ease;
+  transform: translateY(-4px);
+  transform: scale(1.02);
+  transition: transform 0.2s ease;
+.login-page .form-adm {
+.login-page .title-input {
+.login-page .input-adm {
+.login-page .input-adm:focus {
+.form-redef-senha {
+.form-redef-senha .title-content {
+.form-redef-senha .row-input {
+.form-redef-senha .column {
+.form-redef-senha .title-input {
+.input-adm {
+/* Inicio formulario */
+.form-adm,
+.form-redef-senha {
+.row-input {
+.title-input {
+input.input-adm,
+textarea.input-adm,
+select.input-adm {
+textarea.input-adm {
+input.input-adm:focus,
+textarea.input-adm:focus,
+select.input-adm:focus {
+/* Fim formulario */
+.slides input{
+  transition: transform 0.3s ease;
+  transform: scale(1.1);
+  transition: transform 0.3s ease;
+  transform: scale(1.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transform: scale(1.05);
+  transform: translateY(-10px);
+  transform: translateY(0);
+  transition: transform 0.3s ease;
+  transform: rotate(180deg);
+  transition: transform 0.3s ease-in-out;

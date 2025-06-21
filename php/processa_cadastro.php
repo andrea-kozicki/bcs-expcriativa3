@@ -3,7 +3,6 @@ require_once "config.php";
 require_once __DIR__ . '/../vendor/phpmailer/phpmailer/src/PHPMailer.php';
 require_once __DIR__ . '/../vendor/phpmailer/phpmailer/src/SMTP.php';
 require_once __DIR__ . '/../vendor/phpmailer/phpmailer/src/Exception.php';
-require_once __DIR__ . '/../vendor/sonata-project/google-authenticator/src/GoogleAuthenticator.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -24,7 +23,7 @@ if (!$dados) {
     exit;
 }
 
-$camposObrigatorios = ["email", "senha_hash", "salt", "nome"];
+$camposObrigatorios = ["email", "senha", "nome"];
 foreach ($camposObrigatorios as $campo) {
     if (empty($dados[$campo])) {
         http_response_code(400);
@@ -49,19 +48,21 @@ $token = bin2hex(random_bytes(16));
 
 // Gera segredo MFA
 $google2fa = new Google2FA();
-$mfa_secret = $google2fa->generateSecretKey();
+$mfaSecret = $google2fa->generateSecretKey();
 $mfaAtivo = 1;
+
+// Gera hash moderno
+$senhaHashModerna = password_hash($dados["senha"], PASSWORD_DEFAULT);
 
 // Insere na tabela usuarios com MFA ativado
 $stmt = $pdo->prepare("
     INSERT INTO usuarios (
-        email, senha_hash, salt, token_ativacao, mfa_enabled, mfa_secret
-    ) VALUES (?, ?, ?, ?, ?, ?)
+        email, senha_modern_hash, token_ativacao, mfa_enabled, mfa_secret
+    ) VALUES (?, ?, ?, ?, ?)
 ");
 $stmt->execute([
     $dados["email"],
-    $dados["senha_hash"],
-    $dados["salt"],
+    $senhaHashModerna,
     $token,
     $mfaAtivo,
     $mfaSecret

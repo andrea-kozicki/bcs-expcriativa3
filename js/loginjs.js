@@ -1,8 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-  // ============================
-  // ✅ BLOCO 1: MENSAGEM DE ATIVAÇÃO
-  // ============================
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get("ativado") === "1") {
     const div = document.createElement("div");
@@ -24,9 +21,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // ============================
-  // 🔐 BLOCO 2: LOGIN COM MFA
-  // ============================
   const loginForm = document.getElementById("formlogin");
   const errorMessage = document.getElementById("error-message");
   const spinner = document.querySelector(".loading-spinner");
@@ -68,9 +62,13 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (result.usuario_id) {
                       localStorage.setItem("usuario_id", result.usuario_id);
                     }
+                    if (result.usuario_email) {
+                      localStorage.setItem("usuario_email", result.usuario_email);
+                    }
                     const redirectUrl = result.redirect || "/perfil.html";
                     window.location.replace(redirectUrl);
                   } else {
+                    alert("Erro: sessão não iniciada no servidor.");
                     setTimeout(() => location.reload(), 500);
                   }
                 })
@@ -91,76 +89,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // ============================
-  // 🧭 BLOCO 3: INTERFACE (sidebar, dropdowns)
-  // ============================
-  const sidebar = document.querySelector('.sidebar');
-  const barsIcon = document.querySelector('.fa-bars');
-  const menuToggle = document.querySelector('#menu-toggle');
-
-  function toggleSidebar() {
-    if (sidebar) sidebar.classList.toggle('active');
-  }
-
-  barsIcon?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    toggleSidebar();
-  });
-
-  menuToggle?.addEventListener('click', toggleSidebar);
-
-  document.addEventListener("click", (e) => {
-    const isClickInsideSidebar = sidebar?.contains(e.target);
-    const isClickOnToggle = barsIcon?.contains(e.target) || menuToggle?.contains(e.target);
-    if (!isClickInsideSidebar && !isClickOnToggle) {
-      sidebar?.classList.remove("active");
-    }
-  });
-
-  const genresBtn = document.querySelector('.dropdown-btn');
-  const genresDropdown = document.querySelector('.dropdown-container');
-  const genresArrow = document.querySelector('.dropdown-btn .dropdown-arrow');
-
-  if (genresBtn && genresDropdown && genresArrow) {
-    genresBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      genresDropdown.classList.toggle('active');
-      genresArrow.classList.toggle('rotate');
-      if (sidebar && !sidebar.classList.contains('active')) {
-        sidebar.classList.add('active');
-      }
-    });
-  }
-
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('.sidebar') && !e.target.closest('.fa-bars')) {
-      genresDropdown?.classList.remove('active');
-      genresArrow?.classList.remove('rotate');
-    }
-  });
-
-  const avatar = document.querySelector('.avatar');
-  const avatarDropdown = document.querySelector('.dropdown-menu.setting');
-
-  if (avatar && avatarDropdown) {
-    avatar.addEventListener('click', (e) => {
-      e.stopPropagation();
-      avatarDropdown.classList.toggle('active');
-    });
-
-    document.addEventListener('click', (e) => {
-      if (!avatar.contains(e.target)) {
-        avatarDropdown.classList.remove('active');
-      }
-    });
-  }
-
-});
-
-// ============================
-// 🔑 BLOCO 4: Envio de link de redefinição de senha
-// ============================
-document.addEventListener('DOMContentLoaded', () => {
   const btn = document.getElementById('btn-enviar-link');
   const emailInput = document.getElementById('email-redefinicao');
   const mensagem = document.getElementById('mensagem-redefinicao');
@@ -192,4 +120,55 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  const mfaInput = document.getElementById("mfa_code");
+  const verificarBtn = document.getElementById("verificar-mfa");
+
+  async function enviarCodigoMFA() {
+    const codigo = mfaInput?.value.trim();
+    const email = document.getElementById("email")?.value;
+    const senha = document.getElementById("senha")?.value;
+
+    if (!codigo || !email || !senha) {
+      alert("Preencha e-mail, senha e o código do MFA.");
+      return;
+    }
+
+    const dados = new FormData();
+    dados.append("email", email);
+    dados.append("senha", senha);
+    dados.append("mfa_code", codigo);
+    dados.append("acao", "verificar_mfa");
+
+    try {
+      const resposta = await fetch("/php/login_refeito.php", {
+        method: "POST",
+        body: dados,
+        credentials: "include"
+      });
+
+      const resultado = await resposta.json();
+
+      if (resultado.success) {
+        localStorage.setItem("usuario_id", resultado.usuario_id);
+        localStorage.setItem("usuario_email", resultado.usuario_email || email);
+        window.location.replace(resultado.redirect || "/perfil.html");
+      } else {
+        alert(resultado.message || "Código MFA inválido.");
+      }
+    } catch (err) {
+      console.error("❌ Erro na verificação do MFA:", err);
+      alert("Erro ao verificar o código. Tente novamente.");
+    }
+  }
+
+  if (verificarBtn) {
+    verificarBtn.addEventListener("click", enviarCodigoMFA);
+  }
+
+  mfaInput?.addEventListener("keyup", async (e) => {
+    if (e.key === "Enter") {
+      await enviarCodigoMFA();
+    }
+  });
 });

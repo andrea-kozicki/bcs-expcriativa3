@@ -1,66 +1,50 @@
-async function verificarSessaoOuRedirecionar() {
-  try {
-    const resposta = await fetch("/php/session_status.php", {
-      method: "GET",
-      credentials: "include"
-    });
+function verificarSessaoOuRedirecionar() {
+  const caminho = window.location.pathname;
+  const paginaPrivada = caminho.includes("perfil") || caminho.includes("checkout");
 
-    const dados = await resposta.json();
+  function atualizarMenuUsuario(data) {
+    const menu = document.getElementById("menu-usuario");
+    if (!menu) return;
 
-    if (!dados.logged_in) {
-      localStorage.removeItem("usuario_id");
-      localStorage.removeItem("usuario_email");
-      const paginasProtegidas = ["checkout", "perfil", "pedido-concluido"];
-      const atual = window.location.pathname;
-      if (paginasProtegidas.some(p => atual.includes(p))) {
-        alert("Você precisa estar logado para acessar esta página.");
-        window.location.href = "/login2.html";
-        return;
-      }
+    menu.innerHTML = "";
+
+    if (data.logged_in) {
+      localStorage.setItem("usuario_id", data.usuario_id);
+      localStorage.setItem("usuario_email", data.email);
+
+      menu.innerHTML = `
+        <div class="item"><span class="fa-solid fa-user"></span><a href="perfil.html">${data.email}</a></div>
+        <div class="item" id="menuSair"><span class="fa-solid fa-door-open"></span><a href="#" id="logoutBtn">Sair</a></div>
+      `;
+    } else {
+      localStorage.clear();
+      menu.innerHTML = `
+        <div class="item"><span class="fa-solid fa-door-open"></span><a href="login2.html">Login</a></div>
+      `;
     }
-
-    return dados;
-  } catch (erro) {
-    console.error("Erro ao verificar sessão:", erro);
-    window.location.href = "/login2.html";
   }
+
+  function verificarComServidor() {
+    fetch("/php/session_status.php", { credentials: "include" })
+      .then(res => res.json())
+      .then(data => {
+        atualizarMenuUsuario(data);
+
+        if (!data.logged_in && paginaPrivada) {
+          alert("Sua sessão expirou. Faça login novamente.");
+          window.location.href = "login2.html";
+        }
+      })
+      .catch(() => {
+        console.error("Erro ao verificar a sessão com o servidor.");
+      });
+  }
+
+  verificarComServidor();
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const sessao = await verificarSessaoOuRedirecionar();
-  if (!sessao) return;
-
-  // Preenche campos de e-mail ou saudação
-  const emailInput = document.getElementById("email");
-  if (emailInput && sessao.email) {
-    emailInput.value = sessao.email;
-  }
-
-  const saudacao = document.querySelector(".top-list span");
-  if (saudacao && sessao.email) {
-    saudacao.textContent = `Olá, ${sessao.email}!`;
-  }
-
-  // Armazena usuario_id e email localmente
-  if (sessao.usuario_id) {
-    localStorage.setItem("usuario_id", sessao.usuario_id);
-  }
-  if (sessao.email) {
-    localStorage.setItem("usuario_email", sessao.email);
-  }
-
-  // Menu adaptativo
-  const menuLogin = document.getElementById("menuLogin");
-  const menuPerfil = document.getElementById("menuPerfil");
-  const menuSair = document.getElementById("menuSair");
-
-  if (sessao.logged_in) {
-    menuLogin?.classList.add("hidden");
-    menuPerfil?.classList.remove("hidden");
-    menuSair?.classList.remove("hidden");
-  } else {
-    menuLogin?.classList.remove("hidden");
-    menuPerfil?.classList.add("hidden");
-    menuSair?.classList.add("hidden");
-  }
-});
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", verificarSessaoOuRedirecionar);
+} else {
+  verificarSessaoOuRedirecionar();
+}

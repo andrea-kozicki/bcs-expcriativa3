@@ -1,0 +1,14 @@
+/* === cadastrocss.css === */
+ * Estilos para a página de Cadastro - Livraria Estrela
+ * 5. Formulário de Cadastro
+    z-index: 1000;
+    z-index: 1000;
+  /* 5. FORMULÁRIO DE CADASTRO */
+.mensagem-erro {
+  /* Popup de mensagem */
+    z-index: 1000;
+    z-index: 2; /* Garante que fique acima do input */
+    order: 2; /* Garante que a mensagem fica abaixo do medidor */
+  /* Espaço para a mensagem de diretrizes */
+      z-index: 900;
+  z-index: 999;
