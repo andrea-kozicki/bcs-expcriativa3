@@ -49,8 +49,7 @@
                             href="login2.html">Login</a></div>
                     <div class="item" id="menuPerfil"><span class="fa-solid fa-user"></span><a
                             href="perfil.html">Perfil</a></div>
-                    <div class="item" id="menuSair"><span class="fa-solid fa-door-open"></span><a href="#"
-                            id="logoutBtn">Sair</a></div>
+                    <div class="item" id="menuSair"><span class="fa-solid fa-door-open"></span><a href="javascript:void(0);" id="logoutBtn">Sair</a></div>
                 </div>
             </div>
         </div>
@@ -107,7 +106,7 @@
                 <!-- Seção de Endereço -->
                 <section class="perfil-section">
                     <h3 class="title-content">📍 Dados de Entrega</h3>
-                    <div class="placeholder">⚠️ Nenhum endereço cadastrado.</div>
+                    <div class="placeholder"  id="dados-endereco">⚠️ Nenhum endereço cadastrado.</div>
                 </section>
 
                 <!-- Seção MFA -->
@@ -150,13 +149,14 @@
 
         <!-- Scripts -->
 
-
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
         <script src="js/verificarsessao.js"></script>
-        <script src="js/padraoperfil.js"></script>
-        <script src="js/senhasjs.js"></script> <!-- ou senhasjs.js adaptado -->
         <script src="js/cart.js"></script>
         <script src="js/logout.js"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+        
+        <script src="js/padraoperfil.js"></script>
+        <script src="js/senhasjs.js"></script> <!-- ou senhasjs.js adaptado -->
 
 
 

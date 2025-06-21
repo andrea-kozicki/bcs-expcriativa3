@@ -1,31 +1,33 @@
 <?php
 session_start();
+require_once __DIR__ . '/config.php';
+
 header('Content-Type: application/json');
+$pdo = getDatabaseConnection();
 
-// Verifica se o usuário está logado
-if (!isset($_SESSION['usuario_email'])) {
-    echo json_encode(["erro" => "Usuário não autenticado."]);
+$usuario_id = $_SESSION['usuario_id'] ?? $_POST['usuario_id'] ?? null;
+
+if (!$usuario_id) {
+    echo json_encode(["erro" => "Usuário não identificado."]);
     exit;
 }
 
-$email = $_SESSION['usuario_email'];
-$arquivo = "../dados/pedidos.json";
+$sql = "
+    SELECT 
+        p.codigo_pedido,
+        p.data_pedido,
+        COALESCE(SUM(c.quantidade * c.preco_unitario), 0) AS total,
+        MAX(pg.status_pagamento) AS status_pagamento
+    FROM pedidos p
+    LEFT JOIN compras c ON c.codigo_pedido = p.codigo_pedido
+    LEFT JOIN pagamentos pg ON pg.compra_id = c.id
+    WHERE p.usuario_id = ?
+    GROUP BY p.codigo_pedido, p.data_pedido
+    ORDER BY p.data_pedido DESC
+";
 
-if (!file_exists($arquivo)) {
-    echo json_encode([]);
-    exit;
-}
+$stmt = $pdo->prepare($sql);
+$stmt->execute([$usuario_id]);
+$pedidos = $stmt->fetchAll();
 
-// Carrega todos os pedidos
-$pedidos = json_decode(file_get_contents($arquivo), true);
-if (!is_array($pedidos)) {
-    echo json_encode([]);
-    exit;
-}
-
-// Filtra pedidos do usuário logado
-$meus_pedidos = array_filter($pedidos, function($pedido) use ($email) {
-    return isset($pedido['email']) && $pedido['email'] === $email;
-});
-
-echo json_encode(array_values($meus_pedidos));
+echo json_encode($pedidos);

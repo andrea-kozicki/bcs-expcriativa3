@@ -122,3 +122,22 @@
   .hidden {
   display: none !important;
 }
+
+/*carrinho*/
+.cart-menu {
+  display: none;
+  position: absolute;
+  right: 10px;
+  top: 50px;
+  width: 220px;
+  background-color: white;
+  color: black;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 10px;
+  z-index: 999;
+}
+
+.cart-menu.show {
+  display: block !important;
+}

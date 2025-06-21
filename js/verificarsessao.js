@@ -8,7 +8,8 @@ async function verificarSessaoOuRedirecionar() {
     const dados = await resposta.json();
 
     if (!dados.logged_in) {
-      // Redireciona se for página protegida
+      localStorage.removeItem("usuario_id");
+      localStorage.removeItem("usuario_email");
       const paginasProtegidas = ["checkout", "perfil", "pedido-concluido"];
       const atual = window.location.pathname;
       if (paginasProtegidas.some(p => atual.includes(p))) {
@@ -40,9 +41,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     saudacao.textContent = `Olá, ${sessao.email}!`;
   }
 
-  // Armazena usuario_id localmente se ainda não estiver salvo
-  if (sessao.usuario_id && !localStorage.getItem("usuario_id")) {
+  // Armazena usuario_id e email localmente
+  if (sessao.usuario_id) {
     localStorage.setItem("usuario_id", sessao.usuario_id);
+  }
+  if (sessao.email) {
+    localStorage.setItem("usuario_email", sessao.email);
   }
 
   // Menu adaptativo

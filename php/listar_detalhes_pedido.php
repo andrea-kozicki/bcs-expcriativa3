@@ -1,44 +1,31 @@
 <?php
-session_start();
+require_once __DIR__ . '/config.php';
+
 header('Content-Type: application/json');
+$pdo = getDatabaseConnection();
 
-// Verifica se o usuário está logado
-if (!isset($_SESSION['usuario_email'])) {
-    echo json_encode(["erro" => "Usuário não autenticado."]);
-    exit;
-}
-
-$email = $_SESSION['usuario_email'];
-$codigo = $_GET['codigo'] ?? null;
+$codigo = $_GET['codigo'] ?? '';
 
 if (!$codigo) {
     echo json_encode(["erro" => "Código do pedido não fornecido."]);
     exit;
 }
 
-$caminho = "../dados/pedidos.json";
+$stmt = $pdo->prepare("
+    SELECT l.titulo, c.quantidade, c.preco_unitario
+    FROM compras c
+    JOIN livros l ON c.livro_id = l.id
+    WHERE c.codigo_pedido = ?
+");
+$stmt->execute([$codigo]);
+$dados = $stmt->fetchAll();
 
-if (!file_exists($caminho)) {
-    echo json_encode(["erro" => "Arquivo de pedidos não encontrado."]);
-    exit;
-}
+$itens = array_map(function ($item) {
+    return [
+        "titulo" => $item["titulo"],
+        "quantidade" => (int)$item["quantidade"],
+        "preco" => "R$ " . number_format($item["preco_unitario"], 2, ",", ".")
+    ];
+}, $dados);
 
-$dados = json_decode(file_get_contents($caminho), true);
-if (!is_array($dados)) {
-    echo json_encode(["erro" => "Erro ao processar dados do pedido."]);
-    exit;
-}
-
-// Procura o pedido correspondente
-foreach ($dados as $pedido) {
-    if (
-        isset($pedido['codigo_pedido'], $pedido['email'], $pedido['itens']) &&
-        $pedido['codigo_pedido'] === $codigo &&
-        $pedido['email'] === $email
-    ) {
-        echo json_encode(["itens" => $pedido['itens']]);
-        exit;
-    }
-}
-
-echo json_encode(["erro" => "Pedido não encontrado."]);
+echo json_encode(["itens" => $itens]);

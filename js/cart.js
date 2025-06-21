@@ -1,78 +1,55 @@
-function esperarUsuarioId(callback) {
-  const tentar = () => {
-    const id = localStorage.getItem("usuario_id");
-    if (id) {
-      callback(id);
-    } else {
-      setTimeout(tentar, 100);
-    }
-  };
-  tentar();
-}
-
 document.addEventListener("DOMContentLoaded", () => {
-  esperarUsuarioId((usuario_id) => {
-    const carrinhoIcon = document.querySelector(".cart-icon");
-    const carrinhoDropdown = document.getElementById("cartMenu");
-    const contadorCarrinho = document.querySelector(".cart-count");
-    const limparCarrinhoBtn = document.getElementById("limparCarrinho");
-    const itensCarrinhoList = document.getElementById("cartItems");
+  const usuario_id = localStorage.getItem("usuario_id");
+  if (!usuario_id) {
+    console.log("Usuário não logado. Carrinho desativado.");
+    return;
+  }
 
-    function atualizarContadorCarrinho() {
-      const itens = JSON.parse(localStorage.getItem(`cartItems_${usuario_id}`)) || [];
-      document.querySelectorAll(".cart-count").forEach(el => el.textContent = itens.length);
-    }
+  console.log("cart.js carregado, usuario_id:", usuario_id);
 
-    function renderizarItensCarrinho() {
-      if (!itensCarrinhoList) return;
+  const cartIcon = document.querySelector(".cart-icon");
+  const cartMenu = document.getElementById("cartMenu");
+  const cartItemsList = document.getElementById("cartItems");
+  const cartCount = document.querySelector(".cart-count");
 
-      const itens = JSON.parse(localStorage.getItem(`cartItems_${usuario_id}`)) || [];
-      itensCarrinhoList.innerHTML = "";
+  if (!cartIcon || !cartMenu || !cartItemsList || !cartCount) {
+    console.warn("Elementos do carrinho não encontrados.");
+    return;
+  }
 
-      if (itens.length === 0) {
-        const vazio = document.createElement("li");
-        vazio.textContent = "Seu carrinho está vazio";
-        itensCarrinhoList.appendChild(vazio);
-      } else {
-        itens.forEach((item, index) => {
-          const li = document.createElement("li");
-          li.textContent = `${item.titulo || item.nome || "Produto"} - R$ ${item.preco}`;
-
-          const removerBtn = document.createElement("button");
-          removerBtn.textContent = "Remover";
-          removerBtn.addEventListener("click", () => {
-            removerItemCarrinho(index);
-          });
-
-          li.appendChild(removerBtn);
-          itensCarrinhoList.appendChild(li);
-        });
-      }
-    }
-
-    function removerItemCarrinho(index) {
-      let itens = JSON.parse(localStorage.getItem(`cartItems_${usuario_id}`)) || [];
-      itens.splice(index, 1);
-      localStorage.setItem(`cartItems_${usuario_id}`, JSON.stringify(itens));
-      atualizarContadorCarrinho();
-      renderizarItensCarrinho();
-    }
-
-    if (limparCarrinhoBtn) {
-      limparCarrinhoBtn.addEventListener("click", () => {
-        localStorage.removeItem(`cartItems_${usuario_id}`);
-        atualizarContadorCarrinho();
-        renderizarItensCarrinho();
-      });
-    }
-
-    if (carrinhoIcon && carrinhoDropdown) {
-      carrinhoIcon.addEventListener("click", () => {
-        carrinhoDropdown.classList.toggle("show");
-        renderizarItensCarrinho();
-      });
-    }
-
-    atualizarContadorCarrinho();
+  cartIcon.addEventListener("click", () => {
+    cartMenu.classList.toggle("hidden");
   });
+
+  function atualizarCarrinho() {
+    const cartData = JSON.parse(localStorage.getItem(`cartItems_${usuario_id}`) || "[]");
+    cartItemsList.innerHTML = "";
+    cartCount.textContent = cartData.length;
+
+    cartData.forEach((item, index) => {
+      const li = document.createElement("li");
+      li.innerHTML = `
+        ${item.titulo} - R$ ${item.preco}
+        <button onclick="removerItem(${index})">x</button>
+      `;
+      cartItemsList.appendChild(li);
+    });
+  }
+
+  window.removerItem = function (index) {
+    const cartData = JSON.parse(localStorage.getItem(`cartItems_${usuario_id}`) || "[]");
+    cartData.splice(index, 1);
+    localStorage.setItem(`cartItems_${usuario_id}`, JSON.stringify(cartData));
+    atualizarCarrinho();
+  };
+
+  const limparBtn = document.getElementById("limparCarrinho");
+  if (limparBtn) {
+    limparBtn.addEventListener("click", () => {
+      localStorage.removeItem(`cartItems_${usuario_id}`);
+      atualizarCarrinho();
+    });
+  }
+
+  atualizarCarrinho();
 });

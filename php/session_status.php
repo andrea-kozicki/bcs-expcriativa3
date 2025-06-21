@@ -9,6 +9,7 @@ ini_set('session.cookie_secure', 0); // Mude para 1 se usar HTTPS
 
 // INICIALIZAÇÃO
 session_start();
+
 header('Content-Type: application/json');
 require_once 'config.php';
 

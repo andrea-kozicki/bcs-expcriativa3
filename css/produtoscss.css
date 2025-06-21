@@ -62,6 +62,7 @@ body.noscroll {
   padding: 2px 6px;
   font-size: 0.75rem;
 }
+
 .cart-menu {
   display: none;
   position: absolute;
@@ -75,8 +76,9 @@ body.noscroll {
   padding: 10px;
   z-index: 999;
 }
+
 .cart-menu.show {
-  display: block;
+  display: block !important;
 }
 
 .cart-items-list {
