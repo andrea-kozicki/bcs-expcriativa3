@@ -959,8 +959,9 @@ select.input-adm:focus {
 /* fim carrossel página index.html */
 
 /* classes para pagina redefinesenha.html e novasenha.html */
-.hidden {
-    display: none;
+  /*menu */
+  .hidden {
+  display: none !important;
 }
 
 .success { 

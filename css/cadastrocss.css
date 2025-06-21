@@ -845,3 +845,8 @@ input[readonly] {
   a, button, input, .sidebar-nav, .dropdown-btn {
     transition: all 0.3s ease;
   }
+
+  /*menu */
+  .hidden {
+  display: none !important;
+}

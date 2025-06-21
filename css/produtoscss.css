@@ -801,3 +801,8 @@ body.noscroll {
 .btn-success:hover {
   background-color: #1d4ed8;
 }
+
+  /*menu */
+  .hidden {
+  display: none !important;
+}

@@ -44,15 +44,12 @@
             <div class="avatar">
                 <img src="imagens/user-pic.jpg" alt="usuario" width="40">
                 <div class="dropdown-menu setting">
-                    <div class="item">
-                        <span class="fa-solid fa-door-open"></span> <a href="login2.html">Login</a>
-                    </div>
-                    <div class="item">
-                        <span class="fa-solid fa-user"></span><a href="perfil.html">Perfil</a>
-                    </div>
-                    <div class="item">
-                        <span class="fa-solid fa-door-open"></span><a href="index.html">Sair</a>
-                    </div>
+                    <div class="item" id="menuLogin"><span class="fa-solid fa-door-open"></span> <a
+                            href="login2.html">Login</a></div>
+                    <div class="item" id="menuPerfil"><span class="fa-solid fa-user"></span><a
+                            href="perfil.html">Perfil</a></div>
+                    <div class="item" id="menuSair"><span class="fa-solid fa-door-open"></span><a href="#"
+                            id="logoutBtn">Sair</a></div>
                 </div>
             </div>
         </div>
@@ -64,7 +61,8 @@
             <!-- Itens da sidebar -->
             <a href="index.html" class="sidebar-nav"> <i class="icon fa-solid fa-house"></i><span>Inicio</span></a>
 
-            <a href="maisvendidos.html" class="sidebar-nav"><i class="icon fa-solid fa-medal"></i><span>Mais vendidos</span></a>
+            <a href="maisvendidos.html" class="sidebar-nav"><i class="icon fa-solid fa-medal"></i><span>Mais
+                    vendidos</span></a>
 
             <button class="dropdown-btn">
                 <i class="icon fa-solid fa-book"></i>
@@ -73,15 +71,21 @@
             </button>
 
             <div class="dropdown-container">
-                <a href="romance.html" class="sidebar-nav"><i class="icon fa-solid fa-heart"></i><span>Romance</span></a>
-                <a href="biografias.html" class="sidebar-nav"><i class="icon fa-solid fa-pen-nib"></i><span>Biografias</span></a>
-                <a href="poesias.html" class="sidebar-nav"><i class="icon fa-solid fa-feather"></i><span>Poesias</span></a>
-                <a href="contos.html" class="sidebar-nav"><i class="icon fa-solid fa-comment"></i><span>Contos</span></a>
+                <a href="romance.html" class="sidebar-nav"><i
+                        class="icon fa-solid fa-heart"></i><span>Romance</span></a>
+                <a href="biografias.html" class="sidebar-nav"><i
+                        class="icon fa-solid fa-pen-nib"></i><span>Biografias</span></a>
+                <a href="poesias.html" class="sidebar-nav"><i
+                        class="icon fa-solid fa-feather"></i><span>Poesias</span></a>
+                <a href="contos.html" class="sidebar-nav"><i
+                        class="icon fa-solid fa-comment"></i><span>Contos</span></a>
             </div>
 
-            <a href="contato.html" class="sidebar-nav active"> <i class="icon fa-solid fa-envelope"></i><span>Contato</span></a>
+            <a href="contato.html" class="sidebar-nav active"> <i
+                    class="icon fa-solid fa-envelope"></i><span>Contato</span></a>
 
-            <a href="sobre.html" class="sidebar-nav"> <i class="icon fa-solid fa-eye"></i><span>Sobre a livraria</span></a>
+            <a href="sobre.html" class="sidebar-nav"> <i class="icon fa-solid fa-eye"></i><span>Sobre a
+                    livraria</span></a>
         </div>
 
         <!-- Fim da Sidebar -->
@@ -91,24 +95,27 @@
         <div class="wrapper">
             <div class="row">
                 <div class="top-list">
-                    <span class="title-content">Aqui é o espaço para você entrar em contato com a gente. É só preencher o formulário :)</span>
+                    <span class="title-content">Aqui é o espaço para você entrar em contato com a gente. É só preencher
+                        o formulário :)</span>
                 </div>
-                
+
                 <div class="content-adm">
                     <form class="form-adm" id="form-contato" method="post" action="php/enviar_contato.php">
                         <div class="row-input">
                             <div class="column">
                                 <label class="title-input">Nome</label>
-                                <input type="text" name="nome" id="nome" class="input-adm" placeholder="Nome completo" required>
+                                <input type="text" name="nome" id="nome" class="input-adm" placeholder="Nome completo"
+                                    required>
                             </div>
                         </div>
 
                         <div class="row-input">
                             <div class="column">
                                 <label class="title-input">Email</label>
-                                <input type="email" name="email" id="email" class="input-adm" placeholder="Melhor email" required>
+                                <input type="email" name="email" id="email" class="input-adm" placeholder="Melhor email"
+                                    required>
                             </div>
-                        </div>    
+                        </div>
 
                         <div class="row-input">
                             <div class="column">
@@ -121,18 +128,19 @@
                                 </select>
                             </div>
                         </div>
-                        
+
                         <div class="row-input">
                             <div class="column">
                                 <label class="title-input">Sua mensagem</label>
-                                <textarea name="mensagem" id="mensagem" class="input-adm" placeholder="Escreva sua mensagem para nós" required></textarea>
+                                <textarea name="mensagem" id="mensagem" class="input-adm"
+                                    placeholder="Escreva sua mensagem para nós" required></textarea>
                             </div>
                         </div>
                         <button type="submit" class="btn-success">Enviar</button>
                     </form>
                 </div>
-                
-                
+
+
             </div>
         </div>
         <!-- Fim do conteudo do administrativo -->
@@ -141,8 +149,9 @@
 
     <script src="js/contatojs.js"></script>
     <script src="js/cart.js"></script>
+    <script src="js/logout.js"></script>
 
-    
+
 
 </body>
 

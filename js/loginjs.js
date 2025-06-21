@@ -65,6 +65,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 .then(res => res.json())
                 .then(data => {
                   if (data.logged_in) {
+                    if (result.usuario_id) {
+                      localStorage.setItem("usuario_id", result.usuario_id);
+                    }
                     const redirectUrl = result.redirect || "/perfil.html";
                     window.location.replace(redirectUrl);
                   } else {

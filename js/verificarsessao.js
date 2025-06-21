@@ -1,34 +1,62 @@
 async function verificarSessaoOuRedirecionar() {
-    try {
-        const resposta = await fetch('/php/session_status.php', {
-            method: 'GET',
-            credentials: 'include'  // 🔴 ESSENCIAL para enviar os cookies
-        });
+  try {
+    const resposta = await fetch("/php/session_status.php", {
+      method: "GET",
+      credentials: "include"
+    });
 
-        const dados = await resposta.json();
+    const dados = await resposta.json();
 
-        if (!dados.logged_in) {
-            window.location.href = '/login2.html';
-        }
-
-        return dados;
-    } catch (erro) {
-        console.error('Erro ao verificar sessão:', erro);
-        window.location.href = '/login2.html';
+    if (!dados.logged_in) {
+      // Redireciona se for página protegida
+      const paginasProtegidas = ["checkout", "perfil", "pedido-concluido"];
+      const atual = window.location.pathname;
+      if (paginasProtegidas.some(p => atual.includes(p))) {
+        alert("Você precisa estar logado para acessar esta página.");
+        window.location.href = "/login2.html";
+        return;
+      }
     }
+
+    return dados;
+  } catch (erro) {
+    console.error("Erro ao verificar sessão:", erro);
+    window.location.href = "/login2.html";
+  }
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-    const sessao = await verificarSessaoOuRedirecionar();
+document.addEventListener("DOMContentLoaded", async () => {
+  const sessao = await verificarSessaoOuRedirecionar();
+  if (!sessao) return;
 
-    const emailInput = document.getElementById('email');
-    if (emailInput && sessao.email) {
-        emailInput.value = sessao.email;
-    }
+  // Preenche campos de e-mail ou saudação
+  const emailInput = document.getElementById("email");
+  if (emailInput && sessao.email) {
+    emailInput.value = sessao.email;
+  }
 
-    const saudacao = document.querySelector('.top-list span');
-    if (saudacao && sessao.email) {
-        saudacao.textContent = `Olá, ${sessao.email}!`;
-    }
+  const saudacao = document.querySelector(".top-list span");
+  if (saudacao && sessao.email) {
+    saudacao.textContent = `Olá, ${sessao.email}!`;
+  }
+
+  // Armazena usuario_id localmente se ainda não estiver salvo
+  if (sessao.usuario_id && !localStorage.getItem("usuario_id")) {
+    localStorage.setItem("usuario_id", sessao.usuario_id);
+  }
+
+  // Menu adaptativo
+  const menuLogin = document.getElementById("menuLogin");
+  const menuPerfil = document.getElementById("menuPerfil");
+  const menuSair = document.getElementById("menuSair");
+
+  if (sessao.logged_in) {
+    menuLogin?.classList.add("hidden");
+    menuPerfil?.classList.remove("hidden");
+    menuSair?.classList.remove("hidden");
+  } else {
+    menuLogin?.classList.remove("hidden");
+    menuPerfil?.classList.add("hidden");
+    menuSair?.classList.add("hidden");
+  }
 });
-

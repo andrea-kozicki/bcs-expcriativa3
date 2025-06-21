@@ -118,3 +118,7 @@
     background-color: #cc5200;
 }
 
+  /*menu */
+  .hidden {
+  display: none !important;
+}

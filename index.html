@@ -1,133 +1,140 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Livraria</title>
     <link rel="shortcut icon" href="imagens/estrela.ico" type="image/x-icon">
     <link rel="stylesheet" href="css/indexsitecss.css">
-    
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
-    
-<nav class="navbar">
-    <div class="navbar-content">
-        <div id="menu-toggle" class="bars">
-            <i class="fa-solid fa-bars fa-xl"></i>
-        </div>
-        <img class="logo" src="imagens/estrela.ico" width="40"/>
-    </div>
-    <div class="navbar-content">
-        <div class="cart-container">
-            <div class="cart-icon">
-                <i class="fa-solid fa-cart-shopping"></i>
-                <span class="cart-count">0</span>
+
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div id="menu-toggle" class="bars">
+                <i class="fa-solid fa-bars fa-xl"></i>
             </div>
-        
-            <div class="cart-menu hidden" id="cartMenu">
-                <p>Itens no carrinho:</p>
-                <ul id="cartItems" class="cart-items-list"></ul>
-                <button id="limparCarrinho" class="btn-danger">Limpar Carrinho</button>
-                <a href="checkout.html" class="btn-success">Ir para o Checkout</a>
+            <img class="logo" src="imagens/estrela.ico" width="40" />
+        </div>
+        <div class="navbar-content">
+            <div class="cart-container">
+                <div class="cart-icon">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span class="cart-count">0</span>
+                </div>
+
+                <div class="cart-menu hidden" id="cartMenu">
+                    <p>Itens no carrinho:</p>
+                    <ul id="cartItems" class="cart-items-list"></ul>
+                    <button id="limparCarrinho" class="btn-danger">Limpar Carrinho</button>
+                    <a href="checkout.html" class="btn-success">Ir para o Checkout</a>
+                </div>
+            </div>
+
+            <div class="avatar">
+                <img src="imagens/user-pic.jpg" alt="usuario" width="40" />
+                <div class="dropdown-menu setting">
+                    <div class="item" id="menuLogin"><span class="fa-solid fa-door-open"></span> <a
+                            href="login2.html">Login</a></div>
+                    <div class="item" id="menuPerfil"><span class="fa-solid fa-user"></span><a
+                            href="perfil.html">Perfil</a></div>
+                    <div class="item" id="menuSair"><span class="fa-solid fa-door-open"></span><a href="#"
+                            id="logoutBtn">Sair</a></div>
+                </div>
             </div>
         </div>
+    </nav>
 
-        <div class="avatar">
-            <img src="imagens/user-pic.jpg" alt="usuario" width="40" />
-            <div class="dropdown-menu setting">
-                <div class="item"><span class="fa-solid fa-door-open"></span> <a href="login2.html">Login</a></div>
-                <div class="item"><span class="fa-solid fa-user"></span><a href="perfil.html">Perfil</a></div>
-                <div class="item"><span class="fa-solid fa-door-open"></span><a href="index.html">Sair</a></div>
+    <!-- CONTAINER FLEX PRINCIPAL -->
+    <div class="main-container">
+
+        <!-- Sidebar (agora FORA da .content) -->
+        <div class="sidebar">
+            <a href="index.html" class="sidebar-nav">
+                <i class="icon fa-solid fa-house"></i>
+                <span>Inicio</span>
+            </a>
+
+            <a href="maisvendidos.html" class="sidebar-nav">
+                <i class="icon fa-solid fa-medal"></i>
+                <span>Mais vendidos</span>
+            </a>
+
+            <button class="dropdown-btn">
+                <i class="icon fa-solid fa-book"></i>
+                <span>Gêneros</span>
+                <i class="fa-solid fa-caret-down dropdown-arrow"></i>
+            </button>
+            <div class="dropdown-container">
+                <a href="romance.html" class="sidebar-nav">
+                    <i class="icon fa-solid fa-heart"></i>
+                    <span>Romance</span>
+                </a>
+                <a href="biografias.html" class="sidebar-nav">
+                    <i class="icon fa-solid fa-pen-nib"></i>
+                    <span>Biografias</span>
+                </a>
+                <a href="poesias.html" class="sidebar-nav">
+                    <i class="icon fa-solid fa-feather"></i>
+                    <span>Poesias</span>
+                </a>
+                <a href="contos.html" class="sidebar-nav">
+                    <i class="icon fa-solid fa-comment"></i>
+                    <span>Contos</span>
+                </a>
             </div>
-        </div>
-    </div>
-</nav>
 
-<!-- CONTAINER FLEX PRINCIPAL -->
-<div class="main-container">
-
-    <!-- Sidebar (agora FORA da .content) -->
-    <div class="sidebar">
-        <a href="index.html" class="sidebar-nav">
-            <i class="icon fa-solid fa-house"></i>
-            <span>Inicio</span>
-        </a>
-
-        <a href="maisvendidos.html" class="sidebar-nav">
-            <i class="icon fa-solid fa-medal"></i>
-            <span>Mais vendidos</span>
-        </a>
-
-        <button class="dropdown-btn">
-            <i class="icon fa-solid fa-book"></i> 
-            <span>Gêneros</span>
-            <i class="fa-solid fa-caret-down dropdown-arrow"></i>
-        </button>
-        <div class="dropdown-container">
-            <a href="romance.html" class="sidebar-nav">
-                <i class="icon fa-solid fa-heart"></i>
-                <span>Romance</span>
+            <a href="contato.html" class="sidebar-nav">
+                <i class="icon fa-solid fa-envelope"></i>
+                <span>Contato</span>
             </a>
-            <a href="biografias.html" class="sidebar-nav">
-                <i class="icon fa-solid fa-pen-nib"></i>
-                <span>Biografias</span>
-            </a>
-            <a href="poesias.html" class="sidebar-nav">
-                <i class="icon fa-solid fa-feather"></i>
-                <span>Poesias</span>
-            </a>
-            <a href="contos.html" class="sidebar-nav">
-                <i class="icon fa-solid fa-comment"></i>
-                <span>Contos</span>
+
+            <a href="sobre.html" class="sidebar-nav">
+                <i class="icon fa-solid fa-eye"></i>
+                <span>Sobre a livraria</span>
             </a>
         </div>
 
-        <a href="contato.html" class="sidebar-nav">
-            <i class="icon fa-solid fa-envelope"></i>
-            <span>Contato</span>
-        </a>
-
-        <a href="sobre.html" class="sidebar-nav">
-            <i class="icon fa-solid fa-eye"></i>
-            <span>Sobre a livraria</span>
-        </a>
-    </div>
-
-    <!-- Conteúdo principal -->
-    <div class="content">
-        <div class="wrapper">
-            <div class="row">
-                <div class="carousel-container">
-                    <div class="carousel-slides">
-                        <div class="carousel-slide">
-                            <img src="imagens/daPoesiaHilst.png" alt="Livro Da Poesia" class="capa">
+        <!-- Conteúdo principal -->
+        <div class="content">
+            <div class="wrapper">
+                <div class="row">
+                    <div class="carousel-container">
+                        <div class="carousel-slides">
+                            <div class="carousel-slide">
+                                <img src="imagens/daPoesiaHilst.png" alt="Livro Da Poesia" class="capa">
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="imagens/LivroRessigAkaPoeta.png" alt="Livro dos Ressignificados" class="capa">
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="imagens/sylviaAriel.png" alt="Livro Ariel" class="capa">
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="imagens/todaPoesiaLeminski.png" alt="Livro Toda Poesia" class="capa">
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="imagens/aTeusPes.png" alt="Livro A teus pés" class="capa">
+                            </div>
                         </div>
-                        <div class="carousel-slide">
-                            <img src="imagens/LivroRessigAkaPoeta.png" alt="Livro dos Ressignificados" class="capa">
-                        </div>
-                        <div class="carousel-slide">
-                            <img src="imagens/sylviaAriel.png" alt="Livro Ariel" class="capa">
-                        </div>
-                        <div class="carousel-slide">
-                            <img src="imagens/todaPoesiaLeminski.png" alt="Livro Toda Poesia" class="capa">
-                        </div>
-                        <div class="carousel-slide">
-                            <img src="imagens/aTeusPes.png" alt="Livro A teus pés" class="capa">
-                        </div>
+                        <div class="carousel-controls"></div>
                     </div>
-                    <div class="carousel-controls"></div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-   
+
     <script src="js/indexsite.js"></script>
     <script src="js/cart.js"></script>
-    
+    <script src="js/logout.js"></script>
+
 
 </body>
+
 </html>

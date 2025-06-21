@@ -26,30 +26,39 @@ const livros = [
 ];
 
 const produto = livros.find(p => p.id === id);
-const botaoAdicionar = document.getElementById("addCarrinho");
 
-
-  if (produto) {
-    document.getElementById("produto-nome").textContent = produto.titulo;
-    document.getElementById("produto-preco").textContent = produto.preco;
-    document.getElementById("produto-descricao").textContent = produto.descricao;
-    document.getElementById("produto-imagem").src = produto.imagem;
-    document.getElementById("produto-imagem").alt = produto.titulo;
+  if (!produto) {
+    alert("Produto não encontrado.");
+    return;
   }
 
-  botaoAdicionar.addEventListener("click", () => {
-    let carrinho = JSON.parse(localStorage.getItem("cartItems")) || [];
+  // Preenche os dados do produto na página
+  document.getElementById("produto-nome").textContent = produto.titulo;
+  document.getElementById("produto-preco").textContent = produto.preco;
+  document.getElementById("produto-descricao").textContent = produto.descricao;
+  document.getElementById("produto-imagem").src = produto.imagem;
+  document.getElementById("produto-imagem").alt = produto.titulo;
+
+  const botaoAdicionar = document.getElementById("addCarrinho");
+  const usuario_id = localStorage.getItem("usuario_id") || "anonimo";
+
+  // Adiciona ao carrinho corretamente com cartItems_<usuario_id>
+  botaoAdicionar?.addEventListener("click", () => {
+    let carrinho = JSON.parse(localStorage.getItem(`cartItems_${usuario_id}`)) || [];
     const existente = carrinho.find(item => item.titulo === produto.titulo);
+
     if (existente) {
       existente.quantidade += 1;
     } else {
       carrinho.push({
+        id: produto.id,
         titulo: produto.titulo,
         preco: produto.preco,
         quantidade: 1
       });
     }
-    localStorage.setItem("cartItems", JSON.stringify(carrinho));
+
+    localStorage.setItem(`cartItems_${usuario_id}`, JSON.stringify(carrinho));
 
     if (typeof atualizarContadorCarrinho === "function") {
       atualizarContadorCarrinho();
@@ -58,12 +67,13 @@ const botaoAdicionar = document.getElementById("addCarrinho");
     alert("Produto adicionado ao carrinho!");
   });
 
-
+  // Botão voltar
   const botaoVoltar = document.getElementById("voltarBtn");
   botaoVoltar?.addEventListener("click", () => history.back());
 
+  // Atualiza o contador corretamente
   function atualizarContadorCarrinho() {
-    const carrinho = JSON.parse(localStorage.getItem("cartItens")) || [];
+    const carrinho = JSON.parse(localStorage.getItem(`cartItems_${usuario_id}`)) || [];
     const total = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
     const contador = document.querySelector(".cart-count");
     if (contador) {

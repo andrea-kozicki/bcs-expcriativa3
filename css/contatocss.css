@@ -523,3 +523,8 @@ textarea.input-adm {
     from { opacity: 0; }
     to { opacity: 1; }
 }
+
+  /*menu */
+  .hidden {
+  display: none !important;
+}
