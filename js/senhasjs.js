@@ -103,20 +103,23 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      try {
-        const response = await fetch('/php/enviar_token.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({ email })
-        });
+        try {
+            const payload = await encryptHybrid(JSON.stringify({ email }));
 
-        const result = await response.json();
-        mensagemToken.textContent = result.message;
-        mensagemToken.style.color = result.success ? 'green' : 'red';
+            const response = await fetch('/php/enviar_token.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
 
-      } catch (err) {
-        mensagemToken.textContent = 'Erro ao enviar o e-mail.';
-      }
+            const result = await response.json();
+            mensagemToken.textContent = result.message;
+            mensagemToken.style.color = result.success ? 'green' : 'red';
+
+        } catch (err) {
+            mensagemToken.textContent = 'Erro ao enviar o e-mail.';
+        }
+
     });
   }
 });
