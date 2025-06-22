@@ -1,4 +1,9 @@
 <?php
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use phpseclib3\Crypt\RSA;
+use phpseclib3\Crypt\PublicKeyLoader;
+
 function descriptografarEntrada() {
     $privateKeyPath = __DIR__ . '/../keys/private.pem';
 
@@ -6,16 +11,6 @@ function descriptografarEntrada() {
         error_log("🔴 Chave privada não encontrada em: $privateKeyPath");
         http_response_code(500);
         echo json_encode(["success" => false, "message" => "Arquivo da chave privada não encontrado."]);
-        exit;
-    }
-
-    $privateKeyPem = file_get_contents($privateKeyPath);
-    $privateKey = openssl_pkey_get_private($privateKeyPem);
-
-    if (!$privateKey) {
-        error_log("🔴 Erro ao carregar chave privada");
-        http_response_code(500);
-        echo json_encode(["success" => false, "message" => "Erro ao carregar a chave privada."]);
         exit;
     }
 
@@ -44,8 +39,15 @@ function descriptografarEntrada() {
         exit;
     }
 
-    if (!openssl_private_decrypt($encryptedKey, $aesKey, $privateKey, OPENSSL_PKCS1_OAEP_PADDING)) {
-        error_log("❌ Falha ao descriptografar chave AES com RSA-OAEP");
+    try {
+        $privateKeyString = file_get_contents($privateKeyPath);
+        $privateKey = PublicKeyLoader::loadPrivateKey($privateKeyString)
+            ->withPadding(RSA::ENCRYPTION_OAEP)
+            ->withHash('sha256');
+
+        $aesKey = $privateKey->decrypt($encryptedKey);
+    } catch (\Throwable $e) {
+        error_log("❌ Erro ao descriptografar com phpseclib: " . $e->getMessage());
         http_response_code(500);
         echo json_encode(["success" => false, "message" => "Erro ao descriptografar a chave AES."]);
         exit;

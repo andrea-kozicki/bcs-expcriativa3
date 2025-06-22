@@ -12,15 +12,7 @@ async function getPublicKey() {
   const res = await fetch('/php/public_key.php');
   const json = await res.json();
 
-  // Limpeza aprimorada: remove cabeçalhos e quebra linhas
-  const pem = json.publicKey
-    .replace(/-----BEGIN PUBLIC KEY-----/, '')
-    .replace(/-----END PUBLIC KEY-----/, '')
-    .replace(/\r?\n|\r/g, '') // remove \n e \r
-    .trim(); // remove espaços extras
-
-  // Decodifica base64 e transforma em ArrayBuffer
-  const der = Uint8Array.from(atob(pem), c => c.charCodeAt(0));
+  const der = Uint8Array.from(atob(json.publicKey), c => c.charCodeAt(0));
 
   return window.crypto.subtle.importKey(
     'spki',
@@ -30,11 +22,6 @@ async function getPublicKey() {
     ['encrypt']
   );
 }
-
-
-
-
-
 
 async function encryptHybrid(message) {
   console.log("🔐 Iniciando criptografia híbrida...");
@@ -74,7 +61,7 @@ async function encryptHybrid(message) {
 
   // 7. Criptografa a chave AES com RSA
   const encryptedKey = await window.crypto.subtle.encrypt(
-    { name: 'RSA-OAEP' },
+    { name: 'RSA-OAEP', hash:"SHA-256" },
     publicKey,
     rawAesKey
   );

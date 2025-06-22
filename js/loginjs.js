@@ -25,78 +25,166 @@ document.addEventListener("DOMContentLoaded", function () {
   const spinner = document.querySelector(".loading-spinner");
   const mfaSection = document.getElementById("mfa-section");
   const qrCodeDiv = document.getElementById("mfa-qr-code");
+  const mfaInput = document.getElementById("mfa_code");
+  const verificarBtn = document.getElementById("verificar-mfa");
+  const mostrarQRBtn = document.getElementById("mostrar-qr-btn");
+  const mostrarQRBox = document.getElementById("mostrar-qr-box");
+
+  if (verificarBtn) verificarBtn.style.display = "none";
 
   if (loginForm) {
     loginForm.addEventListener("submit", async function (e) {
       e.preventDefault();
-      errorMessage.textContent = "";
-      spinner.style.display = "block";
 
-      const email = document.getElementById("email")?.value;
-      const senha = document.getElementById("senha")?.value;
+      const email = document.getElementById("email")?.value.trim();
+      const senha = document.getElementById("senha")?.value.trim();
 
       if (!email || !senha) {
-        errorMessage.textContent = "Preencha e-mail e senha.";
-        spinner.style.display = "none";
+        alert("Preencha e-mail e senha.");
         return;
       }
 
       try {
-        const payload = await encryptHybrid(JSON.stringify({ email, senha, acao: "login" }));
+        const payload = await encryptHybrid(JSON.stringify({
+          email,
+          senha,
+          acao: "login"
+        }));
 
-        const response = await fetch("/php/login_refeito.php", {
+        const resposta = await fetch("/php/login_refeito.php", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-          credentials: "include"
         });
 
-        const result = await response.json();
-        spinner.style.display = "none";
+        const resultado = await resposta.json();
 
-        if (result.success) {
-          if (result.mfa_required) {
-            mfaSection.style.display = "block";
-            if (result.qr_svg) {
-              qrCodeDiv.style.display = "block";
-              qrCodeDiv.innerHTML = result.qr_svg;
-            }
+        if (resultado.mfa_required) {
+          if (mfaSection) mfaSection.style.display = "block";
+          if (verificarBtn) verificarBtn.style.display = "inline-block";
+
+          const botaoLogin = loginForm.querySelector("button[type='submit']");
+          if (botaoLogin) botaoLogin.disabled = true;
+
+          if (qrCodeDiv && resultado.qr_svg) {
+            qrCodeDiv.innerHTML = resultado.qr_svg;
+            qrCodeDiv.style.display = "block";
+            if (mostrarQRBox) mostrarQRBox.style.display = "none";
+
+            fetch("/php/mfa_qr_visto.php", {
+              method: "POST",
+              credentials: "include"
+            })
+              .then(res => res.json())
+              .then(json => {
+                if (json.success) {
+                  console.log("📌 QR marcado como exibido com sucesso.");
+                } else {
+                  console.warn("⚠️ Falha ao marcar o QR como exibido.");
+                }
+              });
+
           } else {
-            setTimeout(() => {
-              fetch('/php/session_status.php', { credentials: 'include' })
-                .then(res => res.json())
-                .then(data => {
-                  if (data.logged_in) {
-                    if (result.usuario_id) {
-                      localStorage.setItem("usuario_id", result.usuario_id);
-                    }
-                    if (result.usuario_email) {
-                      localStorage.setItem("usuario_email", result.usuario_email);
-                    }
-                    const redirectUrl = result.redirect || "/perfil.html";
-                    window.location.replace(redirectUrl);
-                  } else {
-                    alert("Erro: sessão não iniciada no servidor.");
-                    setTimeout(() => location.reload(), 500);
-                  }
-                })
-                .catch(err => {
-                  console.error("❌ Erro ao verificar sessão antes do redirect:", err);
-                });
-            }, 500);
+            qrCodeDiv.innerHTML = "<p>Use seu app autenticador para digitar o código.</p>";
+            qrCodeDiv.style.display = "block";
+            if (mostrarQRBox) mostrarQRBox.style.display = "block";
           }
+
+          return;
+        }
+
+        if (resultado.success) {
+          localStorage.setItem("usuario_id", resultado.usuario_id);
+          localStorage.setItem("usuario_email", resultado.usuario_email || email);
+          window.location.href = "/perfil.html";
         } else {
-          errorMessage.textContent = result.message || "Erro ao autenticar.";
+          alert(resultado.message || "Login falhou.");
         }
 
       } catch (err) {
-        spinner.style.display = "none";
-        errorMessage.textContent = "Erro de rede ou resposta inválida do servidor.";
-        console.error("Erro:", err);
+        console.error("❌ Erro durante o login criptografado:", err);
+        alert("Erro no login. Tente novamente.");
       }
     });
   }
 
+  if (mostrarQRBtn) {
+    mostrarQRBtn.addEventListener("click", async () => {
+      try {
+        const res = await fetch("/php/reexibir_qr.php", {
+          method: "POST",
+          credentials: "include",
+        });
+
+        const data = await res.json();
+        if (data.success && data.qr_svg) {
+          qrCodeDiv.innerHTML = data.qr_svg;
+          qrCodeDiv.style.display = "block";
+          if (mostrarQRBox) mostrarQRBox.style.display = "none";
+        } else {
+          alert(data.message || "Não foi possível exibir o QR.");
+        }
+      } catch (err) {
+        alert("Erro ao tentar exibir o QR code novamente.");
+      }
+    });
+  }
+
+  async function enviarCodigoMFA() {
+    const codigo = mfaInput?.value.trim();
+    const email = document.getElementById("email")?.value;
+    const senha = document.getElementById("senha")?.value;
+
+    if (!codigo || !email || !senha) {
+      alert("Preencha e-mail, senha e o código do MFA.");
+      return;
+    }
+
+    if (verificarBtn) verificarBtn.disabled = true;
+
+    try {
+      const payload = await encryptHybrid(JSON.stringify({
+        email,
+        senha,
+        mfa_code: codigo,
+        acao: "verificar_mfa"
+      }));
+
+      const resposta = await fetch("/php/login_refeito.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        credentials: "include"
+      });
+
+      const resultado = await resposta.json();
+
+      if (resultado.success) {
+        localStorage.setItem("usuario_id", resultado.usuario_id);
+        localStorage.setItem("usuario_email", resultado.usuario_email || email);
+        window.location.replace(resultado.redirect || "/perfil.html");
+      } else {
+        alert(resultado.message || "Código MFA inválido.");
+        if (verificarBtn) verificarBtn.disabled = false;
+      }
+    } catch (err) {
+      console.error("❌ Erro na verificação do MFA:", err);
+      alert("Erro ao verificar o código. Tente novamente.");
+      if (verificarBtn) verificarBtn.disabled = false;
+    }
+  }
+
+  if (verificarBtn) {
+    verificarBtn.addEventListener("click", enviarCodigoMFA);
+  }
+
+  mfaInput?.addEventListener("keyup", async (e) => {
+    if (e.key === "Enter") {
+      await enviarCodigoMFA();
+    }
+  });
+
+  // 🔄 Recuperação de senha
   const btn = document.getElementById('btn-enviar-link');
   const emailInput = document.getElementById('email-redefinicao');
   const mensagem = document.getElementById('mensagem-redefinicao');
@@ -113,7 +201,10 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       try {
-        const payload = await encryptHybrid(JSON.stringify({ email }));
+        const payload = await encryptHybrid(JSON.stringify({
+          email,
+          acao: "redefinir"
+        }));
 
         const response = await fetch('/php/enviar_token.php', {
           method: 'POST',
@@ -130,55 +221,4 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   }
-
-  const mfaInput = document.getElementById("mfa_code");
-  const verificarBtn = document.getElementById("verificar-mfa");
-
-  async function enviarCodigoMFA() {
-    const codigo = mfaInput?.value.trim();
-    const email = document.getElementById("email")?.value;
-    const senha = document.getElementById("senha")?.value;
-
-    if (!codigo || !email || !senha) {
-      alert("Preencha e-mail, senha e o código do MFA.");
-      return;
-    }
-
-    const dados = new FormData();
-    dados.append("email", email);
-    dados.append("senha", senha);
-    dados.append("mfa_code", codigo);
-    dados.append("acao", "verificar_mfa");
-
-    try {
-      const resposta = await fetch("/php/login_refeito.php", {
-        method: "POST",
-        body: dados,
-        credentials: "include"
-      });
-
-      const resultado = await resposta.json();
-
-      if (resultado.success) {
-        localStorage.setItem("usuario_id", resultado.usuario_id);
-        localStorage.setItem("usuario_email", resultado.usuario_email || email);
-        window.location.replace(resultado.redirect || "/perfil.html");
-      } else {
-        alert(resultado.message || "Código MFA inválido.");
-      }
-    } catch (err) {
-      console.error("❌ Erro na verificação do MFA:", err);
-      alert("Erro ao verificar o código. Tente novamente.");
-    }
-  }
-
-  if (verificarBtn) {
-    verificarBtn.addEventListener("click", enviarCodigoMFA);
-  }
-
-  mfaInput?.addEventListener("keyup", async (e) => {
-    if (e.key === "Enter") {
-      await enviarCodigoMFA();
-    }
-  });
 });

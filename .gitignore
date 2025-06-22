@@ -13,3 +13,14 @@ Html-Js-CSS.zip
 /keys/private.pem
 /keys/public.pem
 /keys/private-rsa.pem
+/info_ambiente.txt
+php/verifica_phpseclib.php
+php_bug_report_openssl_oaep_sha256.pdf
+php_bug_report_openssl_oaep_sha256.txt
+relatorio_criptografia_hibrida.pdf
+relatorio_criptografia_hibrida_com_sistema.pdf
+relatorio_criptografia_hibrida_completo_final.pdf
+relatorio_criptografia_hibrida_final.pdf
+temp-public.pem
+keys/temp_pub.pem
+ php/phpinfo.php

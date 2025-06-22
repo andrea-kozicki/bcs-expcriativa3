@@ -1,80 +1,108 @@
 <?php
-header('Content-Type: application/json');
-require_once 'config.php';
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/cripto_hibrida.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require_once __DIR__ . '/../vendor/autoload.php';
-require_once 'cripto_hibrida.php';
+error_log("📨 Início do enviar_token.php");
 
-// 🔐 Verifica se o conteúdo é JSON
-if ($_SERVER['CONTENT_TYPE'] !== 'application/json') {
-    http_response_code(415);
-    echo json_encode(['success' => false, 'message' => 'Content-Type inválido. Esperado application/json.']);
-    exit;
-}
-
-// 🔐 Descriptografa os dados
+// 🔐 Descriptografa os dados com criptografia híbrida
 try {
     $dados = descriptografarEntrada();
-} catch (Throwable $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Erro interno: ' . $e->getMessage()]);
+} catch (Exception $e) {
+    error_log("❌ Erro ao descriptografar dados: " . $e->getMessage());
+    http_response_code(400);
+    echo json_encode(["success" => false, "message" => "Erro ao processar os dados enviados."]);
     exit;
 }
 
 $email = trim($dados['email'] ?? '');
 
-if (empty($email)) {
-    echo json_encode(['success' => false, 'message' => 'Email é obrigatório.']);
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    error_log("❌ E-mail inválido: $email");
+    echo json_encode(["success" => false, "message" => "E-mail inválido."]);
     exit;
 }
 
-// 🧩 Verifica se o email existe no banco
-$stmt = $pdo->prepare("SELECT id FROM usuarios WHERE email = ?");
+$stmt = $pdo->prepare("SELECT id, ativado FROM usuarios WHERE email = ?");
 $stmt->execute([$email]);
 $usuario = $stmt->fetch();
 
 if (!$usuario) {
-    echo json_encode(['success' => false, 'message' => 'Email não encontrado.']);
+    error_log("⚠️ E-mail não encontrado: $email");
+    echo json_encode(["success" => false, "message" => "Usuário não encontrado."]);
     exit;
 }
 
-// 🔑 Gera token de redefinição
+// 🔄 Reenvia link de ativação, se necessário
+if ((int)$usuario['ativado'] !== 1) {
+    error_log("🔁 Conta não ativada — preparando novo envio...");
+    error_log("🧾 Usuário ID: " . $usuario['id'] . ", Email: $email");
+
+    $token = bin2hex(random_bytes(32));
+    $stmt = $pdo->prepare("UPDATE usuarios SET token_ativacao = ? WHERE id = ?");
+    $stmt->execute([$token, $usuario['id']]);
+
+    $urlBase = $_ENV['URL_BASE'] ?? 'http://localhost';
+    $link = "$urlBase/ativar_conta.php?token=$token";
+
+    $mail = new PHPMailer(true);
+    try {
+        $mail->isSMTP();
+        $mail->Host       = $_ENV['SMTP_HOST'];
+        $mail->SMTPAuth   = true;
+        $mail->Username   = $_ENV['SMTP_USER'];
+        $mail->Password   = $_ENV['SMTP_PASS'];
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port       = $_ENV['SMTP_PORT'];
+
+        $mail->setFrom($_ENV['SMTP_FROM'], 'Suporte');
+        $mail->addAddress($email);
+        $mail->isHTML(true);
+        $mail->Subject = 'Ative sua conta';
+        $mail->Body    = "Olá!<br><br>Ative sua conta clicando <a href='$link'>aqui</a>.<br><br>Se não foi você, ignore este e-mail.";
+
+        $mail->send();
+        error_log("📬 Link de ativação reenviado com sucesso para $email");
+        echo json_encode(["success" => false, "message" => "Conta ainda não ativada. Enviamos um novo e-mail com o link de ativação."]);
+        exit;
+    } catch (Exception $e) {
+        error_log("❌ Erro ao reenviar link de ativação: " . $mail->ErrorInfo);
+        echo json_encode(["success" => false, "message" => "Erro ao reenviar o e-mail de ativação."]);
+        exit;
+    }
+}
+
+// 📨 Se conta ativada, envia link de redefinição de senha normalmente
 $token = bin2hex(random_bytes(32));
-$expiracao = date('Y-m-d H:i:s', time() + 3600); // 1 hora
+$stmt = $pdo->prepare("UPDATE usuarios SET token_ativacao = ? WHERE id = ?");
+$stmt->execute([$token, $usuario['id']]);
 
-$pdo->prepare("DELETE FROM tokens_redefinicao WHERE email = ?")->execute([$email]);
-$pdo->prepare("INSERT INTO tokens_redefinicao (email, token, expiracao) VALUES (?, ?, ?)")
-    ->execute([$email, $token, $expiracao]);
+$urlBase = $_ENV['URL_BASE'] ?? 'http://localhost';
+$link = "$urlBase/novasenha.html?token=$token";
 
-$link = "https://bcs-expcriativa3.local/novasenha.html?token=$token&email=" . urlencode($email);
-
-// 📧 Envia o email
 $mail = new PHPMailer(true);
-
 try {
     $mail->isSMTP();
-    $mail->Host = $_ENV['SMTP_HOST'];
-    $mail->SMTPAuth = true;
-    $mail->Username = $_ENV['SMTP_USER'];
-    $mail->Password = $_ENV['SMTP_PASS'];
+    $mail->Host       = $_ENV['SMTP_HOST'];
+    $mail->SMTPAuth   = true;
+    $mail->Username   = $_ENV['SMTP_USER'];
+    $mail->Password   = $_ENV['SMTP_PASS'];
     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-    $mail->Port = $_ENV['SMTP_PORT'];
+    $mail->Port       = $_ENV['SMTP_PORT'];
 
-    $mail->setFrom($_ENV['SMTP_FROM'], "Livraria");
+    $mail->setFrom($_ENV['SMTP_FROM'], 'Suporte');
     $mail->addAddress($email);
-
     $mail->isHTML(true);
-    $mail->Subject = 'Redefinição de Senha - Livraria';
-    $mail->Body = "<p>Você solicitou uma redefinição de senha.</p>
-                   <p><a href='$link'>Clique aqui para redefinir</a></p>
-                   <p>Este link expira em 1 hora.</p>";
+    $mail->Subject = 'Redefinição de senha';
+    $mail->Body    = "Olá!<br><br>Para redefinir sua senha, <a href='$link'>clique aqui</a>.<br><br>Se não foi você, ignore este e-mail.";
 
     $mail->send();
-    echo json_encode(['success' => true, 'message' => 'E-mail enviado com instruções.']);
-
+    error_log("📨 E-mail de redefinição enviado com sucesso para $email");
+    echo json_encode(["success" => true, "message" => "E-mail enviado com instruções para redefinir a senha."]);
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => 'Erro ao enviar o e-mail: ' . $mail->ErrorInfo]);
+    error_log("❌ Erro ao enviar e-mail de redefinição: " . $mail->ErrorInfo);
+    echo json_encode(["success" => false, "message" => "Erro ao enviar o e-mail de redefinição."]);
 }

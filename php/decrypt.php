@@ -16,7 +16,7 @@ $iv = base64_decode($data['iv']);
 $encryptedMessage = base64_decode($data['encryptedMessage']);
 
 // Descriptografa a chave AES usando a chave RSA privada
-if (!openssl_private_decrypt($encryptedKey, $decryptedAesKey, $privateKey)) {
+if (!openssl_private_decrypt($encryptedKey, $decryptedAesKey, $privateKey, OPENSSL_PKCS1_OAEP_PADDING)) {
     die("Erro ao descriptografar a chave AES");
 }
 

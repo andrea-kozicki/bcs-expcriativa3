@@ -1,105 +1,81 @@
 <?php
-session_start();
+require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/cripto_hibrida.php';
+require_once __DIR__ . '/hybrid_decrypt.php';
+require_once __DIR__ . '/config.php'; // fornece getDatabaseConnection()
 
-define('MAX_SESSION_IDLE_TIME', 900);
-
-if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY']) > MAX_SESSION_IDLE_TIME) {
-    session_unset();
-    session_destroy();
-    responder(false, 'Sessão expirada ou inválida.');
-}
-$_SESSION['LAST_ACTIVITY'] = time();
+use phpseclib3\Exception\BadDecryptionException;
 
 header('Content-Type: application/json');
-require_once 'config.php';
-require_once 'cripto_hibrida.php';
 
-function responder($success, $message) {
-    echo json_encode(['success' => $success, 'message' => $message]);
-    exit;
-}
+try {
+    $input = json_decode(file_get_contents("php://input"), true);
 
-$dados = descriptografarEntrada();
+    $temToken = isset($input['encryptedKey'], $input['iv'], $input['encryptedMessage']);
 
-// ===============================
-// 🔐 1. Captura dos dados descriptografados
-// ===============================
-$email        = $dados['email'] ?? null;
-$senhaAtual   = $dados['senhaAtual'] ?? null;
-$novaSenha    = $dados['novaSenha'] ?? null;
-$token        = $dados['token'] ?? null;
+    $dados = $temToken
+        ? descriptografarEntrada()
+        : json_decode(hybrid_decrypt($input), true);
 
-// ===============================
-// 🚫 2. Validação inicial
-// ===============================
-if (empty($novaSenha)) {
-    responder(false, 'Nova senha não fornecida.');
-}
+    $novaSenha  = trim($dados['novaSenha'] ?? '');
+    $senhaAtual = $dados['senhaAtual'] ?? null;
+    $email      = $dados['email'] ?? null;
+    $token      = $dados['token'] ?? null;
 
-$pdo = getDatabaseConnection();
-
-// ===============================
-// ✅ 3. FLUXO 1: Usuário logado
-// ===============================
-if ($senhaAtual !== null) {
-
-    if (!isset($_SESSION['usuario_email'])) {
-        responder(false, 'Sessão expirada ou inválida.');
+    if (strlen($novaSenha) < 12) {
+        echo json_encode(["success" => false, "message" => "A nova senha deve ter pelo menos 12 caracteres."]);
+        exit;
     }
 
-    $email = $_SESSION['usuario_email'];
-
-    $stmt = $pdo->prepare("SELECT senha_modern_hash FROM usuarios WHERE email = ?");
-    $stmt->execute([$email]);
-    $usuario = $stmt->fetch();
-
-    if (!$usuario) {
-        responder(false, 'Usuário não encontrado.');
+    if (!$senhaAtual && (!$email || !$token)) {
+        echo json_encode(["success" => false, "message" => "Requisição inválida. Use senha atual ou token de redefinição."]);
+        exit;
     }
 
-    if (!password_verify($senhaAtual, $usuario['senha_modern_hash'])) {
-        responder(false, 'Senha atual incorreta.');
+    $pdo = getDatabaseConnection();
+
+    // === FLUXO 1: Redefinição via token (sem login) ===
+    if ($token && $email && !$senhaAtual) {
+        $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE email = ? AND token_ativacao = ?");
+        $stmt->execute([$email, $token]);
+        $usuario = $stmt->fetch();
+
+        if (!$usuario) {
+            echo json_encode(["success" => false, "message" => "Token inválido ou expirado."]);
+            exit;
+        }
+
+        // Atualiza a senha e remove o token
+        $stmt = $pdo->prepare("UPDATE usuarios SET senha_modern_hash = ?, token_ativacao = NULL WHERE id = ?");
+        $stmt->execute([password_hash($novaSenha, PASSWORD_DEFAULT), $usuario['id']]);
+
+        echo json_encode(["success" => true, "message" => "Senha redefinida com sucesso."]);
+        exit;
     }
-}
 
-// ===============================
-// ✅ 4. FLUXO 2: Redefinição via token
-// ===============================
-elseif ($token !== null) {
+    // === FLUXO 2: Alteração logado (com senha atual) ===
+    if ($senhaAtual && $email) {
+        $stmt = $pdo->prepare("SELECT id, senha_modern_hash FROM usuarios WHERE email = ?");
+        $stmt->execute([$email]);
+        $usuario = $stmt->fetch();
 
-    if (empty($email)) {
-        responder(false, 'Email obrigatório para redefinição por token.');
+        if (!$usuario || !password_verify($senhaAtual, $usuario['senha_modern_hash'])) {
+            echo json_encode(["success" => false, "message" => "Senha atual incorreta."]);
+            exit;
+        }
+
+        $stmt = $pdo->prepare("UPDATE usuarios SET senha_modern_hash = ? WHERE id = ?");
+        $stmt->execute([password_hash($novaSenha, PASSWORD_DEFAULT), $usuario['id']]);
+
+        echo json_encode(["success" => true, "message" => "Senha alterada com sucesso."]);
+        exit;
     }
 
-    $stmt = $pdo->prepare("SELECT * FROM tokens_redefinicao WHERE token = ? AND email = ? AND expiracao > NOW()");
-    $stmt->execute([$token, $email]);
-    $validacao = $stmt->fetch();
+    echo json_encode(["success" => false, "message" => "Fluxo não reconhecido."]);
 
-    if (!$validacao) {
-        responder(false, 'Token inválido ou expirado.');
-    }
-
-    $stmt = $pdo->prepare("DELETE FROM tokens_redefinicao WHERE token = ?");
-    $stmt->execute([$token]);
-}
-
-// ===============================
-// ❌ 5. Caso inválido
-// ===============================
-else {
-    responder(false, 'Requisição inválida. Use senha atual ou token de redefinição.');
-}
-
-// ===============================
-// 🔄 6. Atualiza a senha no banco
-// ===============================
-$hashNovo = password_hash($novaSenha, PASSWORD_DEFAULT);
-
-$stmt = $pdo->prepare("UPDATE usuarios SET senha_modern_hash = ? WHERE email = ?");
-$sucesso = $stmt->execute([$hashNovo, $email]);
-
-if ($sucesso) {
-    responder(true, 'Senha atualizada com sucesso.');
-} else {
-    responder(false, 'Erro ao atualizar a senha.');
+} catch (BadDecryptionException $e) {
+    echo json_encode(["success" => false, "message" => "Erro ao descriptografar os dados."]);
+} catch (Throwable $e) {
+    error_log("❌ Erro em trocar_senha.php: " . $e->getMessage());
+    echo json_encode(["success" => false, "message" => "Erro interno ao processar a solicitação."]);
 }

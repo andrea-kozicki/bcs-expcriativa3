@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const email = params.get('email');
     const token = params.get('token');
 
-    const emailInput = document.getElementById('email');
+    const emailInput = document.getElementById('email-redefinicao');
     const tokenInput = document.getElementById('token');
 
     if (email && emailInput) {
@@ -45,12 +45,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const senhaAtualEl = document.getElementById('senhaAtual');
       const tokenEl = document.getElementById('token');
-      const emailEl = document.getElementById('email');
+      const emailEl = document.getElementById('email-redefinicao');
 
-      if (senhaAtualEl) dados.senhaAtual = senhaAtualEl.value;
-      if (tokenEl && emailEl) {
-        dados.token = tokenEl.value;
-        dados.email = emailEl.value;
+      if (senhaAtualEl && senhaAtualEl.value.trim()) {
+        dados.senhaAtual = senhaAtualEl.value.trim();
+      }
+
+      if (tokenEl && tokenEl.value.trim() && emailEl && emailEl.value.trim()) {
+        dados.token = tokenEl.value.trim();
+        dados.email = emailEl.value.trim();
       }
 
       try {
@@ -103,23 +106,22 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-        try {
-            const payload = await encryptHybrid(JSON.stringify({ email }));
+      try {
+        const payload = await encryptHybrid(JSON.stringify({ email }));
 
-            const response = await fetch('/php/enviar_token.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+        const response = await fetch('/php/enviar_token.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
 
-            const result = await response.json();
-            mensagemToken.textContent = result.message;
-            mensagemToken.style.color = result.success ? 'green' : 'red';
+        const result = await response.json();
+        mensagemToken.textContent = result.message;
+        mensagemToken.style.color = result.success ? 'green' : 'red';
 
-        } catch (err) {
-            mensagemToken.textContent = 'Erro ao enviar o e-mail.';
-        }
-
+      } catch (err) {
+        mensagemToken.textContent = 'Erro ao enviar o e-mail.';
+      }
     });
   }
 });

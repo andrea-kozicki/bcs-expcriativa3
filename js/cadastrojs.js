@@ -1,8 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-
-  // ============================
-  // 🔹 BLOCO 1: ELEMENTOS & VARIÁVEIS
-  // ============================
   const form = document.getElementById("cadastroForm");
   const senhaInput = document.getElementById("senha");
   const confirmarSenhaInput = document.getElementById("confirmarSenha");
@@ -11,50 +7,75 @@ document.addEventListener('DOMContentLoaded', () => {
   const cpfInput = document.getElementById("cpf");
   const cepInput = document.getElementById("cep");
 
+  console.debug("🔍 Formulário de cadastro carregado.");
 
   const regex = {
     nome: /^[a-zA-ZÀ-ÿ\s]{5,}$/,
     email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-    senha: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{12,20}$/,
+    senha: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{12,20}$/,
     telefone: /^\(\d{2}\) \d{4,5}-\d{4}$/,
     cpf: /^\d{3}\.\d{3}\.\d{3}-\d{2}$/,
     cep: /^\d{5}-\d{3}$/,
     numero: /^[a-zA-Z0-9\s]{1,}$/,
-    data_nascimento: /^\d{2}\/\d{2}\/\d{4}$/
+    data_nascimento: /^\d{2}\/\d{2}\/\d{4}$/,
+    rua: /^.{2,}$/,
+    estado: /^[A-Z]{2}$/,
+    cidade: /^[a-zA-ZÀ-ÿ\s]{2,}$/
   };
 
   const mensagens = {
     nome: "Nome inválido (mínimo 5 letras).",
     email: "Email inválido.",
-    senha: "Senha deve ter 12-20 caracteres, uma maiúscula, uma minúscula, número e símbolo.",
+    senha: "Senha deve ter 12-20 caracteres, com maiúscula, minúscula, número e símbolo.",
     telefone: "Telefone inválido.",
     cpf: "CPF inválido.",
     cep: "CEP inválido.",
     numero: "Número obrigatório.",
-    data_nascimento: "Data inválida (formato: dd/mm/aaaa)."
+    data_nascimento: "Data inválida (formato: dd/mm/aaaa).",
+    rua: "Rua obrigatória.",
+    estado: "Estado inválido.",
+    cidade: "Cidade inválida."
   };
 
-  function validarCampo(input) {
-    const id = input.id;
+  function validarCampo(input, mostrarErro = true) {
+    const id = input.id || input.name;
     const padrao = regex[id];
     const container = input.closest(".column") || input.parentElement;
     const erro = container.querySelector(".mensagem-erro");
-    if (!padrao) return true;
+    const valor = input.value.trim();
 
-    if (!padrao.test(input.value.trim())) {
+    console.debug(`📌 Validando campo [${id}]: valor='${valor}'`);
+
+    if (!padrao) {
+      console.debug(`ℹ️ Sem regex definida para [${id}].`);
+      return true;
+    }
+
+    const valido = padrao.test(valor);
+    console.debug(`🔍 Regex para [${id}]:`, padrao, "→ Resultado:", valido);
+
+    if (!valido) {
       input.classList.add("erro");
-      if (erro) erro.textContent = mensagens[id] || "Campo inválido";
+      if (erro && mostrarErro) erro.textContent = mensagens[id] || "Campo inválido";
+      if (mostrarErro) console.warn(`❌ Campo inválido [${id}]:`, valor);
       return false;
     }
 
     input.classList.remove("erro");
     if (erro) erro.textContent = "";
+    console.debug(`✅ Campo válido [${id}]`);
     return true;
   }
 
   document.querySelectorAll("#cadastroForm input[required]").forEach((input) => {
-    input.addEventListener("blur", () => validarCampo(input));
-    input.addEventListener("input", () => validarCampo(input));
+    input.addEventListener("blur", () => validarCampo(input, true));
+    input.addEventListener("input", () => validarCampo(input, false));
+    input.addEventListener("paste", () => {
+      setTimeout(() => {
+        input.value = input.value.trim();
+        validarCampo(input, false);
+      }, 0);
+    });
   });
 
   cpfInput.addEventListener("input", (e) => {
@@ -115,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
     maiuscula: /[A-Z]/,
     minuscula: /[a-z]/,
     numero: /\d/,
-    simbolo: /[@$!%*?&]/,
+    simbolo: /[^a-zA-Z\d]/,
     tamanho: /.{12,20}/
   };
 
@@ -151,8 +172,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    console.debug("🚀 Submissão do formulário iniciada");
 
-    if (![...form.elements].every(campo => validarCampo(campo))) {
+    const camposObrigatorios = [...form.querySelectorAll("input[required]")];
+    camposObrigatorios.forEach(campo => console.debug(`📋 Campo requerido: ${campo.name || campo.id} → ${campo.value}`));
+
+    if (!camposObrigatorios.every(campo => validarCampo(campo, true))) {
       mostrarPopup(false, "Por favor, corrija os campos inválidos.");
       return;
     }
@@ -178,8 +203,11 @@ document.addEventListener('DOMContentLoaded', () => {
       cidade: form.cidade.value.trim()
     };
 
+    console.debug("📤 Dados prontos para envio:", dados);
+
     try {
       const payload = await encryptHybrid(JSON.stringify(dados));
+      console.debug("🔐 Payload criptografado:", payload);
 
       const res = await fetch(form.action, {
         method: "POST",
@@ -188,6 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       const json = await res.json();
+      console.debug("📥 Resposta do servidor:", json);
 
       if (!res.ok || !json.success) {
         mostrarPopup(false, json.message || "Erro no cadastro.");
@@ -202,6 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 3000);
 
     } catch (err) {
+      console.error("❌ Erro durante o envio do formulário:", err);
       mostrarPopup(false, "Erro na comunicação com o servidor.");
     }
   });

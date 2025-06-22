@@ -119,10 +119,22 @@
                             <!-- MFA -->
                             <div id="mfa-section" style="display: none; margin-top: 20px;">
                                 <label class="title-input">Código de verificação (MFA)</label>
-                                <input type="text" name="mfa_code" id="mfa_code" class="input-adm"
-                                    placeholder="Insira o código do app autenticador" maxlength="6">
-                                <button type="button" class="btn-success" id="verificar-mfa" style="margin-top: 10px;">Verificar Código</button>
+                                <input type="text" name="mfa_code" id="mfa_code" class="input-adm" placeholder="Insira o código do app autenticador"
+                                    maxlength="6">
+                            
+                                <!-- ✅ Botão escondido inicialmente -->
+                                <button type="button" class="btn-success" id="verificar-mfa" style="margin-top: 10px; display: none;">
+                                    Verificar Código
+                                </button>
+                            
+                                <!-- Área para exibir o QR Code, se necessário -->
+                                <div id="mfa-qr-code" style="margin-top: 15px;"></div>
 
+                                <div id="mostrar-qr-box" style="display: none; margin-top: 10px;">
+                                    <button type="button" class="btn-secundario" id="mostrar-qr-btn">
+                                        📱 Mostrar QR novamente
+                                    </button>
+                                </div>
                             </div>
 
                             <!-- QR Code -->

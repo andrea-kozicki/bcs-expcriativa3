@@ -1,20 +1,22 @@
 <?php
-ob_start();
-require_once 'config.php';
-require '../vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/cripto_hibrida.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
+use Dotenv\Dotenv;
 
-header('Content-Type: application/json');
+// Carrega variáveis do .env
+$dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+$dotenv->load();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+try {
     $dados = descriptografarEntrada();
 
-    $nome     = htmlspecialchars(trim($_POST['nome'] ?? ''), ENT_QUOTES, 'UTF-8');
-    $email    = filter_var(trim($_POST['email'] ?? ''), FILTER_SANITIZE_EMAIL);
-    $assunto  = htmlspecialchars(trim($_POST['assunto'] ?? ''), ENT_QUOTES, 'UTF-8');
-    $mensagem = htmlspecialchars(trim($_POST['mensagem'] ?? ''), ENT_QUOTES, 'UTF-8');
+    $nome     = trim($dados['nome']     ?? '');
+    $email    = trim($dados['email']    ?? '');
+    $assunto  = trim($dados['assunto']  ?? '');
+    $mensagem = trim($dados['mensagem'] ?? '');
 
     $erros = [];
 
@@ -26,64 +28,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $erros[] = "Informe um e-mail válido.";
     }
 
-    if ($assunto === 'Selecione') {
-        $erros[] = "Selecione um assunto válido.";
-    }
-
     if (strlen($mensagem) < 10) {
         $erros[] = "A mensagem deve conter no mínimo 10 caracteres.";
     }
 
     if (!empty($erros)) {
-        ob_end_clean();
-        echo json_encode(['success' => false, 'message' => implode(" ", $erros)]);
-        exit;
-    }
-
-    try {
-        $stmt = $pdo->prepare("INSERT INTO mensagens_contato (nome, email, assunto, mensagem) VALUES (:nome, :email, :assunto, :mensagem)");
-        $stmt->execute([
-            ':nome'     => $nome,
-            ':email'    => $email,
-            ':assunto'  => $assunto,
-            ':mensagem' => $mensagem
+        echo json_encode([
+            "success" => false,
+            "message" => implode(' ', $erros)
         ]);
-    } catch (PDOException $e) {
-        ob_end_clean();
-        echo json_encode(['success' => false, 'message' => 'Erro ao salvar no banco: ' . $e->getMessage()]);
         exit;
     }
 
-    // Envio via SMTP
+    // PHPMailer com variáveis do .env
     $mail = new PHPMailer(true);
-    try {
-        $mail->isSMTP();
-        $mail->Host       = $_ENV['SMTP_HOST'];
-        $mail->SMTPAuth   = true;
-        $mail->Username   = $_ENV['SMTP_USER'];
-        $mail->Password   = $_ENV['SMTP_PASS'];
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port       = $_ENV['SMTP_PORT'];
+    $mail->isSMTP();
+    $mail->Host       = $_ENV['SMTP_HOST'];
+    $mail->SMTPAuth   = true;
+    $mail->Username   = $_ENV['SMTP_USER'];
+    $mail->Password   = $_ENV['SMTP_PASS'];
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+    $mail->Port       = $_ENV['SMTP_PORT'];
 
-        $mail->setFrom($_ENV['SMTP_FROM'], 'Formulário de Contato');
-        $mail->addAddress($_ENV['SMTP_FROM']);
-        $mail->addReplyTo($email, $nome);
+    $mail->setFrom($_ENV['SMTP_FROM'], 'Contato - ExpCriativa');
+    $mail->addAddress($_ENV['SMTP_FROM'], 'Destinatário'); // pode usar outro se quiser
 
-        $mail->Subject = "Contato do site - $assunto";
-        $mail->Body    = "Nome: $nome\nEmail: $email\nAssunto: $assunto\nMensagem:\n$mensagem";
+    $mail->Subject = "[$assunto] Mensagem de $nome";
+    $mail->Body    = "Nome: $nome\nEmail: $email\nAssunto: $assunto\n\nMensagem:\n$mensagem";
+    $mail->CharSet = 'UTF-8';
 
-        $mail->send();
+    $mail->send();
 
-        ob_end_clean();
-        echo json_encode(['success' => true, 'message' => 'Mensagem enviada com sucesso!']);
-    } catch (Exception $e) {
-        ob_end_clean();
-        echo json_encode(['success' => false, 'message' => 'Mensagem registrada, mas houve erro ao enviar o e-mail: ' . $mail->ErrorInfo]);
-    }
-    exit;
+    echo json_encode([
+        "success" => true,
+        "message" => "Mensagem enviada com sucesso!"
+    ]);
 
-} else {
-    ob_end_clean();
-    echo json_encode(['success' => false, 'message' => 'Método de requisição inválido.']);
-    exit;
+} catch (Exception $e) {
+    error_log("📧 Erro PHPMailer: " . $e->getMessage());
+    echo json_encode([
+        "success" => false,
+        "message" => "Erro ao enviar o e-mail. Verifique os dados do servidor SMTP."
+    ]);
+} catch (Throwable $e) {
+    error_log("❌ Erro geral: " . $e->getMessage());
+    echo json_encode([
+        "success" => false,
+        "message" => "Erro interno no servidor."
+    ]);
 }
