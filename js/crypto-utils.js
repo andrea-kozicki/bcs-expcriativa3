@@ -12,24 +12,27 @@ async function getPublicKey() {
   const res = await fetch('/php/public_key.php');
   const json = await res.json();
 
+  // Limpeza aprimorada: remove cabeçalhos e quebra linhas
   const pem = json.publicKey
     .replace(/-----BEGIN PUBLIC KEY-----/, '')
     .replace(/-----END PUBLIC KEY-----/, '')
-    .replace(/\s+/g, '');
+    .replace(/\r?\n|\r/g, '') // remove \n e \r
+    .trim(); // remove espaços extras
 
-  const binaryDer = Uint8Array.from(atob(pem), c => c.charCodeAt(0));
+  // Decodifica base64 e transforma em ArrayBuffer
+  const der = Uint8Array.from(atob(pem), c => c.charCodeAt(0));
 
-  return crypto.subtle.importKey(
+  return window.crypto.subtle.importKey(
     'spki',
-    binaryDer.buffer,
-    {
-      name: 'RSA-OAEP',
-      hash: 'SHA-256'
-    },
+    der,
+    { name: 'RSA-OAEP', hash: 'SHA-256' },
     true,
     ['encrypt']
   );
 }
+
+
+
 
 
 
