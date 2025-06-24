@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({ usuario_id }),
+     credentials: "include"
   })
     .then((res) => res.json())
     .then((pedidos) => {
@@ -57,6 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: new URLSearchParams({ codigo_pedido: codigo }),
+            credentials: "include"
           })
             .then((res) => res.json())
             .then((itens) => {
@@ -97,6 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({ usuario_id }),
+     credentials: "include"
   })
     .then((res) => res.json())
     .then((dados) => {

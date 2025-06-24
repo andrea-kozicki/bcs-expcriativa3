@@ -212,7 +212,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await fetch(form.action, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        credentials: "include"
       });
 
       const json = await res.json();

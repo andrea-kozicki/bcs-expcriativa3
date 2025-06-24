@@ -7,14 +7,75 @@ document.addEventListener("DOMContentLoaded", function () {
   const avatar = document.querySelector(".avatar");
   const avatarDropdown = document.querySelector(".dropdown-menu.setting, .dropdown-menu");
 
+  // ====== MENU USUÁRIO: mostrar/ocultar Perfil, Sair e Login conforme status ======
+  const btnPerfil = document.querySelector('.avatar #menuPerfil');
+  const btnSair = document.querySelector('.avatar #menuSair');
+  const btnLogin = document.querySelector('.avatar #menuLogin');
+
+  function atualizarMenuAvatar() {
+    const usuario_id = localStorage.getItem("usuario_id");
+    if (usuario_id) {
+      // Usuário logado: mostra Perfil e Sair, esconde Login
+      btnPerfil && (btnPerfil.style.display = "");
+      btnSair && (btnSair.style.display = "");
+      btnLogin && (btnLogin.style.display = "none");
+    } else {
+      // Não logado: esconde Perfil e Sair, mostra Login
+      btnPerfil && (btnPerfil.style.display = "none");
+      btnSair && (btnSair.style.display = "none");
+      btnLogin && (btnLogin.style.display = "");
+    }
+  }
+
+  atualizarMenuAvatar();
+  window.addEventListener("storage", atualizarMenuAvatar);
+
+  // Proteção extra: se clicar em "Perfil" sem estar logado, redireciona para login
+  const linkPerfil = document.querySelector('.avatar #menuPerfil a');
+  linkPerfil?.addEventListener('click', function(e) {
+    if (!localStorage.getItem("usuario_id")) {
+      e.preventDefault();
+      window.location.href = "login2.html";
+    }
+  });
+
+  // ============ RESTANTE DO SEU JS ============
+
   if (avatar && avatarDropdown) {
     avatar.addEventListener("click", (e) => {
       e.stopPropagation();
       avatarDropdown.classList.toggle("active");
+
+      // Evento direto no botão de logout
+      const logoutBtn = avatarDropdown.querySelector('.logoutBtn');
+      if (logoutBtn && !logoutBtn._listenerSet) {
+        logoutBtn.addEventListener("click", async function(e) {
+          e.preventDefault();
+          try {
+            const resposta = await fetch("/php/logout.php", { method: "POST" });
+            const dados = await resposta.json();
+            if (dados.success) {
+              localStorage.clear();
+              alert("Logout realizado com sucesso.");
+              window.location.href = "index.html";
+            } else {
+              alert("Erro ao fazer logout.");
+            }
+          } catch (erro) {
+            console.error("Erro na requisição de logout:", erro);
+            alert("Falha na comunicação com o servidor.");
+          }
+        });
+        logoutBtn._listenerSet = true; // evita múltiplos listeners
+      }
     });
 
+    // Só fecha o menu se não for clique no logout
     document.addEventListener("click", (e) => {
-      if (!avatar.contains(e.target)) {
+      if (
+        !avatar.contains(e.target) &&
+        !e.target.closest(".logoutBtn")
+      ) {
         avatarDropdown.classList.remove("active");
       }
     });
@@ -40,16 +101,13 @@ document.addEventListener("DOMContentLoaded", function () {
     sidebar?.classList.contains("active") ? fecharSidebar() : abrirSidebar();
   }
 
-  // TROCA PRINCIPAL: pointerdown ao invés de click!
   bars?.addEventListener("pointerdown", (e) => {
     e.stopPropagation();
     abrirSidebar();
   });
 
-  // Deixe menuToggle opcionalmente para outros botões, mas só se precisar
   menuToggle?.addEventListener("pointerdown", abrirSidebar);
 
-  // O listener global para fechar continua em click (não pointerdown!)
   document.addEventListener("click", (e) => {
     const dentroDoMenu = e.target.closest(".sidebar") ||
                          e.target.closest(".bars") ||

@@ -112,7 +112,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const response = await fetch('/php/enviar_token.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
+          credentials: "include"
         });
 
         const result = await response.json();

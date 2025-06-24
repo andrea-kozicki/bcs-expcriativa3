@@ -14,7 +14,7 @@ function verificarSessaoOuRedirecionar() {
 
       menu.innerHTML = `
         <div class="item"><span class="fa-solid fa-user"></span><a href="perfil.html">${data.email}</a></div>
-        <div class="item" id="menuSair"><span class="fa-solid fa-door-open"></span><a href="#" id="logoutBtn">Sair</a></div>
+        <div class="item" id="menuSair"><span class="fa-solid fa-door-open"></span><a href="#" class="logoutBtn">Sair</a></div>
       `;
     } else {
       localStorage.clear();
