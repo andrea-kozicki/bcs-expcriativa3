@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const sidebar = document.querySelector(".sidebar");
   const bars = document.querySelector(".bars");
   const menuToggle = document.getElementById("menu-toggle");
-  const contentWrapper = document.querySelector(".content-wrapper") || document.querySelector("main");
+  const contentWrapper = document.querySelector(".wrapper");
 
   function abrirSidebar() {
     sidebar?.classList.add("active");
@@ -40,13 +40,16 @@ document.addEventListener("DOMContentLoaded", function () {
     sidebar?.classList.contains("active") ? fecharSidebar() : abrirSidebar();
   }
 
-  bars?.addEventListener("click", (e) => {
+  // TROCA PRINCIPAL: pointerdown ao invés de click!
+  bars?.addEventListener("pointerdown", (e) => {
     e.stopPropagation();
-    setTimeout(toggleSidebar, 10); // evita conflito com listener global
+    abrirSidebar();
   });
 
-  menuToggle?.addEventListener("click", toggleSidebar);
+  // Deixe menuToggle opcionalmente para outros botões, mas só se precisar
+  menuToggle?.addEventListener("pointerdown", abrirSidebar);
 
+  // O listener global para fechar continua em click (não pointerdown!)
   document.addEventListener("click", (e) => {
     const dentroDoMenu = e.target.closest(".sidebar") ||
                          e.target.closest(".bars") ||
@@ -120,4 +123,59 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   }
+
+  // === Carrossel ===
+  const slides = document.querySelectorAll('.carousel-slide');
+  const controlsContainer = document.querySelector('.carousel-controls');
+  let currentSlide = 0;
+  let carouselInterval;
+
+  function showSlide(index) {
+    slides.forEach(slide => {
+      slide.classList.remove('active');
+      slide.style.opacity = '0';
+    });
+
+    slides[index].classList.add('active');
+    slides[index].style.opacity = '1';
+
+    const dots = document.querySelectorAll('.carousel-dot');
+    dots.forEach((dot, i) => {
+      dot.classList.toggle('active', i === index);
+    });
+
+    currentSlide = index;
+  }
+
+  function nextSlide() {
+    let next = currentSlide + 1;
+    if (next >= slides.length) next = 0;
+    showSlide(next);
+  }
+
+  function startCarousel() {
+    carouselInterval = setInterval(nextSlide, 7000);
+  }
+
+  function createDots() {
+    if (!controlsContainer) return;
+    controlsContainer.innerHTML = '';
+    slides.forEach((_, index) => {
+      const dot = document.createElement('span');
+      dot.className = 'carousel-dot';
+      dot.addEventListener('click', () => {
+        clearInterval(carouselInterval);
+        showSlide(index);
+        startCarousel();
+      });
+      controlsContainer.appendChild(dot);
+    });
+  }
+
+  if (slides.length > 0 && controlsContainer) {
+    createDots();
+    showSlide(0);
+    startCarousel();
+  }
+
 });

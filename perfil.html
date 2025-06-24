@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="imagens/estrela.ico" type="image/x-icon">
-    <link rel="stylesheet" href="css/produtoscss.css">
+    <link rel="stylesheet" href="css/contatocss.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -60,9 +60,6 @@
         <div class="sidebar active">
             <a href="index.html" class="sidebar-nav"> <i class="icon fa-solid fa-house"></i><span>Inicio</span></a>
 
-            <a href="maisvendidos.html" class="sidebar-nav"><i class="icon fa-solid fa-medal"></i><span>Mais
-                    vendidos</span></a>
-
             <button class="dropdown-btn sidebar-nav">
                 <i class="icon fa-solid fa-book"></i><span>Gêneros</span><i
                     class="fa-solid fa-caret-down dropdown-arrow"></i>
@@ -87,7 +84,7 @@
 
 
         <div class="wrapper">
-            <div class="page-card">
+            <div class="row">
                 <!-- Cabeçalho do Perfil -->
                 <div class="perfil-header" style="text-align: center; margin-bottom: 30px;">
                     <img src="imagens/user-pic.jpg" alt="Foto do usuário" class="perfil-avatar" width="40" />
@@ -97,18 +94,20 @@
                 <!-- Seção de Pedidos -->
                 <section class="perfil-section" id="meus-pedidos">
                     <h3 class="title-content">📦 Seus Pedidos</h3>
+                    <br>
                     <div id="lista-pedidos" class="placeholder">
                         <!-- Os pedidos serão injetados aqui pelo JS -->
                     </div>
                 </section>
 
-
+                <br>
                 <!-- Seção de Endereço -->
                 <section class="perfil-section">
                     <h3 class="title-content">📍 Dados de Entrega</h3>
+                    <br>
                     <div class="placeholder"  id="dados-endereco">⚠️ Nenhum endereço cadastrado.</div>
                 </section>
-
+                <br>
                 <!-- Seção MFA -->
                 <section class="perfil-section mfa-section" style="display: none;">
                     <h3 class="title-content">🔐 Autenticação em Dois Fatores (MFA)</h3>
@@ -121,22 +120,22 @@
                 <!-- Seção de Redefinição de Senha -->
                 <section class="perfil-section">
                     <h3 class="title-content">🔒 Segurança da Conta</h3>
-
+                    <br>
                     <form id="form-alterar-senha" action="/php/trocar_senha.php" method="post">
                         <label for="senhaAtual">Senha atual</label>
-                        <input type="password" id="senhaAtual" name="senhaAtual" required>
+                        <input type="password" id="senhaAtual" name="senhaAtual" class="input-adm" required>
 
                         <label for="novaSenha">Nova senha</label>
-                        <input type="password" id="novaSenha" name="novaSenha" minlength="12" required>
+                        <input type="password" id="novaSenha" name="novaSenha" minlength="12" class="input-adm" required>
 
                         <label for="confirmarSenha">Confirmar nova senha</label>
-                        <input type="password" id="confirmarSenha" name="confirmarSenha" required>
-
+                        <input type="password" id="confirmarSenha" name="confirmarSenha" class="input-adm" required>
 
                         <input type="hidden" name="senha_hash" id="senha_hash">
                         <input type="hidden" name="salt" id="salt">
 
-                        <button type="submit">Alterar Senha</button>
+                        <br>
+                        <button type="submit" class="btn-success">Alterar Senha</button>
                     </form>
 
                     <div id="mensagem-senha" class="hidden"></div>

@@ -23,4 +23,7 @@ relatorio_criptografia_hibrida_completo_final.pdf
 relatorio_criptografia_hibrida_final.pdf
 temp-public.pem
 keys/temp_pub.pem
- php/phpinfo.php
+php/phpinfo.php
+css/site.css
+php/testar_conn.php
+documentacao_geracao_chaves_RSA.pdf

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="imagens/estrela.ico" type="image/x-icon">
-    <link rel="stylesheet" href="css/produtoscss.css">
+    <link rel="stylesheet" href="css/contatocss.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -61,10 +61,7 @@
         <div class="sidebar active">
             <a href="index.html" class="sidebar-nav"> <i class="icon fa-solid fa-house"></i><span>Inicio</span></a>
 
-            <a href="maisvendidos.html" class="sidebar-nav "><i class="icon fa-solid fa-medal"></i><span>Mais
-                    vendidos</span></a>
-
-            <button class="dropdown-btn sidebar-nav active">
+            <button class="dropdown-btn sidebar-nav">
                 <i class="icon fa-solid fa-book"></i><span>Gêneros</span><i
                     class="fa-solid fa-caret-down dropdown-arrow"></i>
             </button>
@@ -87,25 +84,29 @@
         </div>
 
         <div class="wrapper">
-
-            <div class="checkout-row">
-                <main class="checkout-container">
-                    <h1 class="checkout-title">Resumo do seu carrinho</h1>
-                    <section id="listaCarrinho" class="checkout-lista">
-                        <!-- Itens do carrinho serão renderizados aqui -->
-                    </section>
-
-                    <section class="checkout-total">
-                        <div class="checkout-total-texto">
-                            Total: <span id="totalCarrinho">R$ 0,00</span>
-                        </div>
-                        <div class="checkout-botoes">
-                            <button id="finalizarCompra" class="btn-success">Finalizar Compra</button>
-                            <button id="limparCheckout" class="btn btn-danger">Limpar Carrinho</button>
-                        </div>
-                    </section>
-                </main>
-            </div>
+           <div class="page-card">
+                <div class="checkout-row">
+                    <main class="checkout-container">
+                        <h1 class="checkout-title">Resumo do seu carrinho</h1>
+                        <br>
+                        <section id="listaCarrinho" class="checkout-lista">
+                            
+                            <!-- Itens do carrinho serão renderizados aqui -->
+                        </section>
+                        <br>
+                        <section class="checkout-total">
+                            <div class="checkout-total-texto">
+                                Total: <span id="totalCarrinho">R$ 0,00</span>
+                            </div>
+                            <br>
+                            <div class="checkout-botoes">
+                                <button id="finalizarCompra" class="btn-success">Finalizar Compra</button>
+                                <button id="limparCheckout" class="btn btn-danger">Limpar Carrinho</button>
+                            </div>
+                        </section>
+                    </main>
+                </div>
+            </div>    
         </div>
 
 

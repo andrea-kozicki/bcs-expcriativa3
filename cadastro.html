@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="imagens/estrela.ico" type="image/x-icon">
-    <link rel="stylesheet" href="css/cadastrocss.css">
+    <link rel="stylesheet" href="css/contatocss.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,7 +25,7 @@
             <div class="bars">
                 <i class="fa-solid fa-bars fa-xl"></i>
             </div>
-            <img src="imagens/estrela.ico" class="logo" />
+            <img src="imagens/estrela.ico" class="logo" width="40"/>
         </div>
 
 
@@ -60,14 +60,12 @@
     </nav>
 
     <div class="content">
-        <div class="sidebar active">
+        <div class="sidebar">
             <a href="index.html" class="sidebar-nav"> <i class="icon fa-solid fa-house"></i><span>Inicio</span></a>
 
-            <a href="maisvendidos.html" class="sidebar-nav"><i class="icon fa-solid fa-medal"></i><span>Mais
-                    vendidos</span></a>
-
+            
             <button class="dropdown-btn sidebar-nav">
-                <i class="icon fa-solid fa-book"></i><span>Gêneros</span><i class="fa-solid fa-caret-down"></i>
+                <i class="icon fa-solid fa-book"></i><span>Gêneros</span><i class="fa-solid fa-caret-down dropdown-arrow"></i>
             </button>
             <div class="dropdown-container">
                 <a href="romance.html" class="sidebar-nav"><i
@@ -243,7 +241,7 @@
                             </button>
                     </form>
                 </div>
-                <div class="popup" id="mensagemPopup"></div>
+                <div class="popup hidden" id="mensagemPopup"></div>
 
             </div>
         </div>

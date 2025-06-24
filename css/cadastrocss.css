@@ -83,6 +83,7 @@
     line-height: var(--line-height-base);
     color: #333;
     background-color: var(--background-light);
+    
   }
   
   a {
@@ -115,6 +116,8 @@
   .content {
     display: flex;
     min-height: calc(100vh - 60px); /* Altura total menos navbar */
+    overflow: auto;
+    position: relative;
   }
   
   .wrapper {
@@ -243,8 +246,8 @@
     color: var(--white);
     height: calc(100vh - 60px);
     width: 60px;
-    position: sticky;
-    top: 60px;
+    position: fixed;
+    
     background-color: var(--dark-bg);
     box-shadow: var(--shadow-sm);
     overflow-y: auto;
@@ -539,6 +542,7 @@ input[readonly] {
   
   /* Popup de mensagem */
   .popup {
+    display: none;
     position: fixed;
     top: var(--spacing-lg);
     left: 50%;

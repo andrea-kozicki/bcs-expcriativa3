@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Livraria</title>
     <link rel="shortcut icon" href="imagens/estrela.ico" type="image/x-icon">
-    <link rel="stylesheet" href="css/indexsitecss.css">
+    <link rel="stylesheet" href="css/contatocss.css">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -50,7 +50,7 @@
     </nav>
 
     <!-- CONTAINER FLEX PRINCIPAL -->
-    <div class="main-container">
+    <div class="content">
 
         <!-- Sidebar (agora FORA da .content) -->
         <div class="sidebar">
@@ -59,12 +59,7 @@
                 <span>Inicio</span>
             </a>
 
-            <a href="maisvendidos.html" class="sidebar-nav">
-                <i class="icon fa-solid fa-medal"></i>
-                <span>Mais vendidos</span>
-            </a>
-
-            <button class="dropdown-btn">
+            <button class="dropdown-btn sidebar-nav">
                 <i class="icon fa-solid fa-book"></i>
                 <span>Gêneros</span>
                 <i class="fa-solid fa-caret-down dropdown-arrow"></i>
@@ -100,7 +95,7 @@
         </div>
 
         <!-- Conteúdo principal -->
-        <div class="content">
+        
             <div class="wrapper">
                 <div class="row">
                     <div class="carousel-container">
@@ -125,14 +120,16 @@
                     </div>
                 </div>
             </div>
-        </div>
+        
     </div>
 
     <script src="js/verificarsessao.js"></script>
     
     <script src="js/cart.js"></script>
     <script src="js/logout.js"></script>
-    <script src="js/indexsite.js"></script>
+    <script src="js/siteui.js"></script>
+    <!--<script src="js/indexsite.js"></script>-->
+    
 
 </body>
 

@@ -154,8 +154,8 @@ body {
   color: var(--main-color);
   height: calc(100vh - 60px);
   width: 60px;
-  position: sticky;
-  top: 60px;
+  position: fixed;
+  
   background-color: var(--main-bg-color);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
   overflow-y: auto;

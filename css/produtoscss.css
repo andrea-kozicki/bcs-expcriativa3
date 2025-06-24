@@ -159,8 +159,6 @@ body.noscroll {
 .sidebar {
   background-color: var(--bg-primary);
   position: fixed;
-  top: 60px;
-  left: 0;
   bottom: 0;
   height: calc(100vh - 60px);
   width: 220px;
@@ -177,6 +175,8 @@ body.noscroll {
 }
 .sidebar.active {
   width: 220px;
+ 
+  margin-left:-60px;
 }
 .sidebar a,
 .sidebar button {
@@ -256,7 +256,7 @@ body.noscroll {
 }
 .wrapper {
   max-width: 1200px;
-  margin: 0 auto;
+  margin: 0;
 }
 .page-card {
   background: white;
@@ -269,6 +269,8 @@ body.noscroll {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 24px;
   justify-content: center;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 .box {
@@ -477,13 +479,7 @@ body.noscroll {
 }
 
 /* === AJUSTES FINAIS DE CARDS E CENTRALIZAÇÃO === */
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 24px 16px;
-  justify-content: center;
-  padding: 12px;
-}
+
 
 .box {
   max-width: 100%;
@@ -556,13 +552,7 @@ body.noscroll {
 
 /* === AJUSTES RESPONSIVOS E VISUAIS === */
 
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 20px;
-  justify-content: center;
-  padding: 12px;
-}
+
 
 .box {
   width: 100%;
