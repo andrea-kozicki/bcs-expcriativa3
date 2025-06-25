@@ -3,8 +3,16 @@ document.addEventListener("click", async (e) => {
   if (btn) {
     e.preventDefault();
     try {
-      const resposta = await fetch("/php/logout.php", { method: "POST" });
-      const dados = await resposta.json();
+      const payload = await encryptHybrid(JSON.stringify({ acao: "logout" })); // pode ser {}
+      const resposta = await fetch("/php/logout.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const encryptedResponse = await resposta.json();
+      const decryptedJson = await decryptHybrid(encryptedResponse, payload._aesKey, payload._iv);
+      const dados = JSON.parse(decryptedJson);
+
       if (dados.success) {
         localStorage.clear();
         alert("Logout realizado com sucesso.");

@@ -65,7 +65,9 @@ document.addEventListener('DOMContentLoaded', () => {
           body: JSON.stringify(payload)
         });
 
-        const result = await response.json();
+        const encryptedResponse = await response.json();
+        const decryptedJson = await decryptHybrid(encryptedResponse, payload._aesKey, payload._iv);
+        const result = JSON.parse(decryptedJson);
         exibirMensagem(result.message, !result.success);
 
         if (result.success) {

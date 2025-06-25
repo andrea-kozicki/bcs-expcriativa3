@@ -51,13 +51,17 @@ if (formContato) {
                     credentials: "include"
                 });
 
-                const data = await response.json();
+                const encryptedResponse = await response.json();
+                const decryptedJson = await decryptHybrid(encryptedResponse, payload._aesKey, payload._iv);
+                const data = JSON.parse(decryptedJson);
+
                 if (data.success) {
                     showPopup(data.message, "success");
                     formContato.reset();
                 } else {
                     showPopup(data.message, "error");
                 }
+
             } catch (error) {
                 console.error("Erro ao enviar:", error);
                 showPopup("Erro ao enviar a mensagem. Tente novamente.", "error");

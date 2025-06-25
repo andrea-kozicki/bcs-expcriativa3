@@ -1,22 +1,29 @@
 <?php
+require_once __DIR__ . '/config.php';
+require_once 'cripto_hibrida.php';
+
 session_start();
+header('Content-Type: application/json');
 
-// Permite apenas requisições POST
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405); // Method Not Allowed
-    echo json_encode([
-        "success" => false,
-        "message" => "Método não permitido"
-    ]);
-    exit;
+try {
+    $entrada = descriptografarEntrada();
+    $dados = $entrada['dados'];
+    $aesKey = $entrada['aesKey'];
+    $iv = $entrada['iv'];
+
+    session_unset();
+    session_destroy();
+
+    resposta_criptografada(
+        [ 'success' => true, 'message' => 'Logout realizado com sucesso.' ],
+        $aesKey,
+        base64_encode($iv)
+    );
+} catch (Exception $e) {
+    resposta_criptografada(
+        [ 'success' => false, 'message' => 'Erro ao fazer logout.', 'error' => $e->getMessage() ],
+        $aesKey ?? '',
+        isset($iv) ? base64_encode($iv) : ''
+    );
 }
-
-session_unset();
-session_destroy();
-
-http_response_code(200);
-echo json_encode([
-    "success" => true,
-    "message" => "Logout realizado com sucesso"
-]);
-
+?>

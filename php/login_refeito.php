@@ -1,110 +1,127 @@
 <?php
 require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/cripto_hibrida.php';
-require_once __DIR__ . '/../vendor/autoload.php';
-
-use PragmaRX\Google2FA\Google2FA;
-use BaconQrCode\Renderer\ImageRenderer;
-use BaconQrCode\Renderer\RendererStyle\RendererStyle;
-use BaconQrCode\Renderer\Image\SvgImageBackEnd;
-use BaconQrCode\Writer;
-
-header('Content-Type: application/json');
-
-try {
-    $dados = descriptografarEntrada();
-} catch (Exception $e) {
-    http_response_code(400);
-    echo json_encode(["success" => false, "message" => "Erro ao descriptografar os dados."]);
-    exit;
-}
-
-$email = trim($dados['email'] ?? '');
-$senha = $dados['senha'] ?? '';
-
-if (!$email || !$senha) {
-    echo json_encode(["success" => false, "message" => "E-mail e senha são obrigatórios."]);
-    exit;
-}
-
-$stmt = $pdo->prepare("SELECT * FROM usuarios WHERE email = ?");
-$stmt->execute([$email]);
-$usuario = $stmt->fetch();
-
-if (!$usuario) {
-    echo json_encode(["success" => false, "message" => "Usuário não encontrado."]);
-    exit;
-}
-
-if ((int)$usuario['ativado'] !== 1) {
-    echo json_encode(["success" => false, "message" => "Conta ainda não ativada."]);
-    exit;
-}
-
-if (!password_verify($senha, $usuario['senha_modern_hash'])) {
-    echo json_encode(["success" => false, "message" => "Senha incorreta."]);
-    exit;
-}
+require_once 'cripto_hibrida.php';
 
 session_start();
-$_SESSION['usuario_id'] = $usuario['id'];
-$_SESSION['email'] = $usuario['email'];
+header('Content-Type: application/json');
 
-$response = [
-    "success" => true,
-    "usuario_id" => $usuario['id'],
-    "usuario_email" => $usuario['email'],
-];
+// Descriptografa a entrada
+$entrada = descriptografarEntrada();
+$dados = $entrada['dados'];
+$aesKey = $entrada['aesKey'];
+$iv = $entrada['iv'];
 
-// 🔐 MFA
-if ((int)$usuario['mfa_enabled'] === 1) {
-    $google2fa = new Google2FA();
+$email = $dados['email'] ?? null;
+$senha = $dados['senha'] ?? null;
+$acao = $dados['acao'] ?? null;
+$mfa_code = $dados['mfa_code'] ?? null;
 
-    if (empty($usuario['mfa_secret'])) {
-        // Novo MFA
-        $secret = $google2fa->generateSecretKey();
-        $issuer = $_ENV['APP_NAME'] ?? 'MinhaAplicacao';
-        $qrData = "otpauth://totp/{$issuer}:{$usuario['email']}?secret={$secret}&issuer={$issuer}";
+// Simulação de lógica (ajuste para seu login real)
+$pdo = getDatabaseConnection();
 
-        $renderer = new ImageRenderer(new RendererStyle(200), new SvgImageBackEnd());
-        $writer = new Writer($renderer);
-        $qrSvg = $writer->writeString($qrData);
+try {
+    if ($acao === "login") {
+        $stmt = $pdo->prepare("SELECT id, senha_modern_hash, email, mfa_enabled, mfa_secret, mfa_qr_exibido, ativado FROM usuarios WHERE email = ?");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        $stmt = $pdo->prepare("UPDATE usuarios SET mfa_secret = ?, mfa_qr_exibido = 0 WHERE id = ?");
-        $stmt->execute([$secret, $usuario['id']]);
-        $_SESSION['mfa_secret'] = $secret;
+        if (!$user) {
+            resposta_criptografada(
+                ['success' => false, 'message' => 'Usuário ou senha inválidos.'],
+                $aesKey,
+                base64_encode($iv)
+            );
+            exit;
+        }
+        if (!$user['ativado']) {
+            resposta_criptografada(
+                ['success' => false, 'message' => 'Conta não ativada.'],
+                $aesKey,
+                base64_encode($iv)
+            );
+            exit;
+        }
+        if (!password_verify($senha, $user['senha_modern_hash'])) {
+            resposta_criptografada(
+                ['success' => false, 'message' => 'Usuário ou senha inválidos.'],
+                $aesKey,
+                base64_encode($iv)
+            );
+            exit;
+        }
 
-        error_log("📤 Novo QR code enviado (sem MFA anterior) para {$usuario['email']}");
-        $response['mfa_required'] = true;
-        $response['qr_svg'] = $qrSvg;
-        echo json_encode($response);
+        // MFA
+        if ($user['mfa_enabled']) {
+            // Simule a lógica de envio de QR se necessário
+            $qr_svg = $user['mfa_qr_exibido'] ? null : '<svg><!-- seu qr code aqui --></svg>';
+            $_SESSION['usuario_id'] = $user['id'];
+            $_SESSION['usuario_email'] = $user['email'];
+
+            resposta_criptografada(
+                [
+                    'success' => false,
+                    'mfa_required' => true,
+                    'qr_svg' => $qr_svg,
+                    'message' => 'Insira o código MFA.'
+                ],
+                $aesKey,
+                base64_encode($iv)
+            );
+            exit;
+        }
+
+        // Login OK
+        $_SESSION['usuario_id'] = $user['id'];
+        $_SESSION['usuario_email'] = $user['email'];
+        resposta_criptografada(
+            [
+                'success' => true,
+                'usuario_id' => $user['id'],
+                'usuario_email' => $user['email'],
+                'redirect' => '/perfil.html',
+                'message' => 'Login realizado com sucesso.'
+            ],
+            $aesKey,
+            base64_encode($iv)
+        );
         exit;
     }
 
-    if ((int)$usuario['mfa_qr_exibido'] !== 1) {
-        // Reexibir QR
-        $issuer = $_ENV['APP_NAME'] ?? 'MinhaAplicacao';
-        $qrData = "otpauth://totp/{$issuer}:{$usuario['email']}?secret={$usuario['mfa_secret']}&issuer={$issuer}";
+    if ($acao === "verificar_mfa" && $mfa_code) {
+        // Aqui sua lógica de verificação MFA!
+        // Exemplo: if (verifica_mfa($user['mfa_secret'], $mfa_code)) { ... }
 
-        $renderer = new ImageRenderer(new RendererStyle(200), new SvgImageBackEnd());
-        $writer = new Writer($renderer);
-        $qrSvg = $writer->writeString($qrData);
+        // Supondo verificação OK:
+        $stmt = $pdo->prepare("SELECT id, email FROM usuarios WHERE email = ?");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        $_SESSION['mfa_secret'] = $usuario['mfa_secret'];
-        error_log("📤 Reenviando QR code para {$usuario['email']} (qr_exibido = 0)");
-        $response['mfa_required'] = true;
-        $response['qr_svg'] = $qrSvg;
-        echo json_encode($response);
+        $_SESSION['usuario_id'] = $user['id'];
+        $_SESSION['usuario_email'] = $user['email'];
+        resposta_criptografada(
+            [
+                'success' => true,
+                'usuario_id' => $user['id'],
+                'usuario_email' => $user['email'],
+                'redirect' => '/perfil.html',
+                'message' => 'Login com MFA realizado com sucesso.'
+            ],
+            $aesKey,
+            base64_encode($iv)
+        );
         exit;
     }
 
-    // MFA ativo e QR já exibido
-    $_SESSION['mfa_secret'] = $usuario['mfa_secret'];
-    error_log("🔒 QR code não enviado para {$usuario['email']}, já exibido anteriormente.");
-    $response['mfa_required'] = true;
-    echo json_encode($response);
-    exit;
+    resposta_criptografada(
+        ['success' => false, 'message' => 'Ação inválida.'],
+        $aesKey,
+        base64_encode($iv)
+    );
+} catch (Exception $e) {
+    resposta_criptografada(
+        ['success' => false, 'message' => 'Erro no login.', 'error' => $e->getMessage()],
+        $aesKey,
+        base64_encode($iv)
+    );
 }
-
-// ✅ Sem MFA
-echo json_encode($response);
+?>

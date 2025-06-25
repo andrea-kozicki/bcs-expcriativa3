@@ -1,79 +1,89 @@
 <?php
+require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/cripto_hibrida.php';
+require_once 'cripto_hibrida.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
-use Dotenv\Dotenv;
 
-// Carrega variáveis do .env
-$dotenv = Dotenv::createImmutable(__DIR__ . '/../');
-$dotenv->load();
+header('Content-Type: application/json');
 
 try {
-    $dados = descriptografarEntrada();
+    // Descriptografa a entrada (já retorna ['dados', 'aesKey', 'iv'])
+    $entrada = descriptografarEntrada();
+    $dados = $entrada['dados'];
+    $aesKey = $entrada['aesKey'];
+    $iv = $entrada['iv'];
 
-    $nome     = trim($dados['nome']     ?? '');
-    $email    = trim($dados['email']    ?? '');
-    $assunto  = trim($dados['assunto']  ?? '');
+    // Validação dos dados recebidos
+    $nome = trim($dados['nome'] ?? '');
+    $email = trim($dados['email'] ?? '');
+    $assunto = trim($dados['assunto'] ?? '');
     $mensagem = trim($dados['mensagem'] ?? '');
 
-    $erros = [];
-
-    if (strlen($nome) < 3) {
-        $erros[] = "O nome deve conter pelo menos 3 caracteres.";
-    }
-
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $erros[] = "Informe um e-mail válido.";
-    }
-
-    if (strlen($mensagem) < 10) {
-        $erros[] = "A mensagem deve conter no mínimo 10 caracteres.";
-    }
-
-    if (!empty($erros)) {
-        echo json_encode([
-            "success" => false,
-            "message" => implode(' ', $erros)
-        ]);
+    if (strlen($nome) < 3 || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($assunto) < 3 || strlen($mensagem) < 10) {
+        resposta_criptografada(
+            ['success' => false, 'message' => 'Preencha todos os campos corretamente.', 'debug' => 'Criptografia na volta: erro'],
+            $aesKey,
+            base64_encode($iv)
+        );
         exit;
     }
 
-    // PHPMailer com variáveis do .env
+    // Salva no banco
+    $pdo = getDatabaseConnection();
+    $stmt = $pdo->prepare("INSERT INTO mensagens_contato (nome, email, assunto, mensagem) VALUES (?, ?, ?, ?)");
+    $stmt->execute([$nome, $email, $assunto, $mensagem]);
+
+    // PHPMailer - envia o contato para o e-mail do site
     $mail = new PHPMailer(true);
-    $mail->isSMTP();
-    $mail->Host       = $_ENV['SMTP_HOST'];
-    $mail->SMTPAuth   = true;
-    $mail->Username   = $_ENV['SMTP_USER'];
-    $mail->Password   = $_ENV['SMTP_PASS'];
-    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-    $mail->Port       = $_ENV['SMTP_PORT'];
+    try {
+        $mail->isSMTP();
+        $mail->Host = $_ENV['SMTP_HOST'];
+        $mail->SMTPAuth = true;
+        $mail->Username = $_ENV['SMTP_USER'];
+        $mail->Password = $_ENV['SMTP_PASS'];
+        $mail->SMTPSecure = 'tls';
+        $mail->Port = $_ENV['SMTP_PORT'];
 
-    $mail->setFrom($_ENV['SMTP_FROM'], 'Contato - ExpCriativa');
-    $mail->addAddress($_ENV['SMTP_FROM'], 'Destinatário'); // pode usar outro se quiser
+        $mail->setFrom($_ENV['SMTP_FROM'], 'Contato do site');
+        $mail->addAddress($_ENV['SMTP_FROM']); // Pode mudar para outro destinatário, se quiser
+        $mail->addReplyTo($email, $nome);
 
-    $mail->Subject = "[$assunto] Mensagem de $nome";
-    $mail->Body    = "Nome: $nome\nEmail: $email\nAssunto: $assunto\n\nMensagem:\n$mensagem";
-    $mail->CharSet = 'UTF-8';
+        $mail->isHTML(true);
+        $mail->Subject = 'Contato pelo site: ' . $assunto;
+        $mail->Body    = "
+            <h2>Mensagem recebida pelo formulário de contato</h2>
+            <p><strong>Nome:</strong> {$nome}</p>
+            <p><strong>E-mail:</strong> {$email}</p>
+            <p><strong>Assunto:</strong> {$assunto}</p>
+            <p><strong>Mensagem:</strong><br>{$mensagem}</p>
+        ";
+        $mail->AltBody = "Nome: {$nome}\nE-mail: {$email}\nAssunto: {$assunto}\nMensagem: {$mensagem}";
 
-    $mail->send();
+        $mail->send();
 
-    echo json_encode([
-        "success" => true,
-        "message" => "Mensagem enviada com sucesso!"
-    ]);
+        resposta_criptografada(
+            ['success' => true, 'message' => 'Mensagem enviada e registrada com sucesso!', 'debug' => 'Criptografia na volta: sucesso'],
+            $aesKey,
+            base64_encode($iv)
+        );
+        exit;
+    } catch (Exception $e) {
+        resposta_criptografada(
+            ['success' => false, 'message' => 'Erro ao enviar e-mail: ' . $mail->ErrorInfo, 'debug' => 'Criptografia na volta: erro'],
+            $aesKey,
+            base64_encode($iv)
+        );
+        exit;
+    }
 
 } catch (Exception $e) {
-    error_log("📧 Erro PHPMailer: " . $e->getMessage());
-    echo json_encode([
-        "success" => false,
-        "message" => "Erro ao enviar o e-mail. Verifique os dados do servidor SMTP."
-    ]);
-} catch (Throwable $e) {
-    error_log("❌ Erro geral: " . $e->getMessage());
-    echo json_encode([
-        "success" => false,
-        "message" => "Erro interno no servidor."
-    ]);
+    resposta_criptografada(
+        ['success' => false, 'message' => 'Erro ao enviar contato.', 'debug' => 'Criptografia na volta: erro', 'error' => $e->getMessage()],
+        $aesKey ?? '',
+        isset($iv) ? base64_encode($iv) : ''
+    );
+    exit;
 }
+?>

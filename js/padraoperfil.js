@@ -1,51 +1,53 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const usuario_id = localStorage.getItem("usuario_id");
-  const usuario_email = localStorage.getItem("usuario_email");
+  const pedidosDiv = document.getElementById("lista-pedidos");
+  const enderecoDiv = document.getElementById("dados-endereco");
 
-  if (!usuario_id || !usuario_email) {
-    console.warn("Usuário não logado.");
-    return;
+  // Função utilitária: fetch criptografado ida/volta
+  async function fetchComCriptografia(url, dados = {}, metodo = "POST") {
+    let options = {
+      method: metodo,
+      credentials: "include",
+      headers: { "Content-Type": "application/json" }
+    };
+
+    if (metodo === "POST") {
+      const payload = await encryptHybrid(JSON.stringify(dados));
+      options.body = JSON.stringify(payload);
+    }
+
+    const response = await fetch(url, options);
+    const encryptedPayload = await response.json();
+    const decrypted = await decryptHybrid(encryptedPayload);
+    return JSON.parse(decrypted);
   }
 
-  const spanEmail = document.getElementById("emailUsuario");
-  if (spanEmail) spanEmail.textContent = usuario_email;
-
-  // =========================
-  // PEDIDOS DO USUÁRIO
-  // =========================
-  fetch("../php/listar_pedidos.php", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ usuario_id }),
-     credentials: "include"
-  })
-    .then((res) => res.json())
-    .then((pedidos) => {
-      const lista = document.getElementById("lista-pedidos");
-      if (!lista) return;
+  // Carregar pedidos
+  async function carregarPedidos() {
+    try {
+      const pedidos = await fetchComCriptografia("/php/listar_pedidos.php", {});
       if (!pedidos || pedidos.length === 0) {
-        lista.innerHTML = "<p>⚠️ Nenhum pedido encontrado.</p>";
+        pedidosDiv.innerHTML = "<p>Você não tem pedidos registrados.</p>";
         return;
       }
-
-      pedidos.forEach((pedido) => {
-        const card = document.createElement("div");
-        card.classList.add("pedido-card");
-
-        const total = parseFloat(pedido.total || 0).toFixed(2).replace(".", ",");
-
-        card.innerHTML = `
-          <p><strong>Pedido ${pedido.codigo_pedido}</strong></p>
-          <p>Data: ${pedido.data_pedido || "Data não informada"} | Total: R$ ${total}</p>
-          <button class="btn-detalhes" data-codigo="${pedido.codigo_pedido}">Ver Detalhes</button>
-          <div class="itens-pedido hidden" id="itens-${pedido.codigo_pedido}"></div>
-        `;
-
-        lista.appendChild(card);
-      });
-
+      pedidosDiv.innerHTML = `
+        <h3>📦 Seus Pedidos</h3>
+        ${pedidos
+          .map(
+            (p) => `
+              <div class="pedido">
+                <b>Pedido ${p.codigo_pedido}</b><br>
+                Data: ${p.data_pedido} | Total: R$ ${parseFloat(p.total).toFixed(2).replace('.', ',')}
+                <br>
+                <button class="btn-detalhes" data-codigo="${p.codigo_pedido}">Ver Detalhes</button>
+                <div id="itens-${p.codigo_pedido}" class="hidden"></div>
+              </div>
+            `
+          )
+          .join("")}
+      `;
+      // Botões de detalhes com criptografia
       document.querySelectorAll(".btn-detalhes").forEach((btn) => {
-        btn.addEventListener("click", () => {
+        btn.addEventListener("click", async () => {
           const codigo = btn.dataset.codigo;
           const div = document.getElementById("itens-" + codigo);
           if (!div) return;
@@ -53,73 +55,52 @@ document.addEventListener("DOMContentLoaded", () => {
             div.classList.add("hidden");
             return;
           }
-
-          fetch("../php/listar_detalhes_pedido.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({ codigo_pedido: codigo }),
-            credentials: "include"
-          })
-            .then((res) => res.json())
-            .then((itens) => {
-              if (!itens || itens.length === 0) {
-                div.innerHTML = "<p>Este pedido não possui itens.</p>";
-              } else {
-                div.innerHTML = `
-                  <ul>
-                    ${itens
-                      .map(
-                        (i) =>
-                          `<li>${i.titulo} - ${i.quantidade}x R$ ${parseFloat(i.preco_unitario).toFixed(2).replace(".", ",")}</li>`
-                      )
-                      .join("")}
-                  </ul>
-                `;
-              }
-              div.classList.remove("hidden");
-            })
-            .catch(() => {
-              div.innerHTML = "<p>Erro ao carregar os itens do pedido.</p>";
-              div.classList.remove("hidden");
-            });
+          try {
+            const itens = await fetchComCriptografia("/php/listar_detalhes_pedido.php", { codigo_pedido: codigo });
+            if (!itens || itens.length === 0) {
+              div.innerHTML = "<p>Este pedido não possui itens.</p>";
+            } else {
+              div.innerHTML = `
+                <ul>
+                  ${itens
+                    .map(
+                      (i) =>
+                        `<li>${i.titulo} - ${i.quantidade}x R$ ${parseFloat(i.preco_unitario).toFixed(2).replace(".", ",")}</li>`
+                    )
+                    .join("")}
+                </ul>
+              `;
+            }
+            div.classList.remove("hidden");
+          } catch {
+            div.innerHTML = "<p>Erro ao carregar os itens do pedido.</p>";
+            div.classList.remove("hidden");
+          }
         });
       });
-    })
-    .catch(() => {
-      const lista = document.getElementById("lista-pedidos");
-      if (lista) {
-        lista.innerHTML = "<p>Erro ao carregar pedidos.</p>";
-      }
-    });
+    } catch (err) {
+      pedidosDiv.innerHTML = "<p>Erro ao carregar seus pedidos.</p>";
+    }
+  }
 
-  // =========================
-  // ENDEREÇO DO USUÁRIO
-  // =========================
-  fetch("../php/processar_pedidos.php", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ usuario_id }),
-     credentials: "include"
-  })
-    .then((res) => res.json())
-    .then((dados) => {
-      const div = document.getElementById("dados-endereco");
-      if (!div) return;
-      if (!dados || !dados.cep) {
-        div.innerHTML = "<p>⚠️ Nenhum endereço cadastrado.</p>";
+  // Carregar endereço
+  async function carregarEndereco() {
+    try {
+      const dados = await fetchComCriptografia("/php/processar_pedidos.php", {});
+      if (!dados || Object.keys(dados).length === 0) {
+        enderecoDiv.innerHTML = "<p>📍 Nenhum endereço cadastrado.</p>";
         return;
       }
-
-      div.innerHTML = `
-        <p>${dados.nome || ""}</p>
-        <p>${dados.rua}, ${dados.numero}</p>
-        <p>${dados.cidade} - ${dados.estado}, CEP ${dados.cep}</p>
-        <p>Telefone: ${dados.telefone || "Não informado"}</p>
-        <button class="btn-editar-endereco">Editar</button>
+      enderecoDiv.innerHTML = `
+        <p><b>${dados.nome}</b></p>
+        <p>${dados.rua}, ${dados.numero} - ${dados.cidade}/${dados.estado} | CEP: ${dados.cep}</p>
+        <p>Tel: ${dados.telefone}</p>
       `;
-    })
-    .catch(() => {
-      const div = document.getElementById("dados-endereco");
-      if (div) div.innerHTML = "<p>Erro ao carregar endereço.</p>";
-    });
+    } catch (err) {
+      enderecoDiv.innerHTML = "<p>Erro ao carregar endereço.</p>";
+    }
+  }
+
+  carregarPedidos();
+  carregarEndereco();
 });

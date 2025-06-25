@@ -1,16 +1,41 @@
 <?php
 require_once __DIR__ . '/config.php';
-session_start();
+require_once 'cripto_hibrida.php';
 
-if (!isset($_SESSION['usuario_id'])) {
-    http_response_code(401);
-    echo json_encode(["success" => false, "message" => "Não autenticado."]);
+session_start();
+header('Content-Type: application/json');
+
+$entrada = descriptografarEntrada();
+$dados = $entrada['dados'];
+$aesKey = $entrada['aesKey'];
+$iv = $entrada['iv'];
+
+$usuario_id = $_SESSION['usuario_id'] ?? null;
+
+if (!$usuario_id) {
+    resposta_criptografada(
+        [ 'success' => false, 'message' => 'Usuário não autenticado.' ],
+        $aesKey,
+        base64_encode($iv)
+    );
     exit;
 }
 
-$id = $_SESSION['usuario_id'];
+try {
+    $pdo = getDatabaseConnection();
+    $stmt = $pdo->prepare("UPDATE usuarios SET mfa_qr_exibido = 1 WHERE id = ?");
+    $stmt->execute([$usuario_id]);
 
-$stmt = $pdo->prepare("UPDATE usuarios SET mfa_qr_exibido = 1 WHERE id = ?");
-$stmt->execute([$id]);
-
-echo json_encode(["success" => true]);
+    resposta_criptografada(
+        [ 'success' => true, 'message' => 'QR marcado como visto.' ],
+        $aesKey,
+        base64_encode($iv)
+    );
+} catch (Exception $e) {
+    resposta_criptografada(
+        [ 'success' => false, 'message' => 'Erro ao atualizar.', 'error' => $e->getMessage() ],
+        $aesKey,
+        base64_encode($iv)
+    );
+}
+?>

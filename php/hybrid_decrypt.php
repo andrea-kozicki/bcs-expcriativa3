@@ -5,6 +5,7 @@ use phpseclib3\Crypt\PublicKeyLoader;
 use phpseclib3\Exception\BadDecryptionException;
 
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/cripto_hibrida.php';
 session_start();
 
 function hybrid_decrypt(array $payload): string {

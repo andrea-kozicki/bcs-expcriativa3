@@ -32,6 +32,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (verificarBtn) verificarBtn.style.display = "none";
 
+  let payloadUltimoLogin = null; // Salva para MFA
+
   if (loginForm) {
     loginForm.addEventListener("submit", async function (e) {
       e.preventDefault();
@@ -50,6 +52,7 @@ document.addEventListener("DOMContentLoaded", function () {
           senha,
           acao: "login"
         }));
+        payloadUltimoLogin = payload; // Salva para MFA depois
 
         const resposta = await fetch("/php/login_refeito.php", {
           method: "POST",
@@ -58,7 +61,9 @@ document.addEventListener("DOMContentLoaded", function () {
           credentials: "include"
         });
 
-        const resultado = await resposta.json();
+        const encryptedResponse = await resposta.json();
+        const decryptedJson = await decryptHybrid(encryptedResponse, payload._aesKey, payload._iv);
+        const resultado = JSON.parse(decryptedJson);
 
         if (resultado.mfa_required) {
           if (mfaSection) mfaSection.style.display = "block";
@@ -72,18 +77,22 @@ document.addEventListener("DOMContentLoaded", function () {
             qrCodeDiv.style.display = "block";
             if (mostrarQRBox) mostrarQRBox.style.display = "none";
 
-            fetch("/php/mfa_qr_visto.php", {
+            // Marca QR como exibido, criptografado:
+            const payloadQR = await encryptHybrid(JSON.stringify({}));
+            const res = await fetch("/php/mfa_qr_visto.php", {
               method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payloadQR),
               credentials: "include"
-            })
-              .then(res => res.json())
-              .then(json => {
-                if (json.success) {
-                  console.log("📌 QR marcado como exibido com sucesso.");
-                } else {
-                  console.warn("⚠️ Falha ao marcar o QR como exibido.");
-                }
-              });
+            });
+            const encryptedQR = await res.json();
+            const decryptedQR = await decryptHybrid(encryptedQR, payloadQR._aesKey, payloadQR._iv);
+            const json = JSON.parse(decryptedQR);
+            if (json.success) {
+              console.log("📌 QR marcado como exibido com sucesso.");
+            } else {
+              console.warn("⚠️ Falha ao marcar o QR como exibido.");
+            }
 
           } else {
             qrCodeDiv.innerHTML = "<p>Use seu app autenticador para digitar o código.</p>";
@@ -112,12 +121,18 @@ document.addEventListener("DOMContentLoaded", function () {
   if (mostrarQRBtn) {
     mostrarQRBtn.addEventListener("click", async () => {
       try {
+        // Criptografa até o reexibir QR!
+        const payload = await encryptHybrid(JSON.stringify({}));
         const res = await fetch("/php/reexibir_qr.php", {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
           credentials: "include",
         });
+        const encryptedResponse = await res.json();
+        const decryptedJson = await decryptHybrid(encryptedResponse, payload._aesKey, payload._iv);
+        const data = JSON.parse(decryptedJson);
 
-        const data = await res.json();
         if (data.success && data.qr_svg) {
           qrCodeDiv.innerHTML = data.qr_svg;
           qrCodeDiv.style.display = "block";
@@ -158,7 +173,9 @@ document.addEventListener("DOMContentLoaded", function () {
         credentials: "include"
       });
 
-      const resultado = await resposta.json();
+      const encryptedResponse = await resposta.json();
+      const decryptedJson = await decryptHybrid(encryptedResponse, payload._aesKey, payload._iv);
+      const resultado = JSON.parse(decryptedJson);
 
       if (resultado.success) {
         localStorage.setItem("usuario_id", resultado.usuario_id);
@@ -185,7 +202,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // 🔄 Recuperação de senha
+  // 🔄 Recuperação de senha (não é híbrido, só para referência)
   const btn = document.getElementById('btn-enviar-link');
   const emailInput = document.getElementById('email-redefinicao');
   const mensagem = document.getElementById('mensagem-redefinicao');
@@ -214,7 +231,11 @@ document.addEventListener("DOMContentLoaded", function () {
           credentials: "include"
         });
 
-        const result = await response.json();
+        // Se o endpoint estiver criptografado, troque por descriptografar
+        const encryptedResponse = await response.json();
+        const decryptedJson = await decryptHybrid(encryptedResponse, payload._aesKey, payload._iv);
+        const result = JSON.parse(decryptedJson);
+
         mensagem.textContent = result.message;
         mensagem.style.color = result.success ? 'green' : 'red';
 

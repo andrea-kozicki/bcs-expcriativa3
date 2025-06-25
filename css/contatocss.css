@@ -113,6 +113,7 @@ body {
   box-shadow: 0 2px 10px rgba(0,0,0,0.2);
   z-index: 999;
   border-radius: 8px;
+  
 }
 
 .cart-menu.show {
@@ -125,6 +126,14 @@ body {
   max-height: 180px;
   overflow-y: auto;
   margin-bottom: 10px;
+  
+  
+}
+
+.cart-menu,
+.cart-items-list,
+.cart-items-list li {
+color: #131b38;
 }
 
 .cart-items-list li {
@@ -134,6 +143,7 @@ body {
   font-size: 0.9rem;
   padding: 6px 0;
   border-bottom: 1px solid #ddd;
+  
 }
 
 .cart-items-list li button {

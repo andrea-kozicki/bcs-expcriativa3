@@ -1,81 +1,115 @@
 <?php
+require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/cripto_hibrida.php';
-require_once __DIR__ . '/hybrid_decrypt.php';
-require_once __DIR__ . '/config.php'; // fornece getDatabaseConnection()
+require_once 'cripto_hibrida.php';
 
-use phpseclib3\Exception\BadDecryptionException;
-
+session_start();
 header('Content-Type: application/json');
 
+// 1. Descriptografa a entrada e pega a AES/IV
+$entrada = descriptografarEntrada();
+$dados = $entrada['dados'];
+$aesKey = $entrada['aesKey'];
+$iv = $entrada['iv'];
+
+// 2. Identifica fluxo: troca logada (sessão) OU redefinição via token/email
+$usuario_id = $_SESSION['usuario_id'] ?? null;
+$email = $dados['email'] ?? null;
+$token = $dados['token'] ?? null;
+$novaSenha = $dados['novaSenha'] ?? null;
+$senhaAtual = $dados['senhaAtual'] ?? null;
+
+if (!$novaSenha || strlen($novaSenha) < 12) {
+    resposta_criptografada(
+        ['success' => false, 'message' => 'A senha deve ter pelo menos 12 caracteres.', 'debug' => 'Criptografia na volta: erro'],
+        $aesKey,
+        base64_encode($iv)
+    );
+    exit;
+}
+
+$pdo = getDatabaseConnection();
+
 try {
-    $input = json_decode(file_get_contents("php://input"), true);
+    // Fluxo: usuário autenticado (trocando a própria senha pelo perfil)
+    if ($usuario_id && $senhaAtual) {
+        // Busca usuário pelo ID
+        $stmt = $pdo->prepare("SELECT senha_modern_hash FROM usuarios WHERE id = ?");
+        $stmt->execute([$usuario_id]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    $temToken = isset($input['encryptedKey'], $input['iv'], $input['encryptedMessage']);
+        if (!$user) {
+            resposta_criptografada(
+                ['success' => false, 'message' => 'Usuário não encontrado.', 'debug' => 'Criptografia na volta: erro'],
+                $aesKey,
+                base64_encode($iv)
+            );
+            exit;
+        }
+        // Valida senha atual
+        if (!password_verify($senhaAtual, $user['senha_modern_hash'])) {
+            resposta_criptografada(
+                ['success' => false, 'message' => 'Senha atual incorreta.', 'debug' => 'Criptografia na volta: erro'],
+                $aesKey,
+                base64_encode($iv)
+            );
+            exit;
+        }
 
-    $dados = $temToken
-        ? descriptografarEntrada()
-        : json_decode(hybrid_decrypt($input), true);
+        // Atualiza para a nova senha
+        $nova_hash = password_hash($novaSenha, PASSWORD_DEFAULT);
+        $stmt = $pdo->prepare("UPDATE usuarios SET senha_modern_hash = ?, updated_at = NOW() WHERE id = ?");
+        $stmt->execute([$nova_hash, $usuario_id]);
 
-    $novaSenha  = trim($dados['novaSenha'] ?? '');
-    $senhaAtual = $dados['senhaAtual'] ?? null;
-    $email      = $dados['email'] ?? null;
-    $token      = $dados['token'] ?? null;
-
-    if (strlen($novaSenha) < 12) {
-        echo json_encode(["success" => false, "message" => "A nova senha deve ter pelo menos 12 caracteres."]);
+        resposta_criptografada(
+            ['success' => true, 'message' => 'Senha alterada com sucesso!', 'debug' => 'Criptografia na volta: sucesso'],
+            $aesKey,
+            base64_encode($iv)
+        );
         exit;
     }
 
-    if (!$senhaAtual && (!$email || !$token)) {
-        echo json_encode(["success" => false, "message" => "Requisição inválida. Use senha atual ou token de redefinição."]);
-        exit;
-    }
-
-    $pdo = getDatabaseConnection();
-
-    // === FLUXO 1: Redefinição via token (sem login) ===
-    if ($token && $email && !$senhaAtual) {
-        $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE email = ? AND token_ativacao = ?");
+    // Fluxo: redefinição via e-mail + token
+    if ($email && $token) {
+        // Busca usuário pelo e-mail e token válido
+        $stmt = $pdo->prepare("SELECT id, token_ativacao FROM usuarios WHERE email = ? AND token_ativacao = ?");
         $stmt->execute([$email, $token]);
-        $usuario = $stmt->fetch();
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$usuario) {
-            echo json_encode(["success" => false, "message" => "Token inválido ou expirado."]);
+        if (!$user) {
+            resposta_criptografada(
+                ['success' => false, 'message' => 'E-mail ou token inválido.', 'debug' => 'Criptografia na volta: erro'],
+                $aesKey,
+                base64_encode($iv)
+            );
             exit;
         }
 
         // Atualiza a senha e remove o token
-        $stmt = $pdo->prepare("UPDATE usuarios SET senha_modern_hash = ?, token_ativacao = NULL WHERE id = ?");
-        $stmt->execute([password_hash($novaSenha, PASSWORD_DEFAULT), $usuario['id']]);
+        $nova_hash = password_hash($novaSenha, PASSWORD_DEFAULT);
+        $stmt = $pdo->prepare("UPDATE usuarios SET senha_modern_hash = ?, token_ativacao = NULL, updated_at = NOW() WHERE id = ?");
+        $stmt->execute([$nova_hash, $user['id']]);
 
-        echo json_encode(["success" => true, "message" => "Senha redefinida com sucesso."]);
+        resposta_criptografada(
+            ['success' => true, 'message' => 'Senha redefinida com sucesso!', 'debug' => 'Criptografia na volta: sucesso'],
+            $aesKey,
+            base64_encode($iv)
+        );
         exit;
     }
 
-    // === FLUXO 2: Alteração logado (com senha atual) ===
-    if ($senhaAtual && $email) {
-        $stmt = $pdo->prepare("SELECT id, senha_modern_hash FROM usuarios WHERE email = ?");
-        $stmt->execute([$email]);
-        $usuario = $stmt->fetch();
+    // Caso falhe em todas as verificações:
+    resposta_criptografada(
+        ['success' => false, 'message' => 'Requisição inválida.', 'debug' => 'Criptografia na volta: erro'],
+        $aesKey,
+        base64_encode($iv)
+    );
 
-        if (!$usuario || !password_verify($senhaAtual, $usuario['senha_modern_hash'])) {
-            echo json_encode(["success" => false, "message" => "Senha atual incorreta."]);
-            exit;
-        }
-
-        $stmt = $pdo->prepare("UPDATE usuarios SET senha_modern_hash = ? WHERE id = ?");
-        $stmt->execute([password_hash($novaSenha, PASSWORD_DEFAULT), $usuario['id']]);
-
-        echo json_encode(["success" => true, "message" => "Senha alterada com sucesso."]);
-        exit;
-    }
-
-    echo json_encode(["success" => false, "message" => "Fluxo não reconhecido."]);
-
-} catch (BadDecryptionException $e) {
-    echo json_encode(["success" => false, "message" => "Erro ao descriptografar os dados."]);
-} catch (Throwable $e) {
-    error_log("❌ Erro em trocar_senha.php: " . $e->getMessage());
-    echo json_encode(["success" => false, "message" => "Erro interno ao processar a solicitação."]);
+} catch (Exception $e) {
+    resposta_criptografada(
+        ['success' => false, 'message' => 'Erro ao trocar senha: ' . $e->getMessage(), 'debug' => 'Criptografia na volta: erro'],
+        $aesKey,
+        base64_encode($iv)
+    );
 }
+?>

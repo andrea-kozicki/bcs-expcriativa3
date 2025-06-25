@@ -1,43 +1,41 @@
 <?php
-require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/config.php';
-
-use PragmaRX\Google2FA\Google2FA;
-use BaconQrCode\Renderer\ImageRenderer;
-use BaconQrCode\Renderer\RendererStyle\RendererStyle;
-use BaconQrCode\Writer;
-use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+require_once 'cripto_hibrida.php';
 
 session_start();
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['usuario_id'])) {
-    echo json_encode(["success" => false, "message" => "Usuário não autenticado."]);
+$entrada = descriptografarEntrada();
+$dados = $entrada['dados'];
+$aesKey = $entrada['aesKey'];
+$iv = $entrada['iv'];
+
+$usuario_id = $_SESSION['usuario_id'] ?? null;
+
+if (!$usuario_id) {
+    resposta_criptografada(
+        [ 'success' => false, 'message' => 'Usuário não autenticado.' ],
+        $aesKey,
+        base64_encode($iv)
+    );
     exit;
 }
 
-$pdo = getDatabaseConnection();
-$stmt = $pdo->prepare("SELECT email, mfa_secret FROM usuarios WHERE id = ?");
-$stmt->execute([$_SESSION['usuario_id']]);
-$usuario = $stmt->fetch();
+try {
+    $pdo = getDatabaseConnection();
+    $stmt = $pdo->prepare("UPDATE usuarios SET mfa_qr_exibido = 0 WHERE id = ?");
+    $stmt->execute([$usuario_id]);
 
-if (!$usuario || empty($usuario['mfa_secret'])) {
-    echo json_encode(["success" => false, "message" => "Usuário ou segredo MFA não encontrado."]);
-    exit;
+    resposta_criptografada(
+        [ 'success' => true, 'message' => 'QR poderá ser reexibido.' ],
+        $aesKey,
+        base64_encode($iv)
+    );
+} catch (Exception $e) {
+    resposta_criptografada(
+        [ 'success' => false, 'message' => 'Erro ao atualizar.', 'error' => $e->getMessage() ],
+        $aesKey,
+        base64_encode($iv)
+    );
 }
-
-$google2fa = new Google2FA();
-$qrContent = $google2fa->getQRCodeUrl(
-    'BCS Plataforma',
-    $usuario['email'],
-    $usuario['mfa_secret']
-);
-
-$renderer = new ImageRenderer(
-    new RendererStyle(200),
-    new SvgImageBackEnd()
-);
-$writer = new Writer($renderer);
-$qrSvg = $writer->writeString($qrContent);
-
-echo json_encode(["success" => true, "qr_svg" => $qrSvg]);
+?>

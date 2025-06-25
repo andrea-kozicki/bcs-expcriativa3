@@ -1,33 +1,41 @@
 <?php
-session_start();
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/cripto_hibrida.php';
 
-header('Content-Type: application/json');
-$pdo = getDatabaseConnection();
+session_start();
 
-$usuario_id = $_SESSION['usuario_id'] ?? $_POST['usuario_id'] ?? null;
+$result = descriptografarEntrada();
+$dados = $result['dados'];
+$aesKey = $result['aesKey'];
+$iv = $result['iv'];
+
+$usuario_id = $_SESSION['usuario_id'] ?? null;
 
 if (!$usuario_id) {
-    echo json_encode(["erro" => "Usuário não identificado."]);
+    resposta_criptografada(
+        ['success' => false, 'message' => 'Usuário não autenticado.', 'debug' => 'Criptografia na volta: erro'],
+        $aesKey,
+        base64_encode($iv)
+    );
     exit;
 }
 
-$sql = "
-    SELECT 
-        p.codigo_pedido,
-        p.data_pedido,
-        COALESCE(SUM(c.quantidade * c.preco_unitario), 0) AS total,
-        MAX(pg.status_pagamento) AS status_pagamento
-    FROM pedidos p
-    LEFT JOIN compras c ON c.codigo_pedido = p.codigo_pedido
-    LEFT JOIN pagamentos pg ON pg.compra_id = c.id
-    WHERE p.usuario_id = ?
-    GROUP BY p.codigo_pedido, p.data_pedido
-    ORDER BY p.data_pedido DESC
-";
+try {
+    $pdo = getDatabaseConnection();
+    $stmt = $pdo->prepare("SELECT id, codigo_pedido, data_pedido FROM pedidos WHERE usuario_id = :usuario_id ORDER BY data_pedido DESC");
+    $stmt->execute([':usuario_id' => $usuario_id]);
+    $pedidos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$stmt = $pdo->prepare($sql);
-$stmt->execute([$usuario_id]);
-$pedidos = $stmt->fetchAll();
-
-echo json_encode($pedidos);
+    resposta_criptografada(
+        ['success' => true, 'pedidos' => $pedidos, 'debug' => 'Criptografia na volta: sucesso'],
+        $aesKey,
+        base64_encode($iv)
+    );
+} catch (Exception $e) {
+    resposta_criptografada(
+        ['success' => false, 'message' => 'Erro ao listar pedidos.', 'debug' => 'Criptografia na volta: erro', 'error' => $e->getMessage()],
+        $aesKey,
+        base64_encode($iv)
+    );
+}
+?>

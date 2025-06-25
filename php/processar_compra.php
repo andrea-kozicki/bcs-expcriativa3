@@ -12,10 +12,18 @@ header('Content-Type: application/json');
 $usuario_id = $_SESSION['usuario_id'] ?? null;
 $usuario_email = $_SESSION['usuario_email'] ?? null;
 
-$dados = descriptografarEntrada();
+// --- INÍCIO DO FLUXO CRIPTOGRAFADO ---
+$entrada = descriptografarEntrada();
+$dados = $entrada['dados'];
+$aesKey = $entrada['aesKey'];
+$iv = $entrada['iv'];
 
 if (!$usuario_id || !isset($dados['carrinho']) || empty($dados['carrinho'])) {
-    echo json_encode(["sucesso" => false, "erro" => "Dados inválidos."]);
+    resposta_criptografada(
+        ["success" => false, "message" => "Dados inválidos.", "debug" => "Criptografia na volta: erro"],
+        $aesKey,
+        base64_encode($iv)
+    );
     exit;
 }
 
@@ -116,11 +124,20 @@ try {
         }
     }
 
-    echo json_encode(["sucesso" => true, "codigo_pedido" => $codigo_pedido]);
+    resposta_criptografada(
+        ["success" => true, "codigo_pedido" => $codigo_pedido, "debug" => "Criptografia na volta: sucesso"],
+        $aesKey,
+        base64_encode($iv)
+    );
 
 } catch (Exception $e) {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
-    echo json_encode(["sucesso" => false, "erro" => $e->getMessage()]);
+    resposta_criptografada(
+        ["success" => false, "message" => $e->getMessage(), "debug" => "Criptografia na volta: erro"],
+        $aesKey,
+        base64_encode($iv)
+    );
 }
+?>
