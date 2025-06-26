@@ -3,16 +3,7 @@ header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/cripto_hibrida.php';
 
-function resposta_criptografada($dados, $aes_key, $iv_base64) {
-    $json = json_encode($dados);
-    $iv = base64_decode($iv_base64);
-    $encrypted = openssl_encrypt($json, 'aes-256-cbc', $aes_key, OPENSSL_RAW_DATA, $iv);
-    echo json_encode([
-        'encryptedMessage' => base64_encode($encrypted),
-        'iv' => $iv_base64
-    ]);
-    exit;
-}
+
 
 $data = json_decode(file_get_contents('php://input'), true);
 if (!isset($data['encryptedKey'], $data['iv'], $data['encryptedMessage'])) {

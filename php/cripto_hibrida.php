@@ -28,11 +28,6 @@ function descriptografarEntrada() {
     $iv               = base64_decode($input['iv'] ?? '', true);
     $encryptedMessage = base64_decode($input['encryptedMessage'] ?? '', true);
 
-    error_log("📦 Tamanhos base64 decodificados:");
-    error_log("    🔑 encryptedKey: " . ($encryptedKey ? strlen($encryptedKey) : 'inválido'));
-    error_log("    🧊 IV: " . ($iv ? strlen($iv) : 'inválido'));
-    error_log("    ✉️ encryptedMessage: " . ($encryptedMessage ? strlen($encryptedMessage) : 'inválido'));
-
     if (!$encryptedKey || !$iv || !$encryptedMessage) {
         http_response_code(400);
         echo json_encode(["success" => false, "message" => "Dados incompletos ou malformados."]);
@@ -47,14 +42,12 @@ function descriptografarEntrada() {
 
         $aesKey = $privateKey->decrypt($encryptedKey);
     } catch (\Throwable $e) {
-        error_log("❌ Erro ao descriptografar com phpseclib: " . $e->getMessage());
         http_response_code(500);
         echo json_encode(["success" => false, "message" => "Erro ao descriptografar a chave AES."]);
         exit;
     }
 
     if (strlen($aesKey) !== 32) {
-        error_log("❌ AES key inválida: " . strlen($aesKey) . " bytes");
         http_response_code(500);
         echo json_encode(["success" => false, "message" => "Chave AES inválida (esperado 32 bytes)."]);
         exit;
@@ -63,7 +56,6 @@ function descriptografarEntrada() {
     $plaintext = openssl_decrypt($encryptedMessage, 'aes-256-cbc', $aesKey, OPENSSL_RAW_DATA, $iv);
 
     if (!$plaintext) {
-        error_log("❌ Erro ao descriptografar conteúdo com AES.");
         http_response_code(500);
         echo json_encode(["success" => false, "message" => "Erro ao descriptografar a mensagem."]);
         exit;
@@ -71,11 +63,27 @@ function descriptografarEntrada() {
 
     $dados = json_decode($plaintext, true);
     if (!is_array($dados)) {
-        error_log("❌ JSON descriptografado inválido: $plaintext");
         http_response_code(400);
         echo json_encode(["success" => false, "message" => "Mensagem descriptografada inválida."]);
         exit;
     }
 
-    return $dados;
+    // *** AQUI retorna o array esperado pelo resto dos scripts ***
+    return [
+        'dados'  => $dados,
+        'aesKey' => $aesKey,
+        'iv'     => $iv
+    ];
+}
+
+// === Função para resposta criptografada usando a MESMA chave AES/IV ===
+function resposta_criptografada($dados, $aesKey, $iv_base64) {
+    $json = json_encode($dados);
+    $iv = base64_decode($iv_base64);
+    $encrypted = openssl_encrypt($json, 'aes-256-cbc', $aesKey, OPENSSL_RAW_DATA, $iv);
+    echo json_encode([
+        'encryptedMessage' => base64_encode($encrypted),
+        'iv' => $iv_base64
+    ]);
+    exit;
 }

@@ -44,26 +44,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const erro = container.querySelector(".mensagem-erro");
     const valor = input.value.trim();
 
-    console.debug(`📌 Validando campo [${id}]: valor='${valor}'`);
-
-    if (!padrao) {
-      console.debug(`ℹ️ Sem regex definida para [${id}].`);
-      return true;
-    }
+    if (!padrao) return true;
 
     const valido = padrao.test(valor);
-    console.debug(`🔍 Regex para [${id}]:`, padrao, "→ Resultado:", valido);
 
     if (!valido) {
       input.classList.add("erro");
       if (erro && mostrarErro) erro.textContent = mensagens[id] || "Campo inválido";
-      if (mostrarErro) console.warn(`❌ Campo inválido [${id}]:`, valor);
       return false;
     }
 
     input.classList.remove("erro");
     if (erro) erro.textContent = "";
-    console.debug(`✅ Campo válido [${id}]`);
     return true;
   }
 
@@ -172,7 +164,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    console.debug("🚀 Submissão do formulário iniciada");
 
     const camposObrigatorios = [...form.querySelectorAll("input[required]")];
     if (!camposObrigatorios.every(campo => validarCampo(campo, true))) {
@@ -206,10 +197,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Mensagem visual e console para "ida"
       mostrarPopup(true, "🟢 Criptografia na ida: os dados foram criptografados antes do envio ao servidor.");
-      // Remove popup após 3 segundos
       setTimeout(() => { document.querySelector(".popup").classList.remove("show"); }, 3000);
 
-      // Prepara envio (não envia _aesKey e _iv!)
       const { encryptedKey, iv, encryptedMessage } = payload;
 
       const res = await fetch(form.action, {
@@ -229,7 +218,6 @@ document.addEventListener('DOMContentLoaded', () => {
       mostrarPopup(true, "🔵 Criptografia na volta: a resposta do servidor foi recebida criptografada e descriptografada no navegador.");
       setTimeout(() => { document.querySelector(".popup").classList.remove("show"); }, 3500);
 
-      // Interpreta a resposta descriptografada
       let json;
       try {
         json = JSON.parse(decryptedJson);
@@ -255,107 +243,6 @@ document.addEventListener('DOMContentLoaded', () => {
       mostrarPopup(false, "Erro na comunicação com o servidor.");
     }
   });
-
-  document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById("cadastroForm");
-  const senhaInput = document.getElementById("senha");
-  const confirmarSenhaInput = document.getElementById("confirmarSenha");
-  const dataInput = document.getElementById("data_nascimento");
-  const telefoneInput = document.getElementById("telefone");
-  const cpfInput = document.getElementById("cpf");
-  const cepInput = document.getElementById("cep");
-
-  // ... [Restante do código de validação continua igual]
-
-  // AQUI COMEÇA O FLUXO DE ENVIO DO FORMULÁRIO
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    console.debug("🚀 Submissão do formulário iniciada");
-
-    const camposObrigatorios = [...form.querySelectorAll("input[required]")];
-    if (!camposObrigatorios.every(campo => validarCampo(campo, true))) {
-      mostrarPopup(false, "Por favor, corrija os campos inválidos.");
-      return;
-    }
-    if (senhaInput.value !== confirmarSenhaInput.value) {
-      mostrarPopup(false, "As senhas não coincidem.");
-      return;
-    }
-
-    const dataIso = converterDataParaIso(dataInput.value);
-
-    const dados = {
-      nome: form.nome.value.trim(),
-      email: form.email.value.trim(),
-      senha: senhaInput.value,
-      telefone: form.telefone.value.trim(),
-      cpf: form.cpf.value.trim(),
-      data_nascimento: dataIso,
-      cep: form.cep.value.trim(),
-      rua: form.rua.value.trim(),
-      numero: form.numero.value.trim(),
-      estado: form.estado.value.trim(),
-      cidade: form.cidade.value.trim()
-    };
-
-    try {
-      // Criptografa dados antes do envio (IDA)
-      const payload = await encryptHybrid(JSON.stringify(dados));
-
-      // Mensagem visual e console para "ida"
-      mostrarPopup(true, "🟢 Criptografia na ida: os dados foram criptografados antes do envio ao servidor.");
-      // Remove popup após 3 segundos
-      setTimeout(() => { document.querySelector(".popup").classList.remove("show"); }, 3000);
-
-      // Prepara envio (não envia _aesKey e _iv!)
-      const { encryptedKey, iv, encryptedMessage } = payload;
-
-      const res = await fetch(form.action, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ encryptedKey, iv, encryptedMessage }),
-        credentials: "include"
-      });
-
-      // Recebe resposta criptografada do servidor
-      const encryptedResponse = await res.json();
-
-      // Descriptografa resposta usando a chave AES original
-      const decryptedJson = await decryptHybrid(encryptedResponse, payload._aesKey, payload._iv);
-
-      // Mensagem visual e console para "volta"
-      mostrarPopup(true, "🔵 Criptografia na volta: a resposta do servidor foi recebida criptografada e descriptografada no navegador.");
-      setTimeout(() => { document.querySelector(".popup").classList.remove("show"); }, 3500);
-
-      // Interpreta a resposta descriptografada
-      let json;
-      try {
-        json = JSON.parse(decryptedJson);
-      } catch (parseErr) {
-        mostrarPopup(false, "Erro ao interpretar resposta do servidor.");
-        return;
-      }
-
-      if (!res.ok || !json.success) {
-        mostrarPopup(false, json.message || "Erro no cadastro.");
-        return;
-      }
-
-      mostrarPopup(true, json.message || "Cadastro realizado com sucesso!");
-      form.reset();
-
-      setTimeout(() => {
-        window.location.href = "/login2.html";
-      }, 3000);
-
-    } catch (err) {
-      console.error("❌ Erro durante o envio do formulário:", err);
-      mostrarPopup(false, "Erro na comunicação com o servidor.");
-    }
-  });
-
-  // ... [Restante das funções de validação, UI, etc.]
 
   function mostrarPopup(sucesso, mensagem) {
     let popup = document.querySelector(".popup");
@@ -372,25 +259,23 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (mensagem.includes("volta")) popup.style.background = "#0074d9";
     else popup.style.background = sucesso ? "#2ecc40" : "#ff4136";
   }
-});
 
+  document.querySelectorAll(".toggle-password").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const targetId = btn.dataset.target;
+      const campoSenha = document.getElementById(targetId);
+      const icone = btn.querySelector("i");
 
-document.querySelectorAll(".toggle-password").forEach(btn => {
-  btn.addEventListener("click", (e) => {
-    e.preventDefault();
-    const targetId = btn.dataset.target;
-    const campoSenha = document.getElementById(targetId);
-    const icone = btn.querySelector("i");
-
-    if (campoSenha.type === "password") {
-      campoSenha.type = "text";
-      icone.classList.remove("fa-eye");
-      icone.classList.add("fa-eye-slash");
-    } else {
-      campoSenha.type = "password";
-      icone.classList.remove("fa-eye-slash");
-      icone.classList.add("fa-eye");
-    }
+      if (campoSenha.type === "password") {
+        campoSenha.type = "text";
+        icone.classList.remove("fa-eye");
+        icone.classList.add("fa-eye-slash");
+      } else {
+        campoSenha.type = "password";
+        icone.classList.remove("fa-eye-slash");
+        icone.classList.add("fa-eye");
+      }
+    });
   });
 });
-})
